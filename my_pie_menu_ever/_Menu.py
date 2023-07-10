@@ -256,7 +256,7 @@ def PieMenu_TexturePaint(pie, context):
     box = row.box()
     rowinbox = box.row()
     col2 = rowinbox.column()
-    col2.label(text = "Stroke")
+    col2.label(text = "Brushes")
     cnt = 0
     for i in bpy.data.brushes:
         if i.use_paint_image:

@@ -1,1 +1,1 @@
-powershell compress-archive -Force addon MyPieMenuEver
+powershell compress-archive -Force my_pie_menu_ever my_pie_menu_ever
