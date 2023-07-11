@@ -16,6 +16,7 @@ if "bpy" in locals():
 else:
     from . import _Menu
     from . import _AddonPreferences
+import bpy
 
 classes = (
     _Menu,

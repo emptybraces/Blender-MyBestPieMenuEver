@@ -8,10 +8,14 @@ import copy
 import bpy
 from bpy.types import Panel, Menu, Operator
 from rna_prop_ui import PropertyPanel
-
+from bpy.app.translations import (
+    pgettext_iface as iface_,
+    pgettext_tip as tip_,
+    contexts as i18n_contexts,
+)
 PREID = "MYPIEMENUEVER"
 # --------------------------------------------------------------------------------
-# •Î©`•»•·•À•Â©`
+# „É´„Éº„Éà„É°„Éã„É•„Éº
 # --------------------------------------------------------------------------------
 class MT_Root(Menu):
     bl_idname = PREID + "_MT_Root"
@@ -59,35 +63,52 @@ class OT_InvertValue(bpy.types.Operator):
         layout.context_pointer_set(name=propName, data=targetObj)
         layout.operator(OT_InvertValue.bl_idname, text=label, depress=layout.active and getattr(targetObj, propName, False)).propName = propName
 # --------------------------------------------------------------------------------
-# •™•÷•∏•ß•Ø•»•‚©`•…•·•À•Â©`
+# „Ç™„Éñ„Ç∏„Çß„ÇØ„Éà„É¢„Éº„Éâ„É°„Éã„É•„Éº
 # --------------------------------------------------------------------------------
 def PieMenu_ObjectMode(pie, context):
     active = context.active_object
+    object_mode = 'OBJECT' if active is None else active.mode
+    active_type_is_mesh = active != None and active.type == 'MESH'
+    active_type_is_armature = active != None and active.type == 'ARMATURE'
+    act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
     box = pie.split().box()
-    box.label(text='Change Mode');
+    box.label(text='Mode');
     col = box.column()
     row = col.row(align=False)
+
     r = row.row()
-    r.active = False if context.mode == 'OBJECT' else True
-    r.operator("object.mode_set", text="object", icon="OBJECT_DATA").mode = 'OBJECT'
+    # print(object_mode)
+    # print(bpy.types.Object.bl_rna.properties["mode"].enum_items[object_mode].name)
+    r.active = object_mode != 'OBJECT'
+    r.operator("object.mode_set", text=iface_('Object', act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == 'OBJECT').mode = 'OBJECT'
+
     r = row.row()
-    r.active = False if context.mode == 'EDIT_MESH' else True
-    r.operator("object.mode_set", text="edit", icon="EDITMODE_HLT").mode = 'EDIT'
+    r.active = object_mode != 'EDIT'
+    r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT').mode = 'EDIT'
+
+    r = row.row()
+    r.active = object_mode != 'SCULPT' and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_('Sculpt', act_mode_i18n_context), icon="SCULPTMODE_HLT", depress=object_mode == 'SCULPT')
+    if active_type_is_mesh: op.mode = 'SCULPT'
+
+    r = row.row()
+    r.active = object_mode != 'POSE' and active_type_is_armature
+    op = r.operator("object.mode_set", text=iface_("Pose", act_mode_i18n_context), icon='POSE_HLT', depress=object_mode == 'POSE')
+    if active_type_is_armature: op.mode = 'POSE'
+
     row = col.row(align=False)
     r = row.row()
-    r.active = False if (context.mode == 'SCULPT' or not active.type == 'MESH') else True
-    op = r.operator("object.mode_set", text="sculpt", icon="SCULPTMODE_HLT")
-    if active.type == 'MESH': op.mode = 'SCULPT'
+    r.active = object_mode != 'WEIGHT_PAINT' and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_('Weight Paint', act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == 'WEIGHT_PAINT')
+    if active_type_is_mesh: op.mode = 'WEIGHT_PAINT'
+
     r = row.row()
-    r.active = False if (context.mode == 'WEIGHT_PAINT' or not active.type == 'MESH') else True
-    op = r.operator("object.mode_set", text="weight", icon="WPAINT_HLT")
-    if active.type == 'MESH': op.mode = 'WEIGHT_PAINT'
-    r = row.row()
-    r.active = False if (context.mode == 'POSE' or not active.type == 'ARMATURE') else True
-    op = r.operator("object.mode_set", text="pose", icon='POSE_HLT')
-    if active.type == 'ARMATURE': op.mode = 'POSE'
+    r.active = object_mode != 'TEXTURE_PAINT' and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == 'TEXTURE_PAINT')
+    if active_type_is_mesh: op.mode = 'TEXTURE_PAINT'
+
 # --------------------------------------------------------------------------------
-# •Ê©`•∆•£•Í•∆•£•·•À•Â©`
+# „É¶„Éº„ÉÜ„Ç£„É™„ÉÜ„Ç£„É°„Éã„É•„Éº
 # --------------------------------------------------------------------------------
 def PieMenu_Utility(pie, context):
     def _DrawPivot(layout):
@@ -138,7 +159,7 @@ class OT_Utility_ChangeLanguage(bpy.types.Operator):
             bpy.context.preferences.view.language = "ja_JP"
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
-# •›©`•∫•·•À•Â©`
+# „Éù„Éº„Ç∫„É°„Éã„É•„Éº
 # --------------------------------------------------------------------------------
 class MT_Pose(Menu):
     bl_idname = PREID + "_MT_Pose"
@@ -201,7 +222,7 @@ class OT_Pose_ClearTransform(bpy.types.Operator):
         return {'FINISHED'}
 
 # --------------------------------------------------------------------------------
-# •™•÷•∏•ß•Ø•»ﬂxíkïr•·•À•Â©`
+# „Ç™„Éñ„Ç∏„Çß„ÇØ„ÉàÈÅ©Áî®„É°„Éã„É•„Éº
 # --------------------------------------------------------------------------------
 class MT_Apply(Menu):
     bl_idname = PREID + "_MT_Apply"
@@ -228,7 +249,7 @@ class OT_Apply_ChangeDisplayType(bpy.types.Operator):
             x.display_type = self.types
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
-# •∆•Ø•π•¡•„•⁄•§•Û•»•·•À•Â©`
+# „ÉÜ„ÇØ„Çπ„ÉÅ„É£„Éö„Ç§„É≥„Éà„É°„Éã„É•„Éº
 # --------------------------------------------------------------------------------
 # class MT_TexturePaint(Menu):
 #     bl_idname = PREID + "_MT_TexturePaint"
@@ -271,7 +292,6 @@ def PieMenu_TexturePaint(pie, context):
     for i in enum_values(bpy.context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = OT_TexturePaint_StrokeMethod.getCurrent() == i
         col2.operator(OT_TexturePaint_StrokeMethod.bl_idname, text=i, depress = is_use).methodName = i
-    # col2.operator_menu_enum(OT_TexturePaint_StrokeMethod.bl_idname, "item", text="Change StrokeMethod")
 class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
     bl_idname = "op.texturepaint_changebrush"
     bl_label = "Change Brush"
