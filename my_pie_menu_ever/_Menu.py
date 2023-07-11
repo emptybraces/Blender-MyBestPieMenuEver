@@ -59,9 +59,11 @@ class OT_InvertValue(bpy.types.Operator):
         setattr(target, self.propName, not getattr(target, self.propName))
         return {'FINISHED'}
     @staticmethod
-    def operator(layout, label, propName, targetObj):
+    def operator(layout, label, propName, targetObj, isActive = True):
         layout.context_pointer_set(name=propName, data=targetObj)
-        layout.operator(OT_InvertValue.bl_idname, text=label, depress=layout.active and getattr(targetObj, propName, False)).propName = propName
+        op = layout.operator(OT_InvertValue.bl_idname, text=label, depress=layout.active and getattr(targetObj, propName, False))
+        op.propName = propName
+        layout.enabled = isActive
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -143,12 +145,13 @@ def PieMenu_Utility(pie, context):
     row = col.row(align=False)
     r = row.row()
     r.active = getattr(context.space_data, "overlay", None) != None
-    OT_InvertValue.operator(r, "overlay", "show_overlays", context.space_data.overlay)
-    OT_InvertValue.operator(r, "bone", "show_bones", context.space_data.overlay)
-    r = row.row()
-    r.active =  0 < len(context.selected_objects)
-    OT_InvertValue.operator(r, "wireframe", "show_wire", context.object)
-    OT_InvertValue.operator(r, "front", "show_in_front", context.object)
+    OT_InvertValue.operator(r, "Overlay", "show_overlays", context.space_data.overlay)
+    OT_InvertValue.operator(r, "Bone", "show_bones", context.space_data.overlay)
+    # r.active =  0 < len(context.selected_objects)
+    # OT_InvertValue.operator(r, "Wireframe", "show_wire", context.object)
+    # OT_InvertValue.operator(r, "Front", "show_in_front", context.object)
+    OT_InvertValue.operator(r.row(), "Wireframe", "show_wireframes", context.space_data.overlay)
+    OT_InvertValue.operator(r.row(), "InFront", "show_in_front", context.object, context.object != None)
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"
     bl_label = ""
