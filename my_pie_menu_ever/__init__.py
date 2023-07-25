@@ -1,26 +1,29 @@
 bl_info = {
-    "name": "MyPieMenuEVER",
+    "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
     "version": (1, 0),
-    "blender": (3, 5, 1),
-    "location": "",
-    "description": "My Pie Menu EVER!",
+    "blender": (3, 6, 1),
+    "location": "3D View",
+    "description": "My Best Pie Menu EVER!",
     "warning": "",
     "doc_url": "",
-    "category": "",
+    "category": "3D VIEW",
 }
 if "bpy" in locals():
     import imp
-    imp.reload(_Menu)
+    imp.reload(_MenuRoot)
     imp.reload(_AddonPreferences)
+    imp.reload(_Util)
 else:
-    from . import _Menu
+    from . import _MenuRoot
     from . import _AddonPreferences
+    from . import _Util
 import bpy
 
 classes = (
-    _Menu,
+    _MenuRoot,
     _AddonPreferences,
+    _Util,
 )
 
 def register():
@@ -33,5 +36,4 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-    bpy.ops.wm.call_menu_pie(name=_Menu.MT_Root.bl_idname)    
-
+    #bpy.ops.wm.call_menu_pie(name=_MenuRoot.MT_Root.bl_idname)    
