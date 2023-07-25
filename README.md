@@ -1,12 +1,10 @@
 # Blender_MyPieMenuEver
 
-Hit W key, then open my pie menu ever...
-Working on my project and updating it as needed.
+Hit W key, then open my best pie menu ever... working on my project and updating it as needed.
 
 Object Mode
 
-![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/dcc87278-9f68-4271-90d8-0da183886be6)
-
+![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/d72a992f-045a-41df-8e13-b05e08ffd7ec)
 
 Texture Paint Mode
 
@@ -14,5 +12,7 @@ Texture Paint Mode
 
 
 Pose Mode
+
+![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/b0a437a7-00a1-4b54-b610-47b93255b909)
 
 ~~~~~
