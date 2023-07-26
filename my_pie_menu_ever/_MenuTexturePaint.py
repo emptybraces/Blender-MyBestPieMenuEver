@@ -51,6 +51,7 @@ def MenuSecondary(pie, context):
 class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
     bl_idname = "op.texturepaint_changebrush"
     bl_label = "Change Brush"
+    bl_options = {'REGISTER', 'UNDO'}
     brushName: bpy.props.StringProperty()
     def execute(self, context):
         bpy.context.tool_settings.image_paint.brush = bpy.data.brushes[self.brushName]
@@ -58,6 +59,7 @@ class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
 class OT_TexturePaint_SymmetryX(bpy.types.Operator):
     bl_idname = "op.texturepaint_symmetryx"
     bl_label = "Toggle SymmetryX"
+    bl_options = {'REGISTER', 'UNDO'}
     FIELD = "use_mesh_mirror_x"
     @classmethod
     def isState(self):
@@ -68,6 +70,7 @@ class OT_TexturePaint_SymmetryX(bpy.types.Operator):
 class OT_TexturePaint_StrokeMethod(bpy.types.Operator):
     bl_idname = "op.texturepaint_strokemethod"
     bl_label = "Change Display Type"
+    bl_options = {'REGISTER', 'UNDO'}
     methodName: bpy.props.StringProperty()
     @classmethod
     def getCurrent(self):
@@ -95,10 +98,7 @@ classes = (
     OT_TexturePaint_SymmetryX,
     OT_TexturePaint_StrokeMethod,
 )
-    
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    _Util.register_classes(classes)
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    _Util.unregister_classes(classes)

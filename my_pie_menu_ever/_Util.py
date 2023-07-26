@@ -1,4 +1,5 @@
 import bpy
+from mathutils import Vector, Quaternion
 from bpy.types import Panel, Menu, Operator
 from rna_prop_ui import PropertyPanel
 from bpy.app.translations import (
@@ -30,6 +31,42 @@ def layout_prop_noneable(layout, target, prop, text=None, expand=False):
         layout.prop(target, prop, text=text, expand=expand)
     else:
         layout.label(text='None')
+def reset_pose_bone_location(armature):
+    if armature.type == 'ARMATURE':
+        for b in armature.pose.bones:
+            b.location = b.bone.head #Set the location at rest (edit) pose bone position
+def reset_pose_bone_rotation(armature):
+    if armature.type == 'ARMATURE':
+        for b in armature.pose.bones:
+            b.rotation_quaternion = Quaternion((0, 0, 0), 1)
+def reset_pose_bone_scale(armature):
+    if armature.type == 'ARMATURE':
+        for b in armature.pose.bones:
+            b.scale = Vector((1, 1, 1))
+def reset_pose_bone(armature):
+    reset_pose_bone_location(armature)
+    reset_pose_bone_rotation(armature)
+    reset_pose_bone_scale(armature)
+def register_classes(classes):
+    for cls in classes:
+        try:
+            bpy.utils.register_class(cls)
+        except Exception as e:
+            print(e)
+def unregister_classes(classes):
+    for cls in classes:
+        bpy.utils.register_class(cls)
+def is_armature_in_selected():
+    for obj in bpy.context.selected_objects:
+        if obj.type == 'ARMATURE':
+            return True
+    return False
+def show_msgbox(message, title = "", icon = 'INFO'):
+    def draw(self, context):
+        lines = message.split('\n')
+        for line in lines:
+            self.layout.label(text=line)
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 # --------------------------------------------------------------------------------
 classes = (
     OT_InvertValue,

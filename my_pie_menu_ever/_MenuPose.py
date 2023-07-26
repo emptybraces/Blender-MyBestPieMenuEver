@@ -18,25 +18,28 @@ def MenuPrimary(pie, context):
 class OT_ClearTransform(bpy.types.Operator):
     bl_idname = "op.clear_transform"
     bl_label = "Clear Transform"
+    bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
-        current_mode = context.active_object.mode
-        bpy.ops.object.mode_set(mode='POSE')
-        # backup
-        buf = []
-        for i in range(32):
-            buf.append(bpy.context.object.data.layers[i])
-            bpy.context.object.data.layers[i] = True
-        # execution
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.rot_clear()
-        bpy.ops.pose.loc_clear()
-        bpy.ops.pose.scale_clear()
-        # restore
-        for i in range(32):
-            bpy.context.object.data.layers[i] = buf[i]
-        bpy.ops.object.mode_set( mode = current_mode)
+        selected_objects = context.selected_objects
+        for obj in selected_objects:
+            _Util.reset_pose_bone(obj)
+        # 古い処理
+        # current_mode = context.active_object.mode
+        # # backup
+        # buf = []
+        # for i in range(32):
+        #     buf.append(bpy.context.object.data.layers[i])
+        #     bpy.context.object.data.layers[i] = True
+        # # execution
+        # bpy.ops.pose.select_all(action='SELECT')
+        # bpy.ops.pose.rot_clear()
+        # bpy.ops.pose.loc_clear()
+        # bpy.ops.pose.scale_clear()
+        # # restore
+        # for i in range(32):
+        #     bpy.context.object.data.layers[i] = buf[i]
+        # bpy.ops.object.mode_set( mode = current_mode)
         return {'FINISHED'}
-
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     pass
@@ -46,10 +49,7 @@ def MenuSecondary(pie, context):
 classes = (
     OT_ClearTransform,
 )
-    
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    _Util.register_classes(classes)
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    _Util.unregister_classes(classes)

@@ -1,15 +1,18 @@
 if "bpy" in locals():
     import imp
     imp.reload(_AddonPreferences)
+    imp.reload(_MenuObject)
+    imp.reload(_MenuWeightPaint)
     imp.reload(_MenuTexturePaint)
     imp.reload(_MenuPose)
     imp.reload(_Util)
 else:
     from . import _AddonPreferences
+    from . import _MenuObject
+    from . import _MenuWeightPaint
     from . import _MenuTexturePaint
     from . import _MenuPose
     from . import _Util
-
 import copy
 import bpy
 from bpy.types import Panel, Menu, Operator
@@ -50,6 +53,7 @@ def PieMenu_ObjectMode(pie, context):
     active_type_is_mesh = active != None and active.type == 'MESH'
     active_type_is_armature = active != None and active.type == 'ARMATURE'
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
+
     box = pie.split().box()
     box.label(text='Mode');
     col = box.column()
@@ -145,6 +149,7 @@ def PieMenu_Utility(pie, context):
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"
     bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         if bpy.context.preferences.view.language == "ja_JP":
             bpy.context.preferences.view.language = "en_US"
@@ -155,6 +160,7 @@ class OT_Utility_ChangeLanguage(bpy.types.Operator):
 class OT_ChangePivot(bpy.types.Operator):
     bl_idname = "op.pivot"
     bl_label = "Change Pivot"
+    bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_pivot_pie")
         return {'FINISHED'}
@@ -162,6 +168,7 @@ class OT_ChangePivot(bpy.types.Operator):
 class OT_ChangeOrientations(bpy.types.Operator):
     bl_idname = "op.orientations"
     bl_label = "Change Orientations"
+    bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_orientations_pie")
         return {'FINISHED'}
@@ -170,39 +177,39 @@ class OT_ChangeOrientations(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 def PieMenu_Primary(pie, context):
     current_mode = bpy.context.mode
-    print(current_mode)
-    if current_mode == 'OBJECT': pass
-    elif current_mode == 'EDIT_MESH': pass
+    if current_mode == 'OBJECT': _MenuObject.MenuPrimary(pie, context)
+    elif current_mode == 'EDIT_MESH': Placeholder(pie, context, 'Primary')
     elif current_mode == 'POSE': _MenuPose.MenuPrimary(pie, context)
-    elif current_mode == 'SCULPT': pass
-    elif current_mode == 'PAINT': pass
+    elif current_mode == 'SCULPT': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'PAINT': Placeholder(pie, context, 'Primary')
     elif current_mode == 'PAINT_TEXTURE': _MenuTexturePaint.MenuPrimary(pie, context)
-    elif current_mode == 'PAINT_VERTEX': pass
-    elif current_mode == 'PAINT_WEIGHT': pass
-    elif current_mode == 'PARTICLE_EDIT': pass
-    elif current_mode == 'ARMATURE': pass
-    elif current_mode == 'GPENCIL_DRAW': pass
-    elif current_mode == 'GPENCIL_EDIT': pass
-    elif current_mode == 'GPENCIL_SCULPT': pass
-    elif current_mode == 'GPENCIL_WEIGHT_PAINT': pass
+    elif current_mode == 'PAINT_VERTEX': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'PAINT_WEIGHT':  _MenuWeightPaint.MenuPrimary(pie, context)
+    elif current_mode == 'PARTICLE_EDIT': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'ARMATURE': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_DRAW': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_EDIT': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_SCULPT': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_WEIGHT_PAINT': Placeholder(pie, context, 'Primary')
 def PieMenu_Secondary(pie, context):
     current_mode = bpy.context.mode
-    print(current_mode, context.active_object.mode)
-    if current_mode == 'OBJECT': pass
-    elif current_mode == 'EDIT_MESH': pass
+    if current_mode == 'OBJECT': _MenuObject.MenuSecondary(pie, context)
+    elif current_mode == 'EDIT_MESH': Placeholder(pie, context, 'Secondary')
     elif current_mode == 'POSE': _MenuPose.MenuSecondary(pie, context)
-    elif current_mode == 'SCULPT': pass
-    elif current_mode == 'PAINT': pass
+    elif current_mode == 'SCULPT': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'PAINT': Placeholder(pie, context, 'Secondary')
     elif current_mode == 'PAINT_TEXTURE': _MenuTexturePaint.MenuSecondary(pie, context)
-    elif current_mode == 'PAINT_VERTEX': pass
-    elif current_mode == 'PAINT_WEIGHT': pass
-    elif current_mode == 'PARTICLE_EDIT': pass
-    elif current_mode == 'ARMATURE': pass
-    elif current_mode == 'GPENCIL_DRAW': pass
-    elif current_mode == 'GPENCIL_EDIT': pass
-    elif current_mode == 'GPENCIL_SCULPT': pass
-    elif current_mode == 'GPENCIL_WEIGHT_PAINT': pass
-
+    elif current_mode == 'PAINT_VERTEX': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'PAINT_WEIGHT': _MenuWeightPaint.MenuSecondary(pie, context)
+    elif current_mode == 'PARTICLE_EDIT': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'ARMATURE': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'GPENCIL_DRAW': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'GPENCIL_EDIT': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'GPENCIL_SCULPT': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'GPENCIL_WEIGHT_PAINT': Placeholder(pie, context, 'Secondary')
+def Placeholder(pie, context, text):
+    box = pie.split().box()
+    box.label(text = text)
 # --------------------------------------------------------------------------------
 
 classes = (
@@ -211,14 +218,17 @@ classes = (
     OT_ChangeOrientations,
     OT_Utility_ChangeLanguage,
 )
-    
+modules = (
+    _MenuObject,
+    _MenuWeightPaint,
+    _MenuTexturePaint,
+    _MenuPose,
+)
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-    _MenuTexturePaint.register()
-    _MenuPose.register()
+    _Util.register_classes(classes)
+    for m in modules:
+        m.register()
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-    _MenuTexturePaint.unregister()
-    _MenuPose.unregister()
+    _Util.unregister_classes(classes)
+    for m in modules:
+        m.unregister()

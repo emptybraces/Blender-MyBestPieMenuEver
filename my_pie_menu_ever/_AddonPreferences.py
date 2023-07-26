@@ -1,8 +1,10 @@
 if "bpy" in locals():
     import imp
     imp.reload(_MenuRoot)
+    imp.reload(_Util)
 else:
     from . import _MenuRoot
+    from . import _Util
 import bpy
 import rna_keymap_ui
 from rna_prop_ui import PropertyPanel
@@ -49,11 +51,9 @@ classes = (
 )
     
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    _Util.register_classes(classes)
     registerKeyMap()
     
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    _Util.unregister_classes(classes)
     unregisterKeyMap()
