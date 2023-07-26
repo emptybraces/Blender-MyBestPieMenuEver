@@ -4,7 +4,7 @@ Hit W key, then open my best pie menu ever... working on my project and updating
 
 Object Mode
 
-![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/d72a992f-045a-41df-8e13-b05e08ffd7ec)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/42651a42-fd84-431e-a2f6-ddd7b070a0d7)
 
 Texture Paint Mode
 
