@@ -1,6 +1,6 @@
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/d3277c9f-7318-4457-8246-4e1d741dcd4b)# Blender_MyPieMenuEver
+# Blender_MyBestPieMenuEver
 
-Hit W key, then open my best pie menu ever... working on my project and updating it as needed.
+Hit W key, then open my best pie menu ever... working on my project and updating this addon as needed.
 
 Object Mode
 
