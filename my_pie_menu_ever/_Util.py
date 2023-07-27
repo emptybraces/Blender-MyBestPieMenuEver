@@ -41,11 +41,11 @@ def layout_operator(layout, opid, isActive=None):
 def reset_pose_bone_location(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:
-            b.location = b.bone.head #Set the location at rest (edit) pose bone position
+            b.location = Vector((0, 0, 0))
 def reset_pose_bone_rotation(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:
-            b.rotation_quaternion = Quaternion((0, 0, 0), 1)
+            b.rotation_euler = (0, 0, 0)
 def reset_pose_bone_scale(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:
