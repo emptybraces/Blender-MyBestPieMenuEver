@@ -31,6 +31,13 @@ def layout_prop_noneable(layout, target, prop, text=None, expand=False):
         layout.prop(target, prop, text=text, expand=expand)
     else:
         layout.label(text='None')
+def layout_operator(layout, opid, isActive=None):
+    if isActive == None:
+        layout.operator(opid)
+    else:
+        r = layout.row()
+        r.active = isActive
+        r.operator(opid)
 def reset_pose_bone_location(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:

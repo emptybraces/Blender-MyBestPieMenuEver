@@ -9,13 +9,11 @@ from . import _MenuPose
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint')
-    box.operator(_MenuPose.OT_ClearTransform.bl_idname)
+    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, _Util.is_armature_in_selected())
     r = box.row(align=False)
     r.label(text="Copy Mirrored VG from ")
-    r.operator(OT_MirrorVGFromSelectedListItem.bl_idname)
-    r = r.row()
-    r.active = _Util.is_armature_in_selected()
-    r.operator(OT_MirrorVGFromSelectedBone.bl_idname)
+    _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
+    _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname, _Util.is_armature_in_selected())
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
