@@ -2,24 +2,49 @@ import bpy
 from bpy.types import Panel, Menu, Operator
 from . import _Util
 from . import _MenuPose
-
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint')
-    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, _Util.is_armature_in_selected())
+    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     r = box.row(align=False)
     r.label(text="Copy Mirrored VG from ")
     _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
-    _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname, _Util.is_armature_in_selected())
+    _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname, isActive=_Util.is_armature_in_selected())
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
-    col_root = pie.split().column()
-    col_root.label(text = 'Secondary')
+    box = pie.split().box()
+    r = box.row(align=False)
+    r.label(text = 'Weight')
+    _Util.OT_SetValue.operator(r, "0.0", context.tool_settings.weight_paint.brush, "strength", 0.0)
+    _Util.OT_SetValue.operator(r, "0.1", context.tool_settings.weight_paint.brush, "strength", 0.1)
+    _Util.OT_SetValue.operator(r, "0.5", context.tool_settings.weight_paint.brush, "strength", 0.5)
+    _Util.OT_SetValue.operator(r, "1.0", context.tool_settings.weight_paint.brush, "strength", 1.0)
+    r = box.row(align=False)
+    r.label(text = 'Strength')
+    _Util.OT_SetValue.operator(r, "0.1", context.tool_settings.unified_paint_settings, "weight", 0.1)
+    _Util.OT_SetValue.operator(r, "0.2", context.tool_settings.unified_paint_settings, "weight", 0.2)
+    _Util.OT_SetValue.operator(r, "0.4", context.tool_settings.unified_paint_settings, "weight", 0.4)
+    _Util.OT_SetValue.operator(r, "1.0", context.tool_settings.unified_paint_settings, "weight", 1.0)
 
+# --------------------------------------------------------------------------------
+class OT_InvertValue(bpy.types.Operator):
+    bl_idname = "op.invert_value"
+    bl_label = ""
+    propName: bpy.props.StringProperty()
+    def execute(self, context):
+        target = getattr(context, self.propName, None)
+        setattr(target, self.propName, not getattr(target, self.propName))
+        return {'FINISHED'}
+    @staticmethod
+    def operator(layout, label, propName, targetObj, isActive = True, ctxt = ''):
+        layout.context_pointer_set(name=propName, data=targetObj)
+        op = layout.operator(OT_InvertValue.bl_idname, text=label, text_ctxt =ctxt, depress=layout.active and getattr(targetObj, propName, False))
+        op.propName = propName
+        layout.enabled = isActive and targetObj != None
 # --------------------------------------------------------------------------------
 class OT_MirrorVGFromSelectedBone(bpy.types.Operator):
     bl_idname = "op.mirror_vgroup_from_bone"

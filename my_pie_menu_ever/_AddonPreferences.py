@@ -8,20 +8,24 @@ else:
 import bpy
 import rna_keymap_ui
 from rna_prop_ui import PropertyPanel
+from bpy.props import IntProperty, IntVectorProperty, StringProperty
 
 addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
+    pass_addon: StringProperty(
+        name="Addon Pass",
+    )
     def draw(self, context):
         layout = self.layout
         box = layout.box()
-        col = box.column()
+        box.prop(self, "pass_addon")
         wm = bpy.context.window_manager
         kc = wm.keyconfigs.user
         km = kc.keymaps['3D View']
         for keymaps in addon_keymaps:
-            col.context_pointer_set("keymap", keymaps[1])
-            rna_keymap_ui.draw_kmi([], kc, km, keymaps[1], col, 0)
+            box.context_pointer_set("keymap", keymaps[1])
+            rna_keymap_ui.draw_kmi([], kc, km, keymaps[1], box, 0)
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon

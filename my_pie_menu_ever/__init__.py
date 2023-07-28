@@ -7,7 +7,7 @@ bl_info = {
     "description": "My Best Pie Menu EVER!",
     "warning": "",
     "doc_url": "",
-    "category": "3D VIEW",
+    "category": "3D View",
 }
 if "bpy" in locals():
     import imp

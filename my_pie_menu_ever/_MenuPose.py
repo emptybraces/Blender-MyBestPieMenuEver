@@ -9,11 +9,9 @@ def MenuPrimary(pie, context):
     arm = bpy.context.object.data;
     box = pie.split().box()
     box.label(text = 'Pose')
-    col = box.column()
-
-    col.operator(OT_ClearTransform.bl_idname)
-    col.row().prop(arm, "pose_position", expand=True)
-    col.prop(arm, 'layers')
+    _Util.layout_operator(box, OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    box.row().prop(arm, "pose_position", expand=True)
+    box.prop(arm, 'layers')
 
 class OT_ClearTransform(bpy.types.Operator):
     bl_idname = "op.clear_transform"
