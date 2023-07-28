@@ -12,7 +12,7 @@ Texture Paint Mode
 
 Weight Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/cedd6e68-57ca-448f-903d-f6bf9c9a2f37)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/da33963d-2e17-4a1e-8dec-e969aa107c33)
 
 Pose Mode
 
