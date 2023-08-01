@@ -4,6 +4,7 @@ if "bpy" in locals():
     imp.reload(_MenuObject)
     imp.reload(_MenuWeightPaint)
     imp.reload(_MenuTexturePaint)
+    imp.reload(_MenuSculptCurve)
     imp.reload(_MenuPose)
     imp.reload(_Util)
 else:
@@ -11,6 +12,7 @@ else:
     from . import _MenuObject
     from . import _MenuWeightPaint
     from . import _MenuTexturePaint
+    from . import _MenuSculptCurve
     from . import _MenuPose
     from . import _Util
 import copy
@@ -117,6 +119,14 @@ def PieMenu_Utility(pie, context):
     col = box.column()
     # 行開始
     col.operator(OT_Utility_ChangeLanguage.bl_idname, text="Change Language")
+    # from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
+    # space_type, mode = ToolSelectPanelHelper._tool_key_from_context(context)
+    # cls = ToolSelectPanelHelper._tool_class_from_space_type(space_type)
+    # item, tool, _ = cls._tool_get_active(context, space_type, mode, with_icon=True)
+    # if item != None:
+    #     props = tool.operator_properties("view3d.cursor3d")
+    #     col.prop(props, "use_depth")
+    #     col.prop(props, "orientation")
     # 行開始
     row = col.row(align=False)
     _DrawPivot(row)
@@ -125,23 +135,15 @@ def PieMenu_Utility(pie, context):
     row = col.row(align=False)
     r = row.row()
     r.active = getattr(context.space_data, "overlay", None) != None
-    # _Util.OT_InvertValue.operator(r, "Overlay", "show_overlays", context.space_data.overlay)
-    _Util.layout_prop_noneable(r, context.space_data.overlay, "show_overlays")
-    # _Util.OT_InvertValue.operator(r, "Bone", "show_bones", context.space_data.overlay)
-    _Util.layout_prop_noneable(r, context.space_data.overlay, "show_bones")
-    # r.active =  0 < len(context.selected_objects)
-    # _Util.OT_InvertValue.operator(r, "Wireframe", "show_wire", context.object)
-    # _Util.OT_InvertValue.operator(r, "Front", "show_in_front", context.object)
-    # _Util.OT_InvertValue.operator(r.row(), "Wireframe", "show_wireframes", context.space_data.overlay)
-    _Util.layout_prop_noneable(r, context.space_data.overlay, "show_wireframes")
+    _Util.layout_prop(r, context.space_data.overlay, "show_overlays")
+    _Util.layout_prop(r, context.space_data.overlay, "show_bones")
+    _Util.layout_prop(r, context.space_data.overlay, "show_wireframes")
     # 行開始
     row = col.row(align=False)
     r = row.row()
     r.active = context.object != None
-    #_Util.OT_InvertValue.operator(r, "In Front", "show_in_front", context.object)
-    _Util.layout_prop_noneable(r, context.object, "show_in_front")
-    # _Util.OT_InvertValue.operator(r, bpy.app.translations.pgettext("Show in Front"), "show_in_front", context.object)
-    _Util.layout_prop_noneable(r, context.object, "display_type", text="", expand=False)
+    _Util.layout_prop(r, context.object, "show_in_front")
+    _Util.layout_prop(r, context.object, "display_type", text="", expand=False)
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"
     bl_label = ""
@@ -173,10 +175,12 @@ class OT_ChangeOrientations(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 def PieMenu_Primary(pie, context):
     current_mode = bpy.context.mode
+    
     if current_mode == 'OBJECT': _MenuObject.MenuPrimary(pie, context)
     elif current_mode == 'EDIT_MESH': Placeholder(pie, context, 'Primary')
     elif current_mode == 'POSE': _MenuPose.MenuPrimary(pie, context)
     elif current_mode == 'SCULPT': Placeholder(pie, context, 'Primary')
+    elif current_mode == 'SCULPT_CURVES': _MenuSculptCurve.MenuPrimary(pie, context)
     elif current_mode == 'PAINT': Placeholder(pie, context, 'Primary')
     elif current_mode == 'PAINT_TEXTURE': _MenuTexturePaint.MenuPrimary(pie, context)
     elif current_mode == 'PAINT_VERTEX': Placeholder(pie, context, 'Primary')
@@ -193,6 +197,7 @@ def PieMenu_Secondary(pie, context):
     elif current_mode == 'EDIT_MESH': Placeholder(pie, context, 'Secondary')
     elif current_mode == 'POSE': _MenuPose.MenuSecondary(pie, context)
     elif current_mode == 'SCULPT': Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'SCULPT_CURVES': _MenuSculptCurve.MenuSecondary(pie, context)
     elif current_mode == 'PAINT': Placeholder(pie, context, 'Secondary')
     elif current_mode == 'PAINT_TEXTURE': _MenuTexturePaint.MenuSecondary(pie, context)
     elif current_mode == 'PAINT_VERTEX': Placeholder(pie, context, 'Secondary')
@@ -219,6 +224,7 @@ modules = (
     _MenuWeightPaint,
     _MenuTexturePaint,
     _MenuPose,
+    _MenuSculptCurve,
 )
 def register():
     _Util.register_classes(classes)

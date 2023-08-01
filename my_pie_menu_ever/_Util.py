@@ -12,45 +12,70 @@ from bpy.app.translations import (
 # OT – オペレーター
 # PT – パネル
 # UL – UIリスト
-class OT_InvertValue(bpy.types.Operator):
-    bl_idname = "op.invert_value"
-    bl_label = ""
+class OT_SetterBase():
     propName: bpy.props.StringProperty()
-    def execute(self, context):
-        target = getattr(context, self.propName, None)
-        setattr(target, self.propName, not getattr(target, self.propName))
-        return {'FINISHED'}
-    @staticmethod
-    def operator(layout, label, propName, targetObj, isActive = True, ctxt = ''):
-        layout.context_pointer_set(name=propName, data=targetObj)
-        op = layout.operator(OT_InvertValue.bl_idname, text=label, text_ctxt =ctxt, depress=layout.active and getattr(targetObj, propName, False))
-        op.propName = propName
-        layout.enabled = isActive and targetObj != None
-class OT_SetValue(bpy.types.Operator):
-    bl_idname = "op.valueset"
-    bl_label = ""
-    propName: bpy.props.StringProperty()
-    value: bpy.props.FloatProperty()
     def execute(self, context):
         target = getattr(context, self.propName, None)
         setattr(target, self.propName, self.value)
         return {'FINISHED'}
     @staticmethod
-    def operator(layout, label, targetObj, propName, value, isActive = True, ctxt = ''):
+    def operator(cls, layout, label, targetObj, propName, value=None, depress=None, isActive=True, ctxt=''):
         layout.context_pointer_set(name=propName, data=targetObj)
-        op = layout.operator(OT_SetValue.bl_idname, text=label, text_ctxt =ctxt)
+        if depress is None:
+            cur_value = getattr(targetObj, propName, False) if value is None else value
+            depress = cur_value if isinstance(cur_value, bool) else False
+        op = layout.operator(cls, text=label, text_ctxt=ctxt, depress=depress)
         op.propName = propName
-        op.value = value
+        op.value = not getattr(targetObj, propName) if cls == "op.set_invert" else value
         layout.enabled = isActive and targetObj != None
-
+class OT_SetPointer(bpy.types.Operator):
+    bl_idname = "op.set_pointer"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    propName: bpy.props.StringProperty()
+    propObj: bpy.props.StringProperty()
+    propValue: bpy.props.StringProperty()
+    def execute(self, context):
+        target = getattr(context, self.propObj, None)
+        value = getattr(context, self.propValue, None)
+        setattr(target, self.propName, value)
+        return {'FINISHED'}
+    @staticmethod
+    def operator(layout, label, targetObj, propName, value, isActive = True, ctxt = ''):
+        # context_pointer_setはopeartorの前で設定しないと有効にならない
+        keyObj = label
+        keyValue = keyObj + "_value"
+        layout.context_pointer_set(name=keyObj, data=targetObj)
+        layout.context_pointer_set(name=keyValue, data=value)
+        op = layout.operator(OT_SetPointer.bl_idname, text=label, text_ctxt = ctxt)
+        op.propName = propName
+        op.propObj = keyObj
+        op.propValue = keyValue
+        layout.enabled = isActive and targetObj != None
+ 
+class OT_SetBool(OT_SetterBase, bpy.types.Operator):
+    bl_idname = "op.set_bool"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    value: bpy.props.BoolProperty()
+class OT_SetBoolToggle(OT_SetterBase, bpy.types.Operator):
+    bl_idname = "op.set_invert"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    value: bpy.props.BoolProperty()
+class OT_SetSingle(OT_SetterBase, bpy.types.Operator):
+    bl_idname = "op.set_signel"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    value: bpy.props.FloatProperty()
 # --------------------------------------------------------------------------------
 def show_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
 def enum_values(obj, prop_name):
     return [item.identifier for item in obj.bl_rna.properties[prop_name].enum_items]
-def layout_prop_noneable(layout, target, prop, text=None, expand=False):
+def layout_prop(layout, target, prop, text=None, expand=False, toggle=-1):
     if target != None:
-        layout.prop(target, prop, text=text, expand=expand)
+        layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True)
     else:
         layout.label(text='None')
 def layout_operator(layout, opid, label=None, isActive=None):
@@ -60,6 +85,12 @@ def layout_operator(layout, opid, label=None, isActive=None):
         r = layout.row()
         r.active = isActive
         return r.operator(opid, text=label)
+def layout_for_mirror(layout):
+    row = layout.row(align=True)
+    row.label(icon='MOD_MIRROR')
+    sub = row.row(align=True)
+    sub.scale_x = 0.9
+    return row, sub
 def reset_pose_bone_location(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:
@@ -101,8 +132,10 @@ def get_prefs():
     return bpy.context.preferences.addons["my_pie_menu_ever"].preferences
 # --------------------------------------------------------------------------------
 classes = (
-    OT_InvertValue,
-    OT_SetValue,
+    OT_SetBool,
+    OT_SetBoolToggle,
+    OT_SetSingle,
+    OT_SetPointer,
 )
     
 def register():

@@ -20,9 +20,13 @@ def MenuPrimary(pie, context):
     box.label(text = 'Texture Paint')
     col = box.column()
     row = col.row()
-    _Util.OT_InvertValue.operator(row, "SYM_X", "use_mesh_mirror_x", bpy.context.object)
-
-    # row.operator(OT_TexturePaint_SymmetryX.bl_idname, text="SYM_X", depress = OT_TexturePaint_SymmetryX.isState())
+    mrow, msub = _Util.layout_for_mirror(row)
+    _Util.layout_prop(msub, context.object, "use_mesh_mirror_x", text="X", toggle=True)
+    _Util.layout_prop(msub, context.object, "use_mesh_mirror_y", text="Y", toggle=True)
+    _Util.layout_prop(msub, context.object, "use_mesh_mirror_z", text="Z", toggle=True)
+    # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "X", context.object, "use_mesh_mirror_x")
+    # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "Y", context.object, "use_mesh_mirror_y")
+    # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "Z", context.object, "use_mesh_mirror_z")
     row.operator("image.save_all_modified", text="Save All Images") 
 
     row = col.row()
@@ -33,7 +37,7 @@ def MenuPrimary(pie, context):
     cnt = 0
     for i in bpy.data.brushes:
         if i.use_paint_image:
-            is_use = bpy.context.tool_settings.image_paint.brush.name == i.name
+            is_use = context.tool_settings.image_paint.brush.name == i.name
             col2.operator(OT_TexturePaint_ChangeBrush.bl_idname, text=i.name, depress = is_use).brushName = i.name
             cnt += 1;
             if cnt == 10:
@@ -41,7 +45,7 @@ def MenuPrimary(pie, context):
             # print(dir(i))
     col2 = row.box().column()
     col2.label(text = "Stroke")
-    for i in _Util.enum_values(bpy.context.tool_settings.image_paint.brush, 'stroke_method'):
+    for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = OT_TexturePaint_StrokeMethod.getCurrent() == i
         col2.operator(OT_TexturePaint_StrokeMethod.bl_idname, text=i, depress = is_use).methodName = i
 # --------------------------------------------------------------------------------
@@ -54,7 +58,7 @@ class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     brushName: bpy.props.StringProperty()
     def execute(self, context):
-        bpy.context.tool_settings.image_paint.brush = bpy.data.brushes[self.brushName]
+        context.tool_settings.image_paint.brush = bpy.data.brushes[self.brushName]
         return {'FINISHED'}
 class OT_TexturePaint_SymmetryX(bpy.types.Operator):
     bl_idname = "op.texturepaint_symmetryx"
@@ -63,9 +67,9 @@ class OT_TexturePaint_SymmetryX(bpy.types.Operator):
     FIELD = "use_mesh_mirror_x"
     @classmethod
     def isState(self):
-        return getattr(bpy.context.object, self.FIELD)
+        return getattr(context.object, self.FIELD)
     def execute(self, context):
-        setattr(bpy.context.object, self.FIELD, not self.isState())
+        setattr(context.object, self.FIELD, not self.isState())
         return {'FINISHED'}
 class OT_TexturePaint_StrokeMethod(bpy.types.Operator):
     bl_idname = "op.texturepaint_strokemethod"
@@ -76,18 +80,18 @@ class OT_TexturePaint_StrokeMethod(bpy.types.Operator):
     def getCurrent(self):
         return bpy.context.tool_settings.image_paint.brush.stroke_method
     def execute(self, context):
-        bpy.context.tool_settings.image_paint.brush.stroke_method = self.methodName
+        context.tool_settings.image_paint.brush.stroke_method = self.methodName
         return {'FINISHED'}
 # class OT_TexturePaint_StrokeMethodList(bpy.types.Operator):
 #     bl_idname = "op.texturepaint_strokemethodlist"
 #     bl_label = "Change Display Type"
 #     def items(self, context):
-#         values = enum_values(bpy.context.tool_settings.image_paint.brush, 'stroke_method')
+#         values = enum_values(context.tool_settings.image_paint.brush, 'stroke_method')
 #         return [(value, value, "") for value in values]
 #     item: bpy.props.EnumProperty(items = items, name = "description")
 #     def execute(self, context):
-#         show_enum_values(bpy.context.tool_settings.image_paint.brush, 'stroke_method')
-#         bpy.context.tool_settings.image_paint.stroke_method = self.item
+#         show_enum_values(context.tool_settings.image_paint.brush, 'stroke_method')
+#         context.tool_settings.image_paint.stroke_method = self.item
 #         return {'FINISHED'}
 
 # --------------------------------------------------------------------------------
