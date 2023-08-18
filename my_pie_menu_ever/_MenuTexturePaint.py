@@ -108,6 +108,7 @@ class OT_ShiftEraser(bpy.types.Operator):
     def execute(self, context):
         global g_lastBlend
         g_lastBlend = context.tool_settings.image_paint.brush.blend
+        if g_lastBlend == 'ERASE_ALPHA': g_lastBlend = 'MIX'
         context.tool_settings.image_paint.brush.blend = 'ERASE_ALPHA'
         return {'FINISHED'}
 class OT_ShiftEraserUp(bpy.types.Operator):
@@ -143,7 +144,6 @@ def register():
     
     km3 = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
     kmi3 = km3.keymap_items.new("paint.shift_eraser_up", 'LEFT_SHIFT','RELEASE', shift=True)
-    addon_keymaps.append(km3)
 def unregister():
     _Util.unregister_classes(classes)
     wm = bpy.context.window_manager
