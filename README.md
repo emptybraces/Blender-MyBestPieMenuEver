@@ -17,5 +17,3 @@ Weight Paint Mode
 Pose Mode
 
 ![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/b0a437a7-00a1-4b54-b610-47b93255b909)
-
-~~~~~
