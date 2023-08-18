@@ -68,6 +68,11 @@ class OT_SetSingle(OT_SetterBase, bpy.types.Operator):
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
+class OT_SetString(OT_SetterBase, bpy.types.Operator):
+    bl_idname = "op.set_signel"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    value: bpy.props.FloatProperty()
 # --------------------------------------------------------------------------------
 def show_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
