@@ -8,7 +8,7 @@ Object Mode
 
 Texture Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/bd59ac6c-4714-4a2f-8c6a-4ef26b0d8e1d)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/67a57d7e-b0f1-4c26-8e4e-561873dc7ad5)
 
 Weight Paint Mode
 
