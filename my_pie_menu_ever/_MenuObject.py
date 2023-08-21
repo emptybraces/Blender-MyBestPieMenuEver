@@ -8,7 +8,7 @@ from . import _MenuPose
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Object')
-    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, label="Clear Pose Transform", isActive=_Util.is_armature_in_selected())
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
@@ -20,6 +20,7 @@ def MenuSecondary(pie, context):
     box.operator(OT_ReinstallAddon.bl_idname)
     box = root.split(factor=1.0).box()
 
+# --------------------------------------------------------------------------------
 class OT_ReinstallAddon(bpy.types.Operator):
     bl_idname = "op.reinstall_addon"
     bl_label = "Reinstall Addon"
