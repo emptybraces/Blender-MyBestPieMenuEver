@@ -19,12 +19,14 @@ def MenuSecondary(pie, context):
     box = pie.split().box()
     r = box.row(align=False)
     r.label(text = 'Weight')
+    _Util.layout_prop(r, context.tool_settings.unified_paint_settings, "weight")
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.0", context.tool_settings.unified_paint_settings, "weight", 0.0)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.1", context.tool_settings.unified_paint_settings, "weight", 0.1)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.5", context.tool_settings.unified_paint_settings, "weight", 0.5)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "1.0", context.tool_settings.unified_paint_settings, "weight", 1.0)
     r = box.row(align=False)
     r.label(text = 'Strength')
+    _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.1", context.tool_settings.weight_paint.brush, "strength", 0.1)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.2", context.tool_settings.weight_paint.brush, "strength", 0.2)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.4", context.tool_settings.weight_paint.brush, "strength", 0.4)
@@ -72,11 +74,10 @@ class OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 def mirror_vgroup(obj, name):
-    if name[-2:] != '.L' and name[-2:] != '.R':
+    print (name, '.L' not in name , '.R' not in name)
+    if '.L' not in name and '.R' not in name:
         return None
-    new_name = name[:-2]
-    if name[-2:] == '.L':   new_name += '.R'
-    elif name[-2:] == '.R': new_name += '.L'
+    new_name = name.replace('.L', '.R') if '.L' in name else name.replace('.R', '.L')
     # vgroup = obj.vertex_groups.get(name)
     bpy.ops.object.vertex_group_set_active(group=name)
     bpy.ops.object.vertex_group_copy()
