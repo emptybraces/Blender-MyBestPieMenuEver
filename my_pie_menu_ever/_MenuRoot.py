@@ -143,6 +143,7 @@ def PieMenu_Utility(pie, context):
     r = row.row()
     r.active = context.object != None
     _Util.layout_prop(r, context.object, "show_in_front")
+    _Util.layout_prop(r, context.object, "show_wire")
     _Util.layout_prop(r, context.object, "display_type", text="", expand=False)
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"

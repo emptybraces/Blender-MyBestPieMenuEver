@@ -8,6 +8,7 @@ from . import _MenuPose
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint')
+    _Util.layout_prop(box, bpy.context.object.data, "use_paint_mask")
     _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     r = box.row(align=False)
     r.label(text="Copy Mirrored VG from ")
@@ -27,9 +28,9 @@ def MenuSecondary(pie, context):
     r = box.row(align=False)
     r.label(text = 'Strength')
     _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
+    _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "2x", context.tool_settings.weight_paint.brush, "strength", context.tool_settings.weight_paint.brush.strength * 2)
+    _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "1/2", context.tool_settings.weight_paint.brush, "strength", context.tool_settings.weight_paint.brush.strength / 2)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.1", context.tool_settings.weight_paint.brush, "strength", 0.1)
-    _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.2", context.tool_settings.weight_paint.brush, "strength", 0.2)
-    _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "0.4", context.tool_settings.weight_paint.brush, "strength", 0.4)
     _Util.OT_SetterBase.operator(_Util.OT_SetSingle.bl_idname, r, "1.0", context.tool_settings.weight_paint.brush, "strength", 1.0)
 
 # --------------------------------------------------------------------------------
