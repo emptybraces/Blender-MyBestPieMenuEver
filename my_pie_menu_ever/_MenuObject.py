@@ -9,6 +9,7 @@ def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Object')
     _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, label="Clear Pose Transform", isActive=_Util.is_armature_in_selected())
+    _Util.layout_operator(box, "wiggle.reset", label="Wiggle2: ResetPhysics") # if imported
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
@@ -18,7 +19,7 @@ def MenuSecondary(pie, context):
     box.operator("import_scene.fbx")
     box.operator("screen.userpref_show")
     box.operator(OT_ReinstallAddon.bl_idname)
-    box = root.split(factor=1.0).box()
+    # box = root.split(factor=1.0).box()
 
 # --------------------------------------------------------------------------------
 class OT_ReinstallAddon(bpy.types.Operator):

@@ -8,18 +8,19 @@ else:
 import bpy
 import rna_keymap_ui
 from rna_prop_ui import PropertyPanel
-from bpy.props import IntProperty, IntVectorProperty, StringProperty
+from bpy.props import IntProperty, IntVectorProperty, StringProperty, BoolProperty
 
 addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
-    pass_addon: StringProperty(
-        name="Addon Pass",
-    )
+    pass_addon: StringProperty(name="Addon Pass")
+    image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     def draw(self, context):
         layout = self.layout
         box = layout.box()
         box.prop(self, "pass_addon")
+        b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
+        box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
         wm = bpy.context.window_manager
         kc = wm.keyconfigs.user
         km = kc.keymaps['3D View']
