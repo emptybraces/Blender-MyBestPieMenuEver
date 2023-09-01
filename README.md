@@ -4,9 +4,9 @@ Hit W key, then open my best pie menu ever... working on my project and updating
 
 Object Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/dbeb4711-4331-4d45-b372-9ff45335372e)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/c4382c5c-07b2-4c39-b4ef-9c458f7dfa07)
 
-Shortcut
+Enable shortcut if installed:
 - wiggle2: ResetPhysics
 
 
@@ -18,9 +18,12 @@ Texture Paint Mode
 #
 Weight Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/da33963d-2e17-4a1e-8dec-e969aa107c33)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/21b477fe-8b65-47ee-b838-704923b4aa7a)
 
 #
 Pose Mode
 
-![image](https://github.com/emptybraces/Blender_MyPieMenuEver/assets/1441835/b0a437a7-00a1-4b54-b610-47b93255b909)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/4668674f-64ff-472c-b912-a85a1b0c66f9)
+
+Enable shortcut if installed:
+- wiggle2: ResetPhysics
