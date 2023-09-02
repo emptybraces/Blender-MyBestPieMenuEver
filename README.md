@@ -11,9 +11,10 @@ Hit W key, then open my best pie menu ever... working on my project and updating
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
 - Shortcut 3rdparty functions.
 
-### [Object, Pose, WeightPaint]
+### [Object]
 
-- Reset Transform.
+- Quickly Open Preference.
+- Reset Transform. (Also Pose and WeightPaint mode.)
 
 ### [Pose]
 
