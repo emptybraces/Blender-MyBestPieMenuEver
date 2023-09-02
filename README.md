@@ -4,6 +4,8 @@ Hit W key, then open my best pie menu ever... working on my project and updating
 
 ## Features
 
+Placement in left and right sections are common functions, and upper and lower sections are arranged by mode.
+
 ### [Common]
 
 - Change Modes
