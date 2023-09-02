@@ -138,6 +138,18 @@ class OT_CtrlUp(bpy.types.Operator):
         global g_lastBlend
         context.tool_settings.image_paint.brush.blend = g_lastBlend
         return {'FINISHED'}
+class OT_ShiftDown(bpy.types.Operator):
+    bl_idname = "paint.shift_down"
+    bl_label = "Shift Down"
+    def execute(self, context):
+        context.tool_settings.image_paint.brush = bpy.data.brushes[_AddonPreferences.Accessor.GetImagePaintShiftBrushName()]
+        return {'FINISHED'}
+class OT_ShiftUp(bpy.types.Operator):
+    bl_idname = "paint.shift_up"
+    bl_label = "Shift Up"
+    def execute(self, context):
+        context.tool_settings.image_paint.brush = bpy.data.brushes[_AddonPreferences.Accessor.GetImagePaintDefaultBrushName()]
+        return {'FINISHED'}
 # --------------------------------------------------------------------------------
 
 classes = (
@@ -147,6 +159,8 @@ classes = (
     OT_TexturePaint_ToggleCtrlBehaviour,
     OT_CtrlDown,
     OT_CtrlUp,
+    OT_ShiftDown,
+    OT_ShiftUp,
 )
 
 addon_keymaps = []
@@ -170,7 +184,7 @@ def register():
     addon_keymaps.append(km)
     
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    key_keyup_ctrl = km.keymap_items.new(OT_CtrlUp.bl_idname, 'LEFT_CTRL','RELEASE')
+    key_keyup_ctrl = km.keymap_items.new(OT_CtrlUp.bl_idname, 'LEFT_CTRL', 'RELEASE')
     key_keyup_ctrl.active = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
     addon_keymaps.append(km)
 
@@ -179,7 +193,18 @@ def register():
     key_ctrl_lmb_invert.active = not _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
     key_ctrl_lmb_invert.properties.mode = 'INVERT'
 
+    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
+    kmi = km.keymap_items.new(OT_ShiftDown.bl_idname, 'LEFT_SHIFT', 'PRESS')
     addon_keymaps.append(km)
+
+    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
+    kmi = km.keymap_items.new(OT_ShiftUp.bl_idname, 'LEFT_SHIFT', 'RELEASE')
+    addon_keymaps.append(km)
+
+    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
+    kmi = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE', 'PRESS', shift=True)
+    addon_keymaps.append(km)
+
 def unregister():
     _Util.unregister_classes(classes)
     for km in addon_keymaps:

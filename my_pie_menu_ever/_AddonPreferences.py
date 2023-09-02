@@ -14,11 +14,17 @@ addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
     passAddon: StringProperty(name="Addon Pass")
+    secondLanguage: StringProperty(name="Second Language", default="ja_JP")
+    imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName", default="TexDraw")
+    imagePaintShiftBrushName: StringProperty(name="ImagePaint: ShiftBrushName", default="Soften")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     def draw(self, context):
         layout = self.layout
         box = layout.box()
         box.prop(self, "passAddon")
+        box.prop(self, "secondLanguage")
+        box.prop(self, "imagePaintDefaultBrushName")
+        box.prop(self, "imagePaintShiftBrushName")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
         wm = bpy.context.window_manager
@@ -35,9 +41,15 @@ class Accessor():
     @staticmethod
     def SetAddonPass(v): Accessor.GetReference().passAddon = v
     @staticmethod
+    def GetSecondLanguage(): return Accessor.GetReference().secondLanguage
+    @staticmethod
     def GetImagePaintCtrlBehaviour(): return Accessor.GetReference().image_paint_is_ctrl_behaviour_invert_or_erasealpha
     @staticmethod
     def SetImagePaintCtrlBehaviour(v): Accessor.GetReference().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
+    @staticmethod
+    def GetImagePaintDefaultBrushName(): return Accessor.GetReference().imagePaintDefaultBrushName
+    @staticmethod
+    def GetImagePaintShiftBrushName(): return Accessor.GetReference().imagePaintShiftBrushName
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon

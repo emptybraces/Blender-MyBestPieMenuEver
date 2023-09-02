@@ -150,10 +150,10 @@ class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
-        if bpy.context.preferences.view.language == "ja_JP":
+        if bpy.context.preferences.view.language == "en_US":
+            bpy.context.preferences.view.language = _AddonPreferences.Accessor.GetSecondLanguage()
+        else:
             bpy.context.preferences.view.language = "en_US"
-        elif bpy.context.preferences.view.language == "en_US":
-            bpy.context.preferences.view.language = "ja_JP"
         return {'FINISHED'}
         
 class OT_ChangePivot(bpy.types.Operator):
