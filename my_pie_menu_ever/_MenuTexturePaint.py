@@ -1,7 +1,11 @@
 import bpy
 from bpy.types import Panel, Menu, Operator
 from . import _Util
-
+from . import _AddonPreferences
+key_ctrl_lmb_erasealpha = None
+key_ctrl_lmb_invert = None
+key_keydown_ctrl = None
+key_keyup_ctrl = None
 # --------------------------------------------------------------------------------
 # テクスチャペイントメニュー
 # --------------------------------------------------------------------------------
@@ -56,7 +60,17 @@ def MenuPrimary(pie, context):
         if cnt % 12 == 0: col2 = row2.column()
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
-    pass
+    box = pie.split().box()
+    c = box.column()
+    r = box.row()
+    r.label(text = "Press Ctrl Behaviour")
+    ctrl_behaviour = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    if ctrl_behaviour: # Erase Alpha mode
+        _Util.layout_operator(r, OT_TexturePaint_ToggleCtrlBehaviour.bl_idname, "Invert", depress=False)
+        _Util.layout_operator(r, _Util.OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
+    else:
+        _Util.layout_operator(r, _Util.OT_Empty.bl_idname, "Invert", False, depress=True)
+        _Util.layout_operator(r, OT_TexturePaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
 # --------------------------------------------------------------------------------
 class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
     bl_idname = "op.texturepaint_changebrush"
@@ -66,16 +80,22 @@ class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
     def execute(self, context):
         context.tool_settings.image_paint.brush = bpy.data.brushes[self.brushName]
         return {'FINISHED'}
-class OT_TexturePaint_SymmetryX(bpy.types.Operator):
-    bl_idname = "op.texturepaint_symmetryx"
-    bl_label = "Toggle SymmetryX"
+class OT_TexturePaint_ToggleCtrlBehaviour(bpy.types.Operator):
+    bl_idname = "op.texturepaint_toggle_ctrl_behaviour"
+    bl_label = "Toggle Ctrl Behaviour"
     bl_options = {'REGISTER', 'UNDO'}
     FIELD = "use_mesh_mirror_x"
-    @classmethod
-    def isState(self):
-        return getattr(context.object, self.FIELD)
     def execute(self, context):
-        setattr(context.object, self.FIELD, not self.isState())
+        new_value = not _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+        _AddonPreferences.Accessor.SetImagePaintCtrlBehaviour(new_value)
+        global key_ctrl_lmb_erasealpha
+        global key_keydown_ctrl
+        global key_keyup_ctrl
+        global key_ctrl_lmb_invert
+        key_ctrl_lmb_erasealpha.active = new_value
+        key_keydown_ctrl.active = new_value
+        key_keyup_ctrl.active = new_value
+        key_ctrl_lmb_invert.active = not new_value
         return {'FINISHED'}
 class OT_TexturePaint_StrokeMethod(bpy.types.Operator):
     bl_idname = "op.texturepaint_strokemethod"
@@ -102,18 +122,18 @@ class OT_TexturePaint_Blend(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 g_lastBlend = ""
-class OT_ShiftEraser(bpy.types.Operator):
-    bl_idname = "paint.shift_eraser"
-    bl_label = "Shift Eraser"
+class OT_CtrlDown(bpy.types.Operator):
+    bl_idname = "paint.ctrl_down"
+    bl_label = "Ctrl Down"
     def execute(self, context):
         global g_lastBlend
         g_lastBlend = context.tool_settings.image_paint.brush.blend
         if g_lastBlend == 'ERASE_ALPHA': g_lastBlend = 'MIX'
         context.tool_settings.image_paint.brush.blend = 'ERASE_ALPHA'
         return {'FINISHED'}
-class OT_ShiftEraserUp(bpy.types.Operator):
-    bl_idname = "paint.shift_eraser_up"
-    bl_label = "Shift Eraser Up"
+class OT_CtrlUp(bpy.types.Operator):
+    bl_idname = "paint.ctrl_up"
+    bl_label = "Ctrl Up"
     def execute(self, context):
         global g_lastBlend
         context.tool_settings.image_paint.brush.blend = g_lastBlend
@@ -122,31 +142,46 @@ class OT_ShiftEraserUp(bpy.types.Operator):
 
 classes = (
     OT_TexturePaint_ChangeBrush,
-    OT_TexturePaint_SymmetryX,
     OT_TexturePaint_StrokeMethod,
     OT_TexturePaint_Blend,
-    OT_ShiftEraser,
-    OT_ShiftEraserUp,
+    OT_TexturePaint_ToggleCtrlBehaviour,
+    OT_CtrlDown,
+    OT_CtrlUp,
 )
 
 addon_keymaps = []
+
 def register():
     _Util.register_classes(classes)
     # Keymaps
+    global key_ctrl_lmb_erasealpha
+    global key_ctrl_lmb_invert
+    global key_keydown_ctrl
+    global key_keyup_ctrl
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    kmi = km.keymap_items.new("paint.shift_eraser", 'LEFT_SHIFT','PRESS')
+    key_keydown_ctrl = km.keymap_items.new(OT_CtrlDown.bl_idname, 'LEFT_CTRL','PRESS')
+    key_keydown_ctrl.active = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
     addon_keymaps.append(km)
     
-    km2 = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    kmi2 = km2.keymap_items.new("paint.image_paint", 'LEFTMOUSE','PRESS', shift=True)
-    addon_keymaps.append(km2)
+    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
+    key_ctrl_lmb_erasealpha = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE','PRESS', ctrl=True)
+    key_ctrl_lmb_erasealpha.active = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    addon_keymaps.append(km)
     
-    km3 = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    kmi3 = km3.keymap_items.new("paint.shift_eraser_up", 'LEFT_SHIFT','RELEASE', shift=True)
+    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
+    key_keyup_ctrl = km.keymap_items.new(OT_CtrlUp.bl_idname, 'LEFT_CTRL','RELEASE')
+    key_keyup_ctrl.active = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    addon_keymaps.append(km)
+
+    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
+    key_ctrl_lmb_invert = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE','PRESS', ctrl=True)
+    key_ctrl_lmb_invert.active = not _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    key_ctrl_lmb_invert.properties.mode = 'INVERT'
+
+    addon_keymaps.append(km)
 def unregister():
     _Util.unregister_classes(classes)
-    wm = bpy.context.window_manager
     for km in addon_keymaps:
-        wm.keyconfigs.addon.keymaps.remove(km)
+        bpy.context.window_manager.keyconfigs.addon.keymaps.remove(km)
     del addon_keymaps[:]

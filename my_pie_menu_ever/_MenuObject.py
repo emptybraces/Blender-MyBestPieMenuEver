@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Panel, Menu, Operator
 from . import _Util
+from . import _AddonPreferences
 from . import _MenuPose
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
@@ -26,8 +27,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
     bl_idname = "op.reinstall_addon"
     bl_label = "Reinstall Addon"
     def execute(self, context):
-        prefs = _Util.get_prefs()
-        path_addon = prefs.pass_addon
+        path_addon = _AddonPreferences.Accessor.GetAddonPass()
         if not path_addon:
             _Util.show_msgbox("required setup addon path in preferences")
             return {'FINISHED'}
@@ -36,7 +36,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
         bpy.ops.preferences.addon_refresh()
         bpy.ops.preferences.addon_install(filepath=path_addon)
         bpy.ops.preferences.addon_enable(module=addon_name)
-        _Util.get_prefs().pass_addon = path_addon
+        _AddonPreferences.Accessor.SetAddonPass(path_addon)
         _Util.show_msgbox("Reinstalled!")
         return {'FINISHED'}
 # --------------------------------------------------------------------------------

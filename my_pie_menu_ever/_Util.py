@@ -26,6 +26,7 @@ class OT_SetterBase():
             depress = cur_value if isinstance(cur_value, bool) else False
         op = layout.operator(cls, text=label, text_ctxt=ctxt, depress=depress)
         op.propName = propName
+        print()
         op.value = not getattr(targetObj, propName) if cls == "op.set_invert" else value
         layout.enabled = isActive and targetObj != None
 class OT_SetPointer(bpy.types.Operator):
@@ -73,6 +74,11 @@ class OT_SetString(OT_SetterBase, bpy.types.Operator):
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
+class OT_Empty(bpy.types.Operator):
+    bl_idname = "op.empty"
+    bl_label = "empty"
+    def execute(self, context):
+        return {'FINISHED'}
 # --------------------------------------------------------------------------------
 def show_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
@@ -83,13 +89,13 @@ def layout_prop(layout, target, prop, text=None, expand=False, toggle=-1):
         layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True)
     else:
         layout.label(text='None')
-def layout_operator(layout, opid, label=None, isActive=None):
+def layout_operator(layout, opid, label=None, isActive=None, depress=False):
     if isActive == None:
-        return layout.operator(opid, text=label)
+        return layout.operator(opid, text=label, depress=depress)
     else:
         r = layout.row()
         r.active = isActive
-        return r.operator(opid, text=label)
+        return r.operator(opid, text=label, depress=depress)
 def layout_for_mirror(layout):
     row = layout.row(align=True)
     row.label(icon='MOD_MIRROR')
@@ -132,15 +138,14 @@ def show_msgbox(message, title = "", icon = 'INFO'):
         for line in lines:
             self.layout.label(text=line)
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-def get_prefs():
-    print(__name__)
-    return bpy.context.preferences.addons["my_pie_menu_ever"].preferences
 # --------------------------------------------------------------------------------
 classes = (
     OT_SetBool,
     OT_SetBoolToggle,
     OT_SetSingle,
     OT_SetPointer,
+    OT_SetString,
+    OT_Empty,
 )
     
 def register():

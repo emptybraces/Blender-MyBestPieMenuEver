@@ -13,12 +13,12 @@ from bpy.props import IntProperty, IntVectorProperty, StringProperty, BoolProper
 addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
-    pass_addon: StringProperty(name="Addon Pass")
+    passAddon: StringProperty(name="Addon Pass")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     def draw(self, context):
         layout = self.layout
         box = layout.box()
-        box.prop(self, "pass_addon")
+        box.prop(self, "passAddon")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
         wm = bpy.context.window_manager
@@ -27,6 +27,17 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         for keymaps in addon_keymaps:
             box.context_pointer_set("keymap", keymaps[1])
             rna_keymap_ui.draw_kmi([], kc, km, keymaps[1], box, 0)
+class Accessor():
+    @staticmethod
+    def GetReference(): return bpy.context.preferences.addons["my_pie_menu_ever"].preferences
+    @staticmethod
+    def GetAddonPass(): return Accessor.GetReference().passAddon
+    @staticmethod
+    def SetAddonPass(v): Accessor.GetReference().passAddon = v
+    @staticmethod
+    def GetImagePaintCtrlBehaviour(): return Accessor.GetReference().image_paint_is_ctrl_behaviour_invert_or_erasealpha
+    @staticmethod
+    def SetImagePaintCtrlBehaviour(v): Accessor.GetReference().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon

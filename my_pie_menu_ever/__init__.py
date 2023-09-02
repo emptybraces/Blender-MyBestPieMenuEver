@@ -21,8 +21,8 @@ else:
 import bpy
 
 classes = (
-    _MenuRoot,
     _AddonPreferences,
+    _MenuRoot,
     _Util,
 )
 
