@@ -8,6 +8,7 @@ Hit W key, then open my best pie menu ever... working on my project and updating
 
 - Change Modes
 - Quickly editable view settings.
+- Quickly editable object settings.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
 - Shortcut 3rdparty functions.
 
