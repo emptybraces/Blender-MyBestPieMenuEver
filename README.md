@@ -14,7 +14,7 @@ Enable shortcut if installed:
 Texture Paint Mode
 
 ![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/abf59ab7-a1af-4587-a75f-7d5a6fe256bc)
-- Ctrl behaviour changeable to Invert or EraseAlpha.
+- Ctrl+LMB behaviour changeable to Invert or EraseAlpha.
 #
 Weight Paint Mode
 
