@@ -13,8 +13,8 @@ Enable shortcut if installed:
 #
 Texture Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/67a57d7e-b0f1-4c26-8e4e-561873dc7ad5)
-
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/abf59ab7-a1af-4587-a75f-7d5a6fe256bc)
+- Ctrl behaviour changeable to Invert or EraseAlpha.
 #
 Weight Paint Mode
 
