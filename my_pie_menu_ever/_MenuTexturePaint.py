@@ -122,6 +122,7 @@ class OT_TexturePaint_Blend(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 g_lastBlend = ""
+g_lastBrushName = ""
 class OT_CtrlDown(bpy.types.Operator):
     bl_idname = "paint.ctrl_down"
     bl_label = "Ctrl Down"
@@ -142,6 +143,8 @@ class OT_ShiftDown(bpy.types.Operator):
     bl_idname = "paint.shift_down"
     bl_label = "Shift Down"
     def execute(self, context):
+        global g_lastBrushName
+        g_lastBrushName = context.tool_settings.image_paint.brush.name
         name = _AddonPreferences.Accessor.GetImagePaintShiftBrushName()
         if name in bpy.data.brushes:
             context.tool_settings.image_paint.brush = bpy.data.brushes[name]
@@ -152,11 +155,12 @@ class OT_ShiftUp(bpy.types.Operator):
     bl_idname = "paint.shift_up"
     bl_label = "Shift Up"
     def execute(self, context):
-        name = _AddonPreferences.Accessor.GetImagePaintDefaultBrushName()
-        if name in bpy.data.brushes:
-            context.tool_settings.image_paint.brush = bpy.data.brushes[name]
-        else:
-            _Util.show_msgbox("Set a valid brush name in the preferences.", icon='ERROR')
+        global g_lastBrushName
+        #name = _AddonPreferences.Accessor.GetImagePaintDefaultBrushName()
+        if g_lastBrushName in bpy.data.brushes:
+            context.tool_settings.image_paint.brush = bpy.data.brushes[g_lastBrushName]
+        #else:
+        #    _Util.show_msgbox("Set a valid brush name in the preferences.", icon='ERROR')
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 

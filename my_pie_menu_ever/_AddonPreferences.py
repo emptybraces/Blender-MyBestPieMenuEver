@@ -15,7 +15,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
     passAddon: StringProperty(name="Addon Pass")
     secondLanguage: StringProperty(name="Second Language", default="ja_JP")
-    imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName", default="TexDraw")
+    imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName(UNUSED)", default="TexDraw")
     imagePaintShiftBrushName: StringProperty(name="ImagePaint: ShiftBrushName", default="Soften")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     def draw(self, context):
