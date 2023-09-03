@@ -7,7 +7,7 @@ key_ctrl_lmb_invert = None
 key_keydown_ctrl = None
 key_keyup_ctrl = None
 # --------------------------------------------------------------------------------
-# „ÉÜ„ÇØ„Çπ„ÉÅ„É£„Éö„Ç§„É≥„Éà„É°„Éã„É•„Éº
+# •∆•Ø•π•¡•„•⁄•§•Û•»•·•À•Â©`
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
@@ -142,13 +142,21 @@ class OT_ShiftDown(bpy.types.Operator):
     bl_idname = "paint.shift_down"
     bl_label = "Shift Down"
     def execute(self, context):
-        context.tool_settings.image_paint.brush = bpy.data.brushes[_AddonPreferences.Accessor.GetImagePaintShiftBrushName()]
+        name = _AddonPreferences.Accessor.GetImagePaintShiftBrushName()
+        if name in bpy.data.brushes:
+            context.tool_settings.image_paint.brush = bpy.data.brushes[name]
+        else:
+            _Util.show_msgbox("Set a valid brush name in the preferences.", icon='ERROR')
         return {'FINISHED'}
 class OT_ShiftUp(bpy.types.Operator):
     bl_idname = "paint.shift_up"
     bl_label = "Shift Up"
     def execute(self, context):
-        context.tool_settings.image_paint.brush = bpy.data.brushes[_AddonPreferences.Accessor.GetImagePaintDefaultBrushName()]
+        name = _AddonPreferences.Accessor.GetImagePaintDefaultBrushName()
+        if name in bpy.data.brushes:
+            context.tool_settings.image_paint.brush = bpy.data.brushes[name]
+        else:
+            _Util.show_msgbox("Set a valid brush name in the preferences.", icon='ERROR')
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 
