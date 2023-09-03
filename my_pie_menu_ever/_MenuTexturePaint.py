@@ -21,7 +21,8 @@ def MenuPrimary(pie, context):
     # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "X", context.object, "use_mesh_mirror_x")
     # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "Y", context.object, "use_mesh_mirror_y")
     # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "Z", context.object, "use_mesh_mirror_z")
-    row.operator("image.save_all_modified", text="Save All Images") 
+    row.operator("image.save_all_modified") 
+    # row.operator("image.save_all_modified", text="Save All Images") 
 
     row = col.row() # Brush, Stroke, Blend...
     box = row.box()
@@ -30,13 +31,13 @@ def MenuPrimary(pie, context):
     row2 = box.row()
     col2 = row2.column()
     cnt = 0
+    limit_rows = _AddonPreferences.Accessor.GetImagePaintLimitRows()
     for i in bpy.data.brushes:
         if i.use_paint_image:
             is_use = context.tool_settings.image_paint.brush.name == i.name
             col2.operator(OT_TexturePaint_ChangeBrush.bl_idname, text=i.name, depress = is_use).brushName = i.name
             cnt += 1;
-            if cnt % 12 == 0: col2 = row2.column()
-
+            if cnt % limit_rows == 0: col2 = row2.column()
     # Strokes
     cnt = 0
     box = row.box()
@@ -46,7 +47,8 @@ def MenuPrimary(pie, context):
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = OT_TexturePaint_StrokeMethod.getCurrent() == i
         col2.operator(OT_TexturePaint_StrokeMethod.bl_idname, text=i, depress = is_use).methodName = i
-
+        cnt += 1;
+        if cnt % limit_rows == 0: col2 = row2.column()
     #Blends
     cnt = 0
     box = row.box()
@@ -57,7 +59,7 @@ def MenuPrimary(pie, context):
         is_use = OT_TexturePaint_Blend.getCurrent() == i
         col2.operator(OT_TexturePaint_Blend.bl_idname, text=i, depress = is_use).methodName = i    
         cnt += 1;
-        if cnt % 12 == 0: col2 = row2.column()
+        if cnt % limit_rows == 0: col2 = row2.column()
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()

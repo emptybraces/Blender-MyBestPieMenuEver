@@ -9,8 +9,8 @@ from . import _MenuPose
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Object')
-    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, label="Clear Pose Transform", isActive=_Util.is_armature_in_selected())
-    _Util.layout_operator(box, "wiggle.reset", label="Wiggle2: ResetPhysics") # if imported
+    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, "Clear Pose Transform", isActive=_Util.is_armature_in_selected())
+    _Util.layout_operator(box, "wiggle.reset", "Wiggle2: ResetPhysics") # if imported
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
@@ -43,10 +43,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
 classes = (
     OT_ReinstallAddon,
 )
-    
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    _Util.register_classes(classes)
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    _Util.unregister_classes(classes)

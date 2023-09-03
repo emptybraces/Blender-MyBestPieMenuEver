@@ -84,18 +84,19 @@ def show_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
 def enum_values(obj, prop_name):
     return [item.identifier for item in obj.bl_rna.properties[prop_name].enum_items]
-def layout_prop(layout, target, prop, text=None, expand=False, toggle=-1):
+def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, toggle=-1):
     if target != None:
+        if isActive != None:
+            layout = layout.row()
+            layout.active = isActive
         layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True)
     else:
         layout.label(text='None')
-def layout_operator(layout, opid, label=None, isActive=None, depress=False):
-    if isActive == None:
-        return layout.operator(opid, text=label, depress=depress)
-    else:
-        r = layout.row()
-        r.active = isActive
-        return r.operator(opid, text=label, depress=depress)
+def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon='NONE'):
+    if isActive != None:
+        layout = layout.row()
+        layout.active = isActive
+    return layout.operator(opid, text=text, depress=depress, icon=icon)
 def layout_for_mirror(layout):
     row = layout.row(align=True)
     row.label(icon='MOD_MIRROR')
@@ -147,10 +148,7 @@ classes = (
     OT_SetString,
     OT_Empty,
 )
-    
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    register_classes(classes)
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    unregister_classes(classes)

@@ -18,6 +18,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName(UNUSED)", default="TexDraw")
     imagePaintShiftBrushName: StringProperty(name="ImagePaint: ShiftBrushName", default="Soften")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
+    imagePaintLimitRows: IntProperty("ImagePaint: LimitRows", default=13, min=5)
     def draw(self, context):
         layout = self.layout
         box = layout.box()
@@ -25,6 +26,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         box.prop(self, "secondLanguage")
         box.prop(self, "imagePaintDefaultBrushName")
         box.prop(self, "imagePaintShiftBrushName")
+        box.prop(self, "imagePaintLimitRows")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
         wm = bpy.context.window_manager
@@ -50,6 +52,8 @@ class Accessor():
     def GetImagePaintDefaultBrushName(): return Accessor.GetReference().imagePaintDefaultBrushName
     @staticmethod
     def GetImagePaintShiftBrushName(): return Accessor.GetReference().imagePaintShiftBrushName
+    @staticmethod
+    def GetImagePaintLimitRows(): return Accessor.GetReference().imagePaintLimitRows
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon

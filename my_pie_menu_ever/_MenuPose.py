@@ -42,7 +42,7 @@ class OT_ClearTransform(bpy.types.Operator):
 def MenuSecondary(pie, context):
     root = pie.split().row()
     box = root.split(factor=1.0).box()
-    _Util.layout_operator(box, "wiggle.reset", label="Wiggle2: ResetPhysics") # if imported
+    _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics") # if imported
 
 
 # --------------------------------------------------------------------------------
