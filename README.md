@@ -17,11 +17,11 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [Object]
 
 - Quickly Open Preference.
-- Reset Transform. (Also Pose and WeightPaint mode.)
 
 ### [Pose]
 
 - Quickly change showing bone layer group.
+- Reset bone transform. (Also Object mode and WeightPaint mode.)
 
 ### [ImagePaint]
 
