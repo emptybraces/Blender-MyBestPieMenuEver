@@ -46,7 +46,7 @@ Enable shortcut if installed:
 #
 Texture Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/abf59ab7-a1af-4587-a75f-7d5a6fe256bc)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/b48527db-9131-4048-8e8d-815262fbe1e9)
 
 #
 Weight Paint Mode
