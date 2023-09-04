@@ -19,15 +19,15 @@ class OT_SetterBase():
         setattr(target, self.propName, self.value)
         return {'FINISHED'}
     @staticmethod
-    def operator(cls, layout, label, targetObj, propName, value=None, depress=None, isActive=True, ctxt=''):
+    def operator(layout, clsid, text, targetObj, propName, value=None, depress=None, isActive=True, ctxt=''):
         layout.context_pointer_set(name=propName, data=targetObj)
         if depress is None:
             cur_value = getattr(targetObj, propName, False) if value is None else value
             depress = cur_value if isinstance(cur_value, bool) else False
-        op = layout.operator(cls, text=label, text_ctxt=ctxt, depress=depress)
+        op = layout.operator(clsid, text=text, text_ctxt=ctxt, depress=depress)
         op.propName = propName
         print()
-        op.value = not getattr(targetObj, propName) if cls == "op.set_invert" else value
+        op.value = not getattr(targetObj, propName) if clsid == "op.set_invert" else value
         layout.enabled = isActive and targetObj != None
 class OT_SetPointer(bpy.types.Operator):
     bl_idname = "op.set_pointer"
@@ -42,13 +42,13 @@ class OT_SetPointer(bpy.types.Operator):
         setattr(target, self.propName, value)
         return {'FINISHED'}
     @staticmethod
-    def operator(layout, label, targetObj, propName, value, isActive = True, ctxt = ''):
+    def operator(layout, text, targetObj, propName, value, isActive = True, ctxt = ''):
         # context_pointer_setはopeartorの前で設定しないと有効にならない
-        keyObj = label
+        keyObj = text
         keyValue = keyObj + "_value"
         layout.context_pointer_set(name=keyObj, data=targetObj)
         layout.context_pointer_set(name=keyValue, data=value)
-        op = layout.operator(OT_SetPointer.bl_idname, text=label, text_ctxt = ctxt)
+        op = layout.operator(OT_SetPointer.bl_idname, text=text, text_ctxt = ctxt)
         op.propName = propName
         op.propObj = keyObj
         op.propValue = keyValue

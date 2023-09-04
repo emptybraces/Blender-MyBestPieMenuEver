@@ -12,22 +12,11 @@ key_keyup_ctrl = None
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Texture Paint')
-    col = box.column()
-    row = col.row()
-    mrow, msub = _Util.layout_for_mirror(row)
-    _Util.layout_prop(msub, context.object, "use_mesh_mirror_x", text="X", toggle=True)
-    _Util.layout_prop(msub, context.object, "use_mesh_mirror_y", text="Y", toggle=True)
-    _Util.layout_prop(msub, context.object, "use_mesh_mirror_z", text="Z", toggle=True)
-    # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "X", context.object, "use_mesh_mirror_x")
-    # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "Y", context.object, "use_mesh_mirror_y")
-    # _Util.OT_SetterBase.operator(_Util.OT_SetBoolToggle.bl_idname, msub, "Z", context.object, "use_mesh_mirror_z")
-    row.operator("image.save_all_modified") 
-    # row.operator("image.save_all_modified", text="Save All Images") 
 
-    row = col.row() # Brush, Stroke, Blend...
+    row = box.row() # Brush, Stroke, Blend...
+
     box = row.box()
     box.label(text = "Brush")
-
     row2 = box.row()
     col2 = row2.column()
     cnt = 0
@@ -60,19 +49,36 @@ def MenuPrimary(pie, context):
         col2.operator(OT_TexturePaint_Blend.bl_idname, text=i, depress = is_use).methodName = i    
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
+
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
-    c = box.column()
-    r = box.row()
-    r.label(text = "Press Ctrl Behaviour")
+    box.operator("image.save_all_modified") 
+
+    row = box.row(align=True)
+    row.label(text = "Press Ctrl Behaviour")
     ctrl_behaviour = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
     if ctrl_behaviour: # Erase Alpha mode
-        _Util.layout_operator(r, OT_TexturePaint_ToggleCtrlBehaviour.bl_idname, "Invert", depress=False)
-        _Util.layout_operator(r, _Util.OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
+        _Util.layout_operator(row, OT_TexturePaint_ToggleCtrlBehaviour.bl_idname, "Invert", depress=False)
+        _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
     else:
-        _Util.layout_operator(r, _Util.OT_Empty.bl_idname, "Invert", False, depress=True)
-        _Util.layout_operator(r, OT_TexturePaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
+        _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "Invert", False, depress=True)
+        _Util.layout_operator(row, OT_TexturePaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
+
+    row = box.row(align=True)
+    row.label(text = "Angle")
+    from math import pi
+    _Util.OT_SetterBase.operator(row, _Util.OT_SetSingle.bl_idname, "0", context.tool_settings.image_paint.brush.texture_slot, "angle", 0)
+    _Util.OT_SetterBase.operator(row, _Util.OT_SetSingle.bl_idname, "180", context.tool_settings.image_paint.brush.texture_slot, "angle", pi)
+
+    mrow, msub = _Util.layout_for_mirror(row)
+    # _Util.layout_prop(msub, context.object, "use_mesh_mirror_x", text="X", toggle=True)
+    # _Util.layout_prop(msub, context.object, "use_mesh_mirror_y", text="Y", toggle=True)
+    # _Util.layout_prop(msub, context.object, "use_mesh_mirror_z", text="Z", toggle=True)
+    _Util.OT_SetterBase.operator(msub, _Util.OT_SetBoolToggle.bl_idname, "X", context.object, "use_mesh_mirror_x")
+    _Util.OT_SetterBase.operator(msub, _Util.OT_SetBoolToggle.bl_idname, "Y", context.object, "use_mesh_mirror_y")
+    _Util.OT_SetterBase.operator(msub, _Util.OT_SetBoolToggle.bl_idname, "Z", context.object, "use_mesh_mirror_z")
+
 # --------------------------------------------------------------------------------
 class OT_TexturePaint_ChangeBrush(bpy.types.Operator):
     bl_idname = "op.texturepaint_changebrush"
