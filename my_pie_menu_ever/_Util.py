@@ -70,7 +70,7 @@ class OT_SetSingle(OT_SetterBase, bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
 class OT_SetString(OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.set_signel"
+    bl_idname = "op.set_string"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
@@ -127,6 +127,7 @@ def register_classes(classes):
             print(e)
 def unregister_classes(classes):
     for cls in classes:
+        print(cls)
         bpy.utils.unregister_class(cls)
 def is_armature_in_selected():
     for obj in bpy.context.selected_objects:

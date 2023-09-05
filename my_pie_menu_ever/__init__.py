@@ -11,12 +11,12 @@ bl_info = {
 }
 if "bpy" in locals():
     import imp
-    imp.reload(_MenuRoot)
     imp.reload(_AddonPreferences)
+    imp.reload(_MenuRoot)
     imp.reload(_Util)
 else:
-    from . import _MenuRoot
     from . import _AddonPreferences
+    from . import _MenuRoot
     from . import _Util
 import bpy
 
