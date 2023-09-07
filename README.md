@@ -1,6 +1,6 @@
 # Blender_MyBestPieMenuEver
 
-Hit W key, then open my best pie menu ever... working on my project and updating this addon as needed.
+Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.
 
 ## Features
 
@@ -25,9 +25,10 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [ImagePaint]
 
-- Quickly changeable to brushs, strokes, blends.
-- Quickly switchable Ctrl+LMB behaviour to Invert Color <-> Erase Alpha.
-- Customizable Shift+LMB on ImagePaint mode.(Setting in preference, default is Soften.)
+- Quickly changeable to Brushs, Strokes, Blends.
+- Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
+- Customizable change brush by Shift+LMB.(Setting in preference, default is Soften.)
+- Customizable Brushes and Blends to displayed.
 - Shoftcut "Save All Image shortcut"
   
 ### [WeightPaint]
