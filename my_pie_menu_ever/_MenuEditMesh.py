@@ -70,7 +70,6 @@ classes = (
     OT_MirrorSharp,
 )
 def register():
-    print(classes)
     _Util.register_classes(classes)
 def unregister():
     _Util.unregister_classes(classes)

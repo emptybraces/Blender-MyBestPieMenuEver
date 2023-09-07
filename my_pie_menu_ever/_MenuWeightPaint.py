@@ -18,15 +18,13 @@ def MenuPrimary(pie, context):
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
-    r = box.row(align=False)
-    r.label(text = 'Weight')
+    r = box.row(align=True)
     _Util.layout_prop(r, context.tool_settings.unified_paint_settings, "weight")
     _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.0", context.tool_settings.unified_paint_settings, "weight", 0.0)
     _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.1", context.tool_settings.unified_paint_settings, "weight", 0.1)
     _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.5", context.tool_settings.unified_paint_settings, "weight", 0.5)
     _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "1.0", context.tool_settings.unified_paint_settings, "weight", 1.0)
-    r = box.row(align=False)
-    r.label(text = 'Strength')
+    r = box.row(align=True)
     _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
     _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "2x", context.tool_settings.weight_paint.brush, "strength", context.tool_settings.weight_paint.brush.strength * 2)
     _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "1/2", context.tool_settings.weight_paint.brush, "strength", context.tool_settings.weight_paint.brush.strength / 2)

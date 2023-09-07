@@ -26,11 +26,10 @@ class OT_SetterBase():
             depress = cur_value if isinstance(cur_value, bool) else False
         op = layout.operator(clsid, text=text, text_ctxt=ctxt, depress=depress)
         op.propName = propName
-        print()
-        op.value = not getattr(targetObj, propName) if clsid == "op.set_invert" else value
+        op.value = not getattr(targetObj, propName) if clsid == "mpme.set_invert" else value
         layout.enabled = isActive and targetObj != None
 class OT_SetPointer(bpy.types.Operator):
-    bl_idname = "op.set_pointer"
+    bl_idname = "mpme.set_pointer"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     propName: bpy.props.StringProperty()
@@ -55,27 +54,27 @@ class OT_SetPointer(bpy.types.Operator):
         layout.enabled = isActive and targetObj != None
  
 class OT_SetBool(OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.set_bool"
+    bl_idname = "mpme.set_bool"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.BoolProperty()
 class OT_SetBoolToggle(OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.set_invert"
+    bl_idname = "mpme.set_invert"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.BoolProperty()
 class OT_SetSingle(OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.set_signel"
+    bl_idname = "mpme.set_signel"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
 class OT_SetString(OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.set_string"
+    bl_idname = "mpme.set_string"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
 class OT_Empty(bpy.types.Operator):
-    bl_idname = "op.empty"
+    bl_idname = "mpme.empty"
     bl_label = "empty"
     def execute(self, context):
         return {'FINISHED'}
@@ -127,7 +126,7 @@ def register_classes(classes):
             print(e)
 def unregister_classes(classes):
     for cls in classes:
-        print(cls)
+        print("unregistered: ", cls)
         bpy.utils.unregister_class(cls)
 def is_armature_in_selected():
     for obj in bpy.context.selected_objects:

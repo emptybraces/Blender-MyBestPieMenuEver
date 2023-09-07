@@ -15,16 +15,23 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
     passAddon: StringProperty(name="Addon Pass")
     secondLanguage: StringProperty(name="Second Language", default="ja_JP")
-    imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName(UNUSED)", default="TexDraw")
+    imagePaintBrushExclude: StringProperty(name="ImagePaint: Brush Exclude", default="", description="Specify by comma separated.")
+    imagePaintBlendInclude: StringProperty(name="ImagePaint: Blend Include", default="mix,screen,overlay,erase_alpha", description="Specify by comma separated.")
+    imagePaintBlendAllSample: StringProperty(name="ImagePaint: Blend Sample")
+    # imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName(UNUSED)", default="TexDraw")
     imagePaintShiftBrushName: StringProperty(name="ImagePaint: ShiftBrushName", default="Soften")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     imagePaintLimitRows: IntProperty("ImagePaint: LimitRows", default=13, min=5)
     def draw(self, context):
+        global blends
         layout = self.layout
         box = layout.box()
         box.prop(self, "passAddon")
         box.prop(self, "secondLanguage")
-        box.prop(self, "imagePaintDefaultBrushName")
+        box.prop(self, "imagePaintBrushExclude")
+        box.prop(self, "imagePaintBlendInclude")
+        self.imagePaintBlendAllSample = ','.join(_Util.enum_values(bpy.context.tool_settings.image_paint.brush, 'blend')).lower()
+        box.prop(self, "imagePaintBlendAllSample")
         box.prop(self, "imagePaintShiftBrushName")
         box.prop(self, "imagePaintLimitRows")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
@@ -54,6 +61,10 @@ class Accessor():
     def GetImagePaintShiftBrushName(): return Accessor.GetReference().imagePaintShiftBrushName
     @staticmethod
     def GetImagePaintLimitRows(): return Accessor.GetReference().imagePaintLimitRows
+    @staticmethod
+    def GetImagePaintBrushExclude(): return Accessor.GetReference().imagePaintBrushExclude
+    @staticmethod
+    def GetImagePaintBlendInclude(): return Accessor.GetReference().imagePaintBlendInclude
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon

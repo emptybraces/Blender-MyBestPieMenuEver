@@ -5,7 +5,6 @@ from . import _AddonPreferences
 key_ctrl_lmb_erasealpha = None
 key_ctrl_lmb_invert = None
 key_keydown_ctrl = None
-key_keyup_ctrl = None
 # --------------------------------------------------------------------------------
 # ¥Æ¥¯¥¹¥Á¥ã¥Ú¥¤¥ó¥È¥á¥Ë¥å©`
 # --------------------------------------------------------------------------------
@@ -21,8 +20,9 @@ def MenuPrimary(pie, context):
     col2 = row2.column()
     cnt = 0
     limit_rows = _AddonPreferences.Accessor.GetImagePaintLimitRows()
+    brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.GetImagePaintBrushExclude().lower().split(',')]
     for i in bpy.data.brushes:
-        if i.use_paint_image:
+        if i.use_paint_image and i.name.lower() not in brush_exclude_list:
             is_use = context.tool_settings.image_paint.brush.name == i.name
             col2.operator(OT_TexPaint_ChangeBrush.bl_idname, text=i.name, depress=is_use).brushName = i.name
             cnt += 1;
@@ -39,16 +39,18 @@ def MenuPrimary(pie, context):
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
     #Blends
+    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.GetImagePaintBlendInclude().lower().split(',')]
     cnt = 0
     box = row.box()
     box.label(text = "Blend")
     row2 = box.row()
     col2 = row2.column()
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'blend'):
-        is_use = OT_TexPaint_Blend.getCurrent() == i
-        col2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i    
-        cnt += 1;
-        if cnt % limit_rows == 0: col2 = row2.column()
+        if i.lower() in blend_include_list:
+            is_use = OT_TexPaint_Blend.getCurrent() == i
+            col2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i    
+            cnt += 1;
+            if cnt % limit_rows == 0: col2 = row2.column()
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
@@ -98,11 +100,9 @@ class OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
         _AddonPreferences.Accessor.SetImagePaintCtrlBehaviour(new_value)
         global key_ctrl_lmb_erasealpha
         global key_keydown_ctrl
-        global key_keyup_ctrl
         global key_ctrl_lmb_invert
         key_ctrl_lmb_erasealpha.active = new_value
         key_keydown_ctrl.active = new_value
-        # key_keyup_ctrl.active = new_value
         key_ctrl_lmb_invert.active = not new_value
         return {'FINISHED'}
 class OT_TexPaint_StrokeMethod(bpy.types.Operator):
@@ -198,7 +198,6 @@ def register():
     global key_ctrl_lmb_erasealpha
     global key_ctrl_lmb_invert
     global key_keydown_ctrl
-    global key_keyup_ctrl
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
     key_keydown_ctrl = km.keymap_items.new(OT_TexPaint_SwitchCtrlBehaviour.bl_idname, 'LEFT_CTRL','PRESS')
