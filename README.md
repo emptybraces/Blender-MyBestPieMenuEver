@@ -26,7 +26,7 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [ImagePaint]
 
 - Quickly changeable to Brushs, Strokes, Blends.
-- Quickly switchable Ctrl+LMB behaviour to Invert Color <-> Erase Alpha.
+- Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
 - Customizable change brush by Shift+LMB.(Setting in preference, default is Soften.)
 - Customizable Brushes and Blends to displayed.
 - Shoftcut "Save All Image shortcut"
