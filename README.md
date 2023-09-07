@@ -28,7 +28,7 @@ Placement in left and right sections are common functions, and upper and lower s
 - Quickly changeable to Brushs, Strokes, Blends.
 - Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
 - Customizable change brush by Shift+LMB.(Setting in preference, default is Soften.)
-- Customizable Brushes and Blends to displayed.
+- Filterable Brushes and Blends to displayed.
 - Shoftcut "Save All Image shortcut"
   
 ### [WeightPaint]
