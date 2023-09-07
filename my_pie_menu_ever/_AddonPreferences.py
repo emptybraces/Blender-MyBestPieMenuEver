@@ -17,11 +17,10 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     secondLanguage: StringProperty(name="Second Language", default="ja_JP")
     imagePaintBrushExclude: StringProperty(name="ImagePaint: Brush Exclude", default="", description="Specify by comma separated.")
     imagePaintBlendInclude: StringProperty(name="ImagePaint: Blend Include", default="mix,screen,overlay,erase_alpha", description="Specify by comma separated.")
-    imagePaintBlendAllSample: StringProperty(name="ImagePaint: Blend Sample")
-    # imagePaintDefaultBrushName: StringProperty(name="ImagePaint: DefaultBrushName(UNUSED)", default="TexDraw")
+    imagePaintBlendAllSample: StringProperty(name="ImagePaint: Blend List")
     imagePaintShiftBrushName: StringProperty(name="ImagePaint: ShiftBrushName", default="Soften")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
-    imagePaintLimitRows: IntProperty("ImagePaint: LimitRows", default=13, min=5)
+    imagePaintLimitRowCount: IntProperty("ImagePaint: Limit Row Count", default=13, min=5)
     def draw(self, context):
         global blends
         layout = self.layout
@@ -33,7 +32,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         self.imagePaintBlendAllSample = ','.join(_Util.enum_values(bpy.context.tool_settings.image_paint.brush, 'blend')).lower()
         box.prop(self, "imagePaintBlendAllSample")
         box.prop(self, "imagePaintShiftBrushName")
-        box.prop(self, "imagePaintLimitRows")
+        box.prop(self, "imagePaintLimitRowCount")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
         wm = bpy.context.window_manager
@@ -42,29 +41,39 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         for keymaps in addon_keymaps:
             box.context_pointer_set("keymap", keymaps[1])
             rna_keymap_ui.draw_kmi([], kc, km, keymaps[1], box, 0)
+    def dict(self):
+        return {
+            "passAddon":self.passAddon,
+            "secondLanguage":self.secondLanguage,
+            "imagePaintBrushExclude":self.imagePaintBrushExclude,
+            "imagePaintBlendInclude":self.imagePaintBlendInclude,
+            "imagePaintShiftBrushName":self.imagePaintShiftBrushName,
+            "image_paint_is_ctrl_behaviour_invert_or_erasealpha":self.image_paint_is_ctrl_behaviour_invert_or_erasealpha,
+            "imagePaintLimitRowCount":self.imagePaintLimitRowCount,
+        }
+    def dict_apply(self, dict):
+        for key, value in dict.items(): 
+            setattr(self, key, value)
+
 class Accessor():
     @staticmethod
-    def GetReference(): return bpy.context.preferences.addons["my_pie_menu_ever"].preferences
+    def get_ref(): return bpy.context.preferences.addons["my_pie_menu_ever"].preferences
     @staticmethod
-    def GetAddonPass(): return Accessor.GetReference().passAddon
+    def get_addon_path(): return Accessor.get_ref().passAddon
     @staticmethod
-    def SetAddonPass(v): Accessor.GetReference().passAddon = v
+    def get_second_language(): return Accessor.get_ref().secondLanguage
     @staticmethod
-    def GetSecondLanguage(): return Accessor.GetReference().secondLanguage
+    def get_image_paint_ctrl_behaviour(): return Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha
     @staticmethod
-    def GetImagePaintCtrlBehaviour(): return Accessor.GetReference().image_paint_is_ctrl_behaviour_invert_or_erasealpha
+    def set_image_paint_ctrl_behaviour(v): Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
     @staticmethod
-    def SetImagePaintCtrlBehaviour(v): Accessor.GetReference().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
+    def get_image_paint_shift_brush_name(): return Accessor.get_ref().imagePaintShiftBrushName
     @staticmethod
-    def GetImagePaintDefaultBrushName(): return Accessor.GetReference().imagePaintDefaultBrushName
+    def get_image_paint_limit_row(): return Accessor.get_ref().imagePaintLimitRowCount
     @staticmethod
-    def GetImagePaintShiftBrushName(): return Accessor.GetReference().imagePaintShiftBrushName
+    def get_image_paint_brush_exclude(): return Accessor.get_ref().imagePaintBrushExclude
     @staticmethod
-    def GetImagePaintLimitRows(): return Accessor.GetReference().imagePaintLimitRows
-    @staticmethod
-    def GetImagePaintBrushExclude(): return Accessor.GetReference().imagePaintBrushExclude
-    @staticmethod
-    def GetImagePaintBlendInclude(): return Accessor.GetReference().imagePaintBlendInclude
+    def get_image_paint_blend_include(): return Accessor.get_ref().imagePaintBlendInclude
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon
@@ -77,16 +86,6 @@ def registerKeyMap():
 def unregisterKeyMap():
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
-    #kc = bpy.context.window_manager.keyconfigs.addon
-    #if kc:
-    #    for km, kmi in addon_keymaps:
-    #        km.keymap_items.remove(kmi)
-    #    for km in kc.keymaps:
-    #        if km.name == "3D View":
-    #            for kmi in km.keymap_items:
-    #                if hasattr(kmi.properties, 'name') and kmi.properties.name == addon_id:
-    #                    km.keymap_items.remove(kmi)
-    #            break
     addon_keymaps.clear()
 
 classes = (

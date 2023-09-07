@@ -27,7 +27,8 @@ class OT_ReinstallAddon(bpy.types.Operator):
     bl_idname = "op.reinstall_addon"
     bl_label = "Reinstall Addon"
     def execute(self, context):
-        path_addon = _AddonPreferences.Accessor.GetAddonPass()
+        dict = _AddonPreferences.Accessor.get_ref().dict()
+        path_addon = _AddonPreferences.Accessor.get_addon_path()
         if not path_addon:
             _Util.show_msgbox("required setup addon path in preferences")
             return {'FINISHED'}
@@ -36,7 +37,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
         bpy.ops.preferences.addon_refresh()
         bpy.ops.preferences.addon_install(filepath=path_addon)
         bpy.ops.preferences.addon_enable(module=addon_name)
-        _AddonPreferences.Accessor.SetAddonPass(path_addon)
+        _AddonPreferences.Accessor.get_ref().dict_apply(dict)
         _Util.show_msgbox("Reinstalled!")
         return {'FINISHED'}
 # --------------------------------------------------------------------------------

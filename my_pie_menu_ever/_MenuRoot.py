@@ -153,7 +153,7 @@ class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         if bpy.context.preferences.view.language == "en_US":
-            bpy.context.preferences.view.language = _AddonPreferences.Accessor.GetSecondLanguage()
+            bpy.context.preferences.view.language = _AddonPreferences.Accessor.get_second_language()
         else:
             bpy.context.preferences.view.language = "en_US"
         return {'FINISHED'}

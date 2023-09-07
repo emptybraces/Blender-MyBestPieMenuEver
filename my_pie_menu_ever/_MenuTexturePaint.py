@@ -19,8 +19,8 @@ def MenuPrimary(pie, context):
     row2 = box.row()
     col2 = row2.column()
     cnt = 0
-    limit_rows = _AddonPreferences.Accessor.GetImagePaintLimitRows()
-    brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.GetImagePaintBrushExclude().lower().split(',')]
+    limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
+    brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_brush_exclude().lower().split(',')]
     for i in bpy.data.brushes:
         if i.use_paint_image and i.name.lower() not in brush_exclude_list:
             is_use = context.tool_settings.image_paint.brush.name == i.name
@@ -39,7 +39,7 @@ def MenuPrimary(pie, context):
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
     #Blends
-    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.GetImagePaintBlendInclude().lower().split(',')]
+    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_include().lower().split(',')]
     cnt = 0
     box = row.box()
     box.label(text = "Blend")
@@ -58,13 +58,13 @@ def MenuSecondary(pie, context):
     box.operator("image.save_all_modified") 
 
     row = box.row(align=True)
-    row.label(text = "Press Ctrl Behaviour")
-    ctrl_behaviour = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    row.label(text = "Hold Ctrl Behaviour")
+    ctrl_behaviour = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     if ctrl_behaviour: # Erase Alpha mode
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Invert", depress=False)
         _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
     else:
-        _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "Invert", False, depress=True)
+        _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "SubColor", False, depress=True)
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
 
     row = box.row(align=True)
@@ -94,10 +94,9 @@ class OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
     bl_idname = "mpme.texpaint_toggle_ctrl_behaviour"
     bl_label = "Toggle Ctrl Behaviour"
     bl_options = {'REGISTER', 'UNDO'}
-    FIELD = "use_mesh_mirror_x"
     def execute(self, context):
-        new_value = not _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
-        _AddonPreferences.Accessor.SetImagePaintCtrlBehaviour(new_value)
+        new_value = not _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
+        _AddonPreferences.Accessor.set_image_paint_ctrl_behaviour(new_value)
         global key_ctrl_lmb_erasealpha
         global key_keydown_ctrl
         global key_ctrl_lmb_invert
@@ -161,7 +160,6 @@ class OT_TexPaint_ChangeSoften(bpy.types.Operator):
             return {'PASS_THROUGH'}
         global g_lastBrushName
         if g_lastBrushName != "":
-            #name = _AddonPreferences.Accessor.GetImagePaintDefaultBrushName()
             if g_lastBrushName in bpy.data.brushes:
                 context.tool_settings.image_paint.brush = bpy.data.brushes[g_lastBrushName]
             g_lastBrushName = ""
@@ -170,7 +168,7 @@ class OT_TexPaint_ChangeSoften(bpy.types.Operator):
     def execute(self, context):
         global g_lastBrushName
         g_lastBrushName = context.tool_settings.image_paint.brush.name
-        name = _AddonPreferences.Accessor.GetImagePaintShiftBrushName()
+        name = _AddonPreferences.Accessor.get_image_paint_shift_brush_name()
         if name in bpy.data.brushes:
             context.tool_settings.image_paint.brush = bpy.data.brushes[name]
             self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
@@ -201,17 +199,17 @@ def register():
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
     key_keydown_ctrl = km.keymap_items.new(OT_TexPaint_SwitchCtrlBehaviour.bl_idname, 'LEFT_CTRL','PRESS')
-    key_keydown_ctrl.active = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    key_keydown_ctrl.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_keydown_ctrl))
     
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
     key_ctrl_lmb_erasealpha = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE','PRESS', ctrl=True)
-    key_ctrl_lmb_erasealpha.active = _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    key_ctrl_lmb_erasealpha.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_ctrl_lmb_erasealpha))
     
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
     key_ctrl_lmb_invert = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE','PRESS', ctrl=True)
-    key_ctrl_lmb_invert.active = not _AddonPreferences.Accessor.GetImagePaintCtrlBehaviour()
+    key_ctrl_lmb_invert.active = not _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     key_ctrl_lmb_invert.properties.mode = 'INVERT'
     addon_keymaps.append((km, key_ctrl_lmb_invert))
 
