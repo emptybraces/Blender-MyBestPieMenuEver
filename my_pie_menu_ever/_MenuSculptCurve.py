@@ -1,6 +1,10 @@
+if "bpy" in locals():
+    import imp
+    imp.reload(_Util)
+else:
+    from . import _Util
 import bpy
 from bpy.types import Panel, Menu, Operator
-from . import _Util
 # --------------------------------------------------------------------------------
 # カーブスカルプトモードメニュー
 # 'use_paint_antialiasing', 'use_paint_grease_pencil', 'use_paint_image', 'use_paint_sculpt', 'use_paint_sculpt_curves', 'use_paint_uv_sculpt', 'use_paint_vertex', 'use_paint_weight'

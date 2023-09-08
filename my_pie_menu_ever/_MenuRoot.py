@@ -26,14 +26,14 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
-PREID = "MYPIEMENUEVER"
-
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
-class MT_Root(Menu):
-    bl_idname = PREID + "_MT_Root"
-    bl_label = ""
+class VIEW3D_MT_my_pie_menu(Menu):
+    # bl_idname = "VIEW3D_PT_my_pie_menu"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'WINDOW'
+    bl_label = "My Pie Menu"
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
@@ -217,7 +217,7 @@ def Placeholder(pie, context, text):
 # --------------------------------------------------------------------------------
 
 classes = (
-    MT_Root,
+    VIEW3D_MT_my_pie_menu,
     OT_ChangePivot,
     OT_ChangeOrientations,
     OT_Utility_ChangeLanguage,

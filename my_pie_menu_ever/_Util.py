@@ -1,3 +1,8 @@
+if "bpy" in locals():
+    import imp
+    imp.reload(_AddonPreferences)
+else:
+    from . import _AddonPreferences
 import bpy
 from mathutils import Vector, Quaternion
 from bpy.types import Panel, Menu, Operator
@@ -7,6 +12,7 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
+
 # HT – ヘッダー
 # MT – メニュー
 # OT – オペレーター
@@ -41,18 +47,17 @@ class OT_SetPointer(bpy.types.Operator):
         setattr(target, self.propName, value)
         return {'FINISHED'}
     @staticmethod
-    def operator(layout, text, targetObj, propName, value, isActive = True, ctxt = ''):
+    def operator(layout, text, targetObj, propName, value, isActive=True, depress=False, ctxt=''):
         # context_pointer_setはopeartorの前で設定しないと有効にならない
         keyObj = text
         keyValue = keyObj + "_value"
         layout.context_pointer_set(name=keyObj, data=targetObj)
         layout.context_pointer_set(name=keyValue, data=value)
-        op = layout.operator(OT_SetPointer.bl_idname, text=text, text_ctxt = ctxt)
+        op = layout.operator(OT_SetPointer.bl_idname, text=text, depress=depress, text_ctxt = ctxt)
         op.propName = propName
         op.propObj = keyObj
         op.propValue = keyValue
         layout.enabled = isActive and targetObj != None
- 
 class OT_SetBool(OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpme.set_bool"
     bl_label = ""
@@ -72,7 +77,7 @@ class OT_SetString(OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpme.set_string"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
-    value: bpy.props.FloatProperty()
+    value: bpy.props.StringProperty()
 class OT_Empty(bpy.types.Operator):
     bl_idname = "mpme.empty"
     bl_label = "empty"
@@ -151,4 +156,4 @@ classes = (
 def register():
     register_classes(classes)
 def unregister():
-    unregister_classes(classes)
+    unregister_class(cls)

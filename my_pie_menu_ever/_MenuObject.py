@@ -1,8 +1,14 @@
+if "bpy" in locals():
+    import imp
+    imp.reload(_AddonPreferences)
+    imp.reload(_Util)
+    imp.reload(_MenuPose)
+else:
+    from . import _AddonPreferences
+    from . import _Util
+    from . import _MenuPose
 import bpy
 from bpy.types import Panel, Menu, Operator
-from . import _Util
-from . import _AddonPreferences
-from . import _MenuPose
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -19,30 +25,9 @@ def MenuSecondary(pie, context):
     box.label(text = 'File')
     box.operator("import_scene.fbx")
     box.operator("screen.userpref_show")
-    box.operator(OT_ReinstallAddon.bl_idname)
     # box = root.split(factor=1.0).box()
-
-# --------------------------------------------------------------------------------
-class OT_ReinstallAddon(bpy.types.Operator):
-    bl_idname = "op.reinstall_addon"
-    bl_label = "Reinstall Addon"
-    def execute(self, context):
-        dict = _AddonPreferences.Accessor.get_ref().dict()
-        path_addon = _AddonPreferences.Accessor.get_addon_path()
-        if not path_addon:
-            _Util.show_msgbox("required setup addon path in preferences")
-            return {'FINISHED'}
-        addon_name = "my_pie_menu_ever"
-        bpy.ops.preferences.addon_remove(module=addon_name)
-        bpy.ops.preferences.addon_refresh()
-        bpy.ops.preferences.addon_install(filepath=path_addon)
-        bpy.ops.preferences.addon_enable(module=addon_name)
-        _AddonPreferences.Accessor.get_ref().dict_apply(dict)
-        _Util.show_msgbox("Reinstalled!")
-        return {'FINISHED'}
 # --------------------------------------------------------------------------------
 classes = (
-    OT_ReinstallAddon,
 )
 def register():
     _Util.register_classes(classes)

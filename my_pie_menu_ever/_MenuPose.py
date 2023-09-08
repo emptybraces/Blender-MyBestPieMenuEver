@@ -1,7 +1,10 @@
+if "bpy" in locals():
+    import imp
+    imp.reload(_Util)
+else:
+    from . import _Util
 import bpy
 from bpy.types import Panel, Menu, Operator
-from . import _Util
-
 # --------------------------------------------------------------------------------
 # ポーズメニュー
 # --------------------------------------------------------------------------------
@@ -43,7 +46,6 @@ def MenuSecondary(pie, context):
     root = pie.split().row()
     box = root.split(factor=1.0).box()
     _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics") # if imported
-
 
 # --------------------------------------------------------------------------------
 classes = (
