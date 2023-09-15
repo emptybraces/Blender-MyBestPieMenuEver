@@ -138,8 +138,9 @@ def PieMenu_Utility(pie, context):
     r = row.row()
     r.active = getattr(context.space_data, "overlay", None) != None
     _Util.layout_prop(r, context.space_data.overlay, "show_overlays")
-    _Util.layout_prop(r, context.space_data.overlay, "show_bones")
-    _Util.layout_prop(r, context.space_data.overlay, "show_wireframes")
+    _Util.layout_prop(r, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays)
+    _Util.layout_prop(r, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays)
+    _Util.layout_prop(r, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
     # 行開始
     row = col.row(align=False)
     r = row.row()
