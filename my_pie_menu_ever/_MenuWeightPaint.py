@@ -1,12 +1,7 @@
-if "bpy" in locals():
-    import imp
-    imp.reload(_Util)
-    imp.reload(_MenuPose)
-else:
-    from . import _Util
-    from . import _MenuPose
 import bpy
 from bpy.types import Panel, Menu, Operator
+from . import _Util
+from . import _MenuPose
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------

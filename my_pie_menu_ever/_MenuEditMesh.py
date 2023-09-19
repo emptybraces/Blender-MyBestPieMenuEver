@@ -1,12 +1,7 @@
-if "bpy" in locals():
-    import imp
-    imp.reload(_AddonPreferences)
-    imp.reload(_Util)
-else:
-    from . import _AddonPreferences
-    from . import _Util
 import bpy
 from bpy.types import Panel, Menu, Operator
+from . import _Util
+from . import _AddonPreferences
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------

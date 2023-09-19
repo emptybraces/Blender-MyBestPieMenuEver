@@ -1,10 +1,6 @@
-if "bpy" in locals():
-    import imp
-    imp.reload(_Util)
-else:
-    from . import _Util
 import bpy
 from bpy.types import Panel, Menu, Operator
+from . import _Util
 # --------------------------------------------------------------------------------
 # ポーズメニュー
 # --------------------------------------------------------------------------------

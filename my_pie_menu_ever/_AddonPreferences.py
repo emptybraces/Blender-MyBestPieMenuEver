@@ -1,14 +1,9 @@
-if "bpy" in locals():
-    import imp
-    imp.reload(_MenuRoot)
-    imp.reload(_Util)
-else:
-    from . import _MenuRoot
-    from . import _Util
-import bpy
+﻿import bpy
 import rna_keymap_ui
 from rna_prop_ui import PropertyPanel
 from bpy.props import IntProperty, IntVectorProperty, StringProperty, BoolProperty
+from . import _Util
+from . import _MenuRoot
 
 addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
@@ -17,35 +12,68 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     isDebug: BoolProperty(name="Debug Mode")
     imagePaintBrushExclude: StringProperty(name="Brush Exclude", default="", description="Specify by comma separated.")
     imagePaintBlendInclude: StringProperty(name="Blend Include", default="mix,screen,overlay,erase_alpha", description="Specify by comma separated.")
-    imagePaintBlendAllSample: StringProperty(name="Blend samples")
     imagePaintShiftBrushName: StringProperty(name="ShiftBrushName", default="Soften")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     imagePaintLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5)
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5)
     sculptBrushFilterByName: StringProperty(name="Filter by brush name")
-    sculptBrushFilterByNameSample: StringProperty(name="Brush name samples")
+
+    def __get_imagepaint_brush_names(self, context):
+        return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
+    def __select_dropdown_imagepaint_filter(self, value):
+        value = self.__get_imagepaint_brush_names(None)[value][1]
+        if value in self.imagePaintBrushExclude: return
+        if self.imagePaintBrushExclude:
+            self.imagePaintBrushExclude += ', '
+        self.imagePaintBrushExclude += value
+    imagePaintBrushNameDropDown: bpy.props.EnumProperty(name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_filter)
+    def __select_dropdown_imagepaint_shift_brush(self, value):
+        value = self.__get_imagepaint_brush_names(None)[value][0]
+        self.imagePaintShiftBrushName = value
+    imagePaintShiftBrushNameDropDown: bpy.props.EnumProperty(name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_shift_brush)
+    def __get_blend_names(self, context):
+        return [(i.lower(), i.lower(), "") for i in _Util.enum_values(bpy.context.tool_settings.image_paint.brush, 'blend')]
+    def __select_dropdown_blend_names(self, value):
+        value = self.__get_blend_names(None)[value][1]
+        if value in self.imagePaintBlendInclude: return
+        if self.imagePaintBlendInclude:
+            self.imagePaintBlendInclude += ', '
+        self.imagePaintBlendInclude += value
+    imagePaintBlendDropDown: bpy.props.EnumProperty(name="", items=__get_blend_names, set=__select_dropdown_blend_names)
+    def __get_sculpt_brush_names(self, context):
+        return [(i.name.lower(), i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_sculpt]
+    def __select_dropdown_sclupt_brush_filter(self, value):
+        value = self.__get_sculpt_brush_names(None)[value][1]
+        if value in self.sculptBrushFilterByName: return
+        if self.sculptBrushFilterByName:
+            self.sculptBrushFilterByName += ', '
+        self.sculptBrushFilterByName += value
+    sculptBrushNameDropDown: bpy.props.EnumProperty(name="", items=__get_sculpt_brush_names, set=__select_dropdown_sclupt_brush_filter)
     def draw(self, context):
+        def sub_row(self, layout, prop1, prop2):
+            row = layout.row()
+            row.prop(self, prop1)
+            row.scale_x = 0.2
+            row.prop(self, prop2)
         global blends
         layout = self.layout
         box = layout.box().column(heading='Utility')
         box.prop(self, "secondLanguage")
         box.prop(self, "isDebug")
 
-        box = layout.box().column(heading='Image Paint')
-        box.prop(self, "imagePaintBrushExclude")
-        box.prop(self, "imagePaintBlendInclude")
-        self.imagePaintBlendAllSample = ','.join(_Util.enum_values(bpy.context.tool_settings.image_paint.brush, 'blend')).lower()
-        box.prop(self, "imagePaintBlendAllSample")
-        box.prop(self, "imagePaintShiftBrushName")
-        box.prop(self, "imagePaintLimitRowCount")
+        box = layout.box()
+        box.label(text='Image Paint')
+        sub_row(self, box, "imagePaintBrushExclude", "imagePaintBrushNameDropDown")
+        sub_row(self, box, "imagePaintBlendInclude", "imagePaintBlendDropDown")
+        sub_row(self, box, "imagePaintShiftBrushName", "imagePaintShiftBrushNameDropDown")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
+        box.prop(self, "imagePaintLimitRowCount")
         
-        box = layout.box().column(heading='Sculpt')
+        box = layout.box()
+        box.label(text='Sculpt')
+        sub_row(self, box, "sculptBrushFilterByName", "sculptBrushNameDropDown")
         box.prop(self, "sculptLimitRowCount")
-        box.prop(self, "sculptBrushFilterByName")
-        self.sculptBrushFilterByNameSample = ','.join([i.name for i in bpy.data.brushes if i.use_paint_sculpt]).lower()
-        box.prop(self, "sculptBrushFilterByNameSample")
 
         box = layout.box()
         box.label(text="KeyConfig")

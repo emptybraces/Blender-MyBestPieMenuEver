@@ -1,5 +1,6 @@
 if "bpy" in locals():
     import imp
+    imp.reload(_Util)
     imp.reload(_AddonPreferences)
     imp.reload(_MenuObject)
     imp.reload(_MenuEditMesh)
@@ -8,8 +9,8 @@ if "bpy" in locals():
     imp.reload(_MenuSculpt)
     imp.reload(_MenuSculptCurve)
     imp.reload(_MenuPose)
-    imp.reload(_Util)
 else:
+    from . import _Util    
     from . import _AddonPreferences
     from . import _MenuObject
     from . import _MenuEditMesh
@@ -18,7 +19,6 @@ else:
     from . import _MenuSculpt
     from . import _MenuSculptCurve
     from . import _MenuPose
-    from . import _Util    
 import copy
 import bpy
 from bpy.types import Panel, Menu, Operator

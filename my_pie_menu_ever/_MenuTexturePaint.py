@@ -2,8 +2,8 @@ import bpy
 import mathutils
 from bpy.types import Panel, Menu, Operator
 from bl_ui.properties_paint_common import UnifiedPaintPanel, brush_basic_texpaint_settings
-from . import _AddonPreferences
 from . import _Util
+from . import _AddonPreferences
 key_ctrl_lmb_erasealpha = None
 key_ctrl_lmb_invert = None
 key_keydown_ctrl = None

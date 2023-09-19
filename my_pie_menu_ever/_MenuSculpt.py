@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel, Menu, Operator
-from . import _AddonPreferences
 from . import _Util
+from . import _AddonPreferences
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
 # 'use_paint_antialiasing', 'use_paint_grease_pencil', 'use_paint_image', 'use_paint_sculpt', 'use_paint_sculpt_curves', 'use_paint_uv_sculpt', 'use_paint_vertex', 'use_paint_weight'

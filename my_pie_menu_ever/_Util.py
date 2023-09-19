@@ -1,8 +1,3 @@
-if "bpy" in locals():
-    import imp
-    imp.reload(_AddonPreferences)
-else:
-    from . import _AddonPreferences
 import bpy
 from mathutils import Vector, Quaternion
 from bpy.types import Panel, Menu, Operator
