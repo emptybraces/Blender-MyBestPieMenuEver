@@ -38,7 +38,7 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [Sclupt]
 
-- Quickly changeable to any Brushs, Strokes.tting in preference, default is Soften.)
+- Quickly changeable to any Brushs, Strokes.
 - Filterable brushes to displayed.
 
 #
