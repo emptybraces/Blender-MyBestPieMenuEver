@@ -28,13 +28,18 @@ Placement in left and right sections are common functions, and upper and lower s
 - Quickly changeable to Brushs, Strokes, Blends.
 - Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
 - Customizable change brush by Shift+LMB.(Setting in preference, default is Soften.)
-- Filterable Brushes and Blends to displayed.
-- Shoftcut "Save All Image shortcut"
+- Filterable brushes and blend modes to displayed.
+- Shortcut button "Save All Images".
   
 ### [WeightPaint]
 
 - Shortcut PaintMask switch.
 - Copy the mirrored Vertex Group. Possible from selected bones.
+
+### [Sclupt]
+
+- Quickly changeable to any Brushs, Strokes.tting in preference, default is Soften.)
+- Filterable brushes to displayed.
 
 #
 Object Mode
