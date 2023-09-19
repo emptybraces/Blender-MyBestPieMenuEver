@@ -44,19 +44,21 @@ class OT_SetPointer(bpy.types.Operator):
     def execute(self, context):
         target = getattr(context, self.propObj, None)
         value = getattr(context, self.propValue, None)
+        # print(context, self.propObj, self.propValue, target, value)
         setattr(target, self.propName, value)
         return {'FINISHED'}
     @staticmethod
     def operator(layout, text, targetObj, propName, value, isActive=True, depress=False, ctxt=''):
-        # context_pointer_setはopeartorの前で設定しないと有効にならない
         keyObj = text
         keyValue = keyObj + "_value"
+        # context_pointer_setはopeartorの前で設定しないと有効にならない
         layout.context_pointer_set(name=keyObj, data=targetObj)
         layout.context_pointer_set(name=keyValue, data=value)
-        op = layout.operator(OT_SetPointer.bl_idname, text=text, depress=depress, text_ctxt = ctxt)
+        op = layout.operator(OT_SetPointer.bl_idname, text=text, depress=depress)
         op.propName = propName
         op.propObj = keyObj
         op.propValue = keyValue
+        # print(layout, op.propObj, op.propValue, targetObj, value)
         layout.enabled = isActive and targetObj != None
 class OT_SetBool(OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpme.set_bool"
@@ -156,4 +158,4 @@ classes = (
 def register():
     register_classes(classes)
 def unregister():
-    unregister_class(cls)
+    unregister_classes(classes)

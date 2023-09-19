@@ -5,6 +5,7 @@ if "bpy" in locals():
     imp.reload(_MenuEditMesh)
     imp.reload(_MenuWeightPaint)
     imp.reload(_MenuTexturePaint)
+    imp.reload(_MenuSculpt)
     imp.reload(_MenuSculptCurve)
     imp.reload(_MenuPose)
     imp.reload(_Util)
@@ -14,9 +15,10 @@ else:
     from . import _MenuEditMesh
     from . import _MenuWeightPaint
     from . import _MenuTexturePaint
+    from . import _MenuSculpt
     from . import _MenuSculptCurve
     from . import _MenuPose
-    from . import _Util
+    from . import _Util    
 import copy
 import bpy
 from bpy.types import Panel, Menu, Operator
@@ -26,6 +28,7 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
+
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
@@ -120,7 +123,7 @@ def PieMenu_Utility(pie, context):
     box.label(text = 'Utilities')
     col = box.column()
     # 行開始
-    col.operator(OT_Utility_ChangeLanguage.bl_idname, text="Change Language")
+    col.operator(OT_Utility_ChangeLanguage.bl_idname, text="Change Language", icon='FILE_FONT')
     # from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
     # space_type, mode = ToolSelectPanelHelper._tool_key_from_context(context)
     # cls = ToolSelectPanelHelper._tool_class_from_space_type(space_type)
@@ -183,7 +186,7 @@ def PieMenu_Primary(pie, context):
     if current_mode == 'OBJECT':                _MenuObject.MenuPrimary(pie, context)
     elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuPrimary(pie, context)
     elif current_mode == 'POSE':                _MenuPose.MenuPrimary(pie, context)
-    elif current_mode == 'SCULPT':              Placeholder(pie, context, 'Primary')
+    elif current_mode == 'SCULPT':              _MenuSculpt.MenuPrimary(pie, context)
     elif current_mode == 'SCULPT_CURVES':       _MenuSculptCurve.MenuPrimary(pie, context)
     elif current_mode == 'PAINT':               Placeholder(pie, context, 'Primary')
     elif current_mode == 'PAINT_TEXTURE':       _MenuTexturePaint.MenuPrimary(pie, context)
@@ -200,7 +203,7 @@ def PieMenu_Secondary(pie, context):
     if current_mode == 'OBJECT':                _MenuObject.MenuSecondary(pie, context)
     elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuSecondary(pie, context)
     elif current_mode == 'POSE':                _MenuPose.MenuSecondary(pie, context)
-    elif current_mode == 'SCULPT':              Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'SCULPT':              _MenuSculpt.MenuSecondary(pie, context)
     elif current_mode == 'SCULPT_CURVES':       _MenuSculptCurve.MenuSecondary(pie, context)
     elif current_mode == 'PAINT':               Placeholder(pie, context, 'Secondary')
     elif current_mode == 'PAINT_TEXTURE':       _MenuTexturePaint.MenuSecondary(pie, context)
@@ -229,6 +232,7 @@ modules = (
     _MenuWeightPaint,
     _MenuTexturePaint,
     _MenuPose,
+    _MenuSculpt,
     _MenuSculptCurve,
 )
 def register():

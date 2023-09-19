@@ -23,8 +23,9 @@ def MenuSecondary(pie, context):
     root = pie.split().row()
     box = root.split(factor=1.0).box()
     box.label(text = 'File')
-    box.operator("import_scene.fbx")
-    box.operator("screen.userpref_show")
+    box.operator("import_scene.fbx", icon='IMPORT')
+    box.operator("screen.userpref_show", icon='PREFERENCES')
+    box.operator("wm.console_toggle", icon='CONSOLE')
     # box = root.split(factor=1.0).box()
 # --------------------------------------------------------------------------------
 classes = (

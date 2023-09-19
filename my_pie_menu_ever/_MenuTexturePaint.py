@@ -1,14 +1,9 @@
-if "bpy" in locals():
-    import imp
-    imp.reload(_AddonPreferences)
-    imp.reload(_Util)
-else:
-    from . import _AddonPreferences
-    from . import _Util
 import bpy
 import mathutils
 from bpy.types import Panel, Menu, Operator
 from bl_ui.properties_paint_common import UnifiedPaintPanel, brush_basic_texpaint_settings
+from . import _AddonPreferences
+from . import _Util
 key_ctrl_lmb_erasealpha = None
 key_ctrl_lmb_invert = None
 key_keydown_ctrl = None
@@ -21,6 +16,7 @@ def MenuPrimary(pie, context):
 
     row = box.row(align=True) # Brush, Stroke, Blend...
 
+    # Brushes
     box = row.box()
     box.label(text = "Brush")
     row2 = box.row()
@@ -34,6 +30,7 @@ def MenuPrimary(pie, context):
             _Util.OT_SetPointer.operator(col2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
             cnt += 1;
             if cnt % limit_rows == 0: col2 = row2.column()
+
     #Color picker
     box = row.box()
     box.label(text = "Color")
@@ -74,7 +71,7 @@ def MenuPrimary(pie, context):
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
-    box.operator("image.save_all_modified") 
+    box.operator("image.save_all_modified", text="Save All Image") 
 
     row = box.row(align=True)
     row.label(text = "Hold Ctrl Behaviour")

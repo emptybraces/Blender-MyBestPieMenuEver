@@ -11,7 +11,7 @@ from bpy.types import Panel, Menu, Operator
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Sclupt Curves')
+    box.label(text = 'Sculpt Curves')
 
     rowinbox = box.row()
     col2 = rowinbox.column()
