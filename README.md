@@ -57,7 +57,7 @@ Texture Paint Mode
 #
 Weight Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/21b477fe-8b65-47ee-b838-704923b4aa7a)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/99194f7e-0539-47e5-b5b3-db6311006b5d)
 
 #
 Sculpt Mode
