@@ -17,6 +17,7 @@ def MenuPrimary(pie, context):
     _Util.layout_prop(r2, context.scene.tool_settings, "use_proportional_connected", isActive=context.scene.tool_settings.use_proportional_edit)
     _Util.layout_prop(r2, context.scene.tool_settings, "proportional_edit_falloff", text="", isActive=context.scene.tool_settings.use_proportional_edit)
     _Util.layout_prop(box2, context.scene.tool_settings, "use_snap")
+    _Util.layout_operator(box2, "mesh.select_mirror")
 
     box2 = r.box()
     box2.label(text = 'UV')
