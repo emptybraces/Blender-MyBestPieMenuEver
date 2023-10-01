@@ -28,18 +28,23 @@ Placement in left and right sections are common functions, and upper and lower s
 - Quickly changeable to Brushs, Strokes, Blends.
 - Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
 - Customizable change brush by Shift+LMB.(Setting in preference, default is Soften.)
-- Filterable Brushes and Blends to displayed.
-- Shoftcut "Save All Image shortcut"
+- Filterable brushes and blend modes to displayed.
+- Shortcut button "Save All Images".
   
 ### [WeightPaint]
 
 - Shortcut PaintMask switch.
 - Copy the mirrored Vertex Group. Possible from selected bones.
 
+### [Sclupt]
+
+- Quickly changeable to any Brushs, Strokes.
+- Filterable brushes to displayed.
+
 #
 Object Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/c4382c5c-07b2-4c39-b4ef-9c458f7dfa07)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/79bd65bf-289e-4a3a-adb5-fd61bcd6f462)
 
 Enable shortcut if installed:
 - wiggle2: ResetPhysics
@@ -47,12 +52,17 @@ Enable shortcut if installed:
 #
 Texture Paint Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/fffcc8a8-7f51-45fd-b361-86eb117c1ceb)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/edf44a76-33bf-414d-9ca0-277dae6a5a1f)
 
 #
 Weight Paint Mode
 
 ![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/21b477fe-8b65-47ee-b838-704923b4aa7a)
+
+#
+Sculpt Mode
+
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/bec00b31-d67e-4e37-b51a-80df282383e2)
 
 #
 Pose Mode
