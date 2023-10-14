@@ -18,6 +18,9 @@ def MenuPrimary(pie, context):
     _Util.layout_prop(r2, context.scene.tool_settings, "proportional_edit_falloff", text="", isActive=context.scene.tool_settings.use_proportional_edit)
     _Util.layout_prop(box2, context.scene.tool_settings, "use_snap")
     _Util.layout_operator(box2, "mesh.select_mirror")
+    op = _Util.layout_operator(box2, "mesh.select_face_by_sides", "Ngons")
+    op.number = 4
+    op.type='GREATER'
 
     box2 = r.box()
     box2.label(text = 'UV')
@@ -33,6 +36,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
     _Util.layout_operator(r2, "mesh.mark_sharp", "", icon='REMOVE').clear = True
     _Util.layout_operator(r2, OT_MirrorSharp.bl_idname, "", icon='MOD_MIRROR')
+    _Util.layout_operator(box2, "mesh.normals_make_consistent").inside=False
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
