@@ -1,10 +1,11 @@
 import bpy
-# --------------------------------------------------------------------------------
-# 選択履歴
-# --------------------------------------------------------------------------------
+
 g_history = []
 g_history_idx = 1
 g_is_busy = False
+# --------------------------------------------------------------------------------
+# 選択履歴
+# --------------------------------------------------------------------------------
 def PanelHistory(pie, context):
     box = pie.split().box()
     box.prop(context.scene, "selection_history")
@@ -23,6 +24,7 @@ def on_selection_changed(context):
     if bpy.context.mode == 'POSE':
         bones = ctx.selected_pose_bones
     elif bpy.context.mode == 'EDIT_ARMATURE':
+        # なんでか参照が永続化されないので必要なパラメータを抽出
         bones = [[(b.name, b.select, b.select_head, b.select_tail) for b in obj.data.edit_bones if b.select or b.select_head or b.select_tail] for obj in objs]
         # print("bones = ", bones)
     if 0 < len(g_history) and g_history[0]["objects"] == objs and (not bones or g_history[0]["bones"] == bones):
@@ -92,7 +94,7 @@ def set_history(self, value):
                 eb.select = tpl[1]
                 eb.select_head = tpl[2]
                 eb.select_tail = tpl[3]
-                # bpy.context.object.data.edit_bones.active = o
+                # bpy.context.object.data.edit_bones.active = eb
     g_is_busy = False
     # print("-----------------------------")
 # --------------------------------------------------------------------------------
@@ -102,7 +104,11 @@ def register():
     bpy.types.Scene.selection_history = bpy.props.EnumProperty(items=get_history, set=set_history)
 
 def unregister():
+    global g_history
+    global g_history_idx
+    global g_is_busy
     bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
     del bpy.types.Scene.selection_history
     g_history.clear()
     g_history_idx = 1
+    g_is_busy = False
