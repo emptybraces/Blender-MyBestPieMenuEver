@@ -9,6 +9,7 @@ if "bpy" in locals():
     imp.reload(_MenuSculpt)
     imp.reload(_MenuSculptCurve)
     imp.reload(_MenuPose)
+    imp.reload(_PanelSelectionHistory)
 else:
     from . import _Util    
     from . import _AddonPreferences
@@ -19,6 +20,7 @@ else:
     from . import _MenuSculpt
     from . import _MenuSculptCurve
     from . import _MenuPose
+    from . import _PanelSelectionHistory
 import copy
 import bpy
 from bpy.types import Panel, Menu, Operator
@@ -47,12 +49,13 @@ class VIEW3D_MT_my_pie_menu(Menu):
         PieMenu_Primary(pie, context);
         PieMenu_Secondary(pie, context);
 
+        _PanelSelectionHistory.PanelHistory(pie, context)
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
 def PieMenu_ObjectMode(pie, context):
     active = context.active_object
-    object_mode = 'OBJECT' if active is None else active.mode
+    object_mode = 'OBJECT' if active is None else context.mode
     active_type_is_mesh = active != None and active.type == 'MESH'
     active_type_is_armature = active != None and active.type == 'ARMATURE'
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
@@ -69,8 +72,8 @@ def PieMenu_ObjectMode(pie, context):
     r.operator("object.mode_set", text=iface_('Object', act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == 'OBJECT').mode = 'OBJECT'
 
     r = row.row()
-    r.active = object_mode != 'EDIT'
-    r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT').mode = 'EDIT'
+    r.active = object_mode != 'EDIT_MESH'
+    r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT_MESH').mode = 'EDIT'
 
     r = row.row()
     r.active = object_mode != 'SCULPT' and active_type_is_mesh
@@ -84,13 +87,13 @@ def PieMenu_ObjectMode(pie, context):
 
     row = col.row(align=False)
     r = row.row()
-    r.active = object_mode != 'WEIGHT_PAINT' and active_type_is_mesh
-    op = r.operator("object.mode_set", text=iface_('Weight Paint', act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == 'WEIGHT_PAINT')
+    r.active = object_mode != 'PAINT_WEIGHT' and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_('Weight Paint', act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == 'PAINT_WEIGHT')
     if active_type_is_mesh: op.mode = 'WEIGHT_PAINT'
 
     r = row.row()
-    r.active = object_mode != 'TEXTURE_PAINT' and active_type_is_mesh
-    op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == 'TEXTURE_PAINT')
+    r.active = object_mode != 'PAINT_TEXTURE' and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == 'PAINT_TEXTURE')
     if active_type_is_mesh: op.mode = 'TEXTURE_PAINT'
 
 # --------------------------------------------------------------------------------
@@ -181,25 +184,24 @@ class OT_ChangeOrientations(bpy.types.Operator):
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
 def PieMenu_Primary(pie, context):
-    current_mode = bpy.context.mode
-    
+    current_mode = context.mode
     if current_mode == 'OBJECT':                _MenuObject.MenuPrimary(pie, context)
     elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuPrimary(pie, context)
     elif current_mode == 'POSE':                _MenuPose.MenuPrimary(pie, context)
     elif current_mode == 'SCULPT':              _MenuSculpt.MenuPrimary(pie, context)
     elif current_mode == 'SCULPT_CURVES':       _MenuSculptCurve.MenuPrimary(pie, context)
-    elif current_mode == 'PAINT':               Placeholder(pie, context, 'Primary')
     elif current_mode == 'PAINT_TEXTURE':       _MenuTexturePaint.MenuPrimary(pie, context)
     elif current_mode == 'PAINT_VERTEX':        Placeholder(pie, context, 'Primary')
     elif current_mode == 'PAINT_WEIGHT':        _MenuWeightPaint.MenuPrimary(pie, context)
     elif current_mode == 'PARTICLE_EDIT':       Placeholder(pie, context, 'Primary')
-    elif current_mode == 'ARMATURE':            Placeholder(pie, context, 'Primary')
+    elif current_mode == 'EDIT_ARMATURE':       Placeholder(pie, context, 'Primary')
     elif current_mode == 'GPENCIL_DRAW':        Placeholder(pie, context, 'Primary')
     elif current_mode == 'GPENCIL_EDIT':        Placeholder(pie, context, 'Primary')
     elif current_mode == 'GPENCIL_SCULPT':      Placeholder(pie, context, 'Primary')
     elif current_mode == 'GPENCIL_WEIGHT_PAINT':Placeholder(pie, context, 'Primary')
+
 def PieMenu_Secondary(pie, context):
-    current_mode = bpy.context.mode
+    current_mode = context.mode
     if current_mode == 'OBJECT':                _MenuObject.MenuSecondary(pie, context)
     elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuSecondary(pie, context)
     elif current_mode == 'POSE':                _MenuPose.MenuSecondary(pie, context)
@@ -210,14 +212,16 @@ def PieMenu_Secondary(pie, context):
     elif current_mode == 'PAINT_VERTEX':        Placeholder(pie, context, 'Secondary')
     elif current_mode == 'PAINT_WEIGHT':        _MenuWeightPaint.MenuSecondary(pie, context)
     elif current_mode == 'PARTICLE_EDIT':       Placeholder(pie, context, 'Secondary')
-    elif current_mode == 'ARMATURE':            Placeholder(pie, context, 'Secondary')
+    elif current_mode == 'EDIT_ARMATURE':       Placeholder(pie, context, 'Secondary')
     elif current_mode == 'GPENCIL_DRAW':        Placeholder(pie, context, 'Secondary')
     elif current_mode == 'GPENCIL_EDIT':        Placeholder(pie, context, 'Secondary')
     elif current_mode == 'GPENCIL_SCULPT':      Placeholder(pie, context, 'Secondary')
     elif current_mode == 'GPENCIL_WEIGHT_PAINT':Placeholder(pie, context, 'Secondary')
+
 def Placeholder(pie, context, text):
     box = pie.split().box()
     box.label(text = text)
+# --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 
 classes = (
@@ -234,6 +238,7 @@ modules = (
     _MenuPose,
     _MenuSculpt,
     _MenuSculptCurve,
+    _PanelSelectionHistory,
 )
 def register():
     _Util.register_classes(classes)

@@ -36,8 +36,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     def __select_dropdown_blend_names(self, value):
         value = self.__get_blend_names(None)[value][1]
         if value in self.imagePaintBlendInclude: return
-        if self.imagePaintBlendInclude:
-            self.imagePaintBlendInclude += ', '
+        if self.imagePaintBlendInclude: self.imagePaintBlendInclude += ', '
         self.imagePaintBlendInclude += value
     imagePaintBlendDropDown: bpy.props.EnumProperty(name="", items=__get_blend_names, set=__select_dropdown_blend_names)
     def __get_sculpt_brush_names(self, context):

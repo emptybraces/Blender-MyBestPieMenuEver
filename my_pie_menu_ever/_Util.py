@@ -112,6 +112,7 @@ def reset_pose_bone_rotation(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:
             b.rotation_euler = (0, 0, 0)
+            b.rotation_quaternion = (1, 0, 0, 0)
 def reset_pose_bone_scale(armature):
     if armature.type == 'ARMATURE':
         for b in armature.pose.bones:
