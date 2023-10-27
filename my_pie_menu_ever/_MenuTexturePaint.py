@@ -12,7 +12,7 @@ key_keydown_ctrl = None
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Texture Paint')
+    box.label(text = 'Texture Paint Primary')
 
     row = box.row(align=True) # Brush, Stroke, Blend...
 
@@ -20,7 +20,7 @@ def MenuPrimary(pie, context):
     box = row.box()
     box.label(text = "Brush")
     row2 = box.row()
-    col2 = row2.column()
+    col2 = row2.column(align=True)
     cnt = 0
     limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
     brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_brush_exclude().lower().split(',')]
@@ -34,20 +34,21 @@ def MenuPrimary(pie, context):
     #Color picker
     box = row.box()
     box.label(text = "Color")
-    row2 = box.row(align=True)
+    c = box.column(align=True)
+    row2 = c.row(align=True)
     row2.scale_x = 0.3
     UnifiedPaintPanel.prop_unified_color(row2, context, context.tool_settings.image_paint.brush, "color", text="")
     UnifiedPaintPanel.prop_unified_color(row2, context, context.tool_settings.image_paint.brush, "secondary_color", text="")
-    _Util.layout_operator(box, OT_TexPaint_SwapColor.bl_idname)
-    _Util.layout_operator(box, OT_TexPaint_SetWhite.bl_idname)
-    _Util.layout_operator(box, OT_TexPaint_SetBlack.bl_idname)
+    _Util.layout_operator(c, OT_TexPaint_SwapColor.bl_idname)
+    _Util.layout_operator(c, OT_TexPaint_SetWhite.bl_idname)
+    _Util.layout_operator(c, OT_TexPaint_SetBlack.bl_idname)
 
     # Strokes
     cnt = 0
     box = row.box()
     box.label(text = "Stroke")
     row2 = box.row()
-    col2 = row2.column()
+    col2 = row2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = context.tool_settings.image_paint.brush.stroke_method == i
         _Util.OT_SetterBase.operator(col2, _Util.OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
@@ -59,7 +60,7 @@ def MenuPrimary(pie, context):
     box = row.box()
     box.label(text = "Blend")
     row2 = box.row()
-    col2 = row2.column()
+    col2 = row2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'blend'):
         if i.lower() in blend_include_list:
             is_use = context.tool_settings.image_paint.brush.blend == i
@@ -71,9 +72,11 @@ def MenuPrimary(pie, context):
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
-    box.operator("image.save_all_modified", text="Save All Image") 
+    box.label(text = 'Texture Paint Seconday')
+    c = box.column(align=True)
+    c.operator("image.save_all_modified", text="Save All Image") 
 
-    row = box.row(align=True)
+    row = c.row(align=True)
     row.label(text = "Hold Ctrl Behaviour")
     ctrl_behaviour = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     if ctrl_behaviour: # Erase Alpha mode
@@ -83,7 +86,7 @@ def MenuSecondary(pie, context):
         _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "SubColor", False, depress=True)
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
 
-    row = box.row(align=True)
+    row = c.row(align=True)
     row.label(text = "Angle")
     from math import pi
     _Util.OT_SetterBase.operator(row, _Util.OT_SetSingle.bl_idname, "0", context.tool_settings.image_paint.brush.texture_slot, "angle", 0)

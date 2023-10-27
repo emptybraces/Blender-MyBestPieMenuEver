@@ -49,7 +49,6 @@ class VIEW3D_MT_my_pie_menu(Menu):
         PieMenu_Primary(pie, context);
         PieMenu_Secondary(pie, context);
 
-        _PanelSelectionHistory.PanelHistory(pie, context)
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -60,38 +59,41 @@ def PieMenu_ObjectMode(pie, context):
     active_type_is_armature = active != None and active.type == 'ARMATURE'
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
 
-    box = pie.split().box()
-    box.label(text='Mode');
-    col = box.column()
-    row = col.row(align=False)
 
-    r = row.row()
+
+    row = pie.split().row()
+    box = row.box()
+    _PanelSelectionHistory.PanelHistory(box, context)
+    box = row.box()
+    box.label(text='Mode');
+    col = box.column(align = True)
+
+    r = col.row()
     # print(object_mode)
     # print(bpy.types.Object.bl_rna.properties["mode"].enum_items[object_mode].name)
     r.active = object_mode != 'OBJECT'
     r.operator("object.mode_set", text=iface_('Object', act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == 'OBJECT').mode = 'OBJECT'
 
-    r = row.row()
+    r = col.row()
     r.active = object_mode != 'EDIT_MESH'
     r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT_MESH').mode = 'EDIT'
 
-    r = row.row()
+    r = col.row()
     r.active = object_mode != 'SCULPT' and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_('Sculpt', act_mode_i18n_context), icon="SCULPTMODE_HLT", depress=object_mode == 'SCULPT')
     if active_type_is_mesh: op.mode = 'SCULPT'
 
-    r = row.row()
+    r = col.row()
     r.active = object_mode != 'POSE' and active_type_is_armature
     op = r.operator("object.mode_set", text=iface_("Pose", act_mode_i18n_context), icon='POSE_HLT', depress=object_mode == 'POSE')
     if active_type_is_armature: op.mode = 'POSE'
 
-    row = col.row(align=False)
-    r = row.row()
+    r = col.row()
     r.active = object_mode != 'PAINT_WEIGHT' and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_('Weight Paint', act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == 'PAINT_WEIGHT')
     if active_type_is_mesh: op.mode = 'WEIGHT_PAINT'
 
-    r = row.row()
+    r = col.row()
     r.active = object_mode != 'PAINT_TEXTURE' and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == 'PAINT_TEXTURE')
     if active_type_is_mesh: op.mode = 'TEXTURE_PAINT'
@@ -101,7 +103,7 @@ def PieMenu_ObjectMode(pie, context):
 # --------------------------------------------------------------------------------
 def PieMenu_Utility(pie, context):
     def _DrawPivot(layout):
-        text = bpy.context.scene.tool_settings.transform_pivot_point
+        text = context.scene.tool_settings.transform_pivot_point
         if text == 'ACTIVE_ELEMENT':
             text = "Active"
             icon = "PIVOT_ACTIVE"
@@ -122,11 +124,15 @@ def PieMenu_Utility(pie, context):
         text = bpy.context.scene.transform_orientation_slots[0].type
         icon = "ORIENTATION_" + text
         layout.operator(OT_ChangeOrientations.bl_idname, text=text, icon=icon)
+    
     box = pie.split().box()
     box.label(text = 'Utilities')
-    col = box.column()
+    row = box.row(align = True)
+    box = row.box()
+    box.label(text = 'Tool')
+    c = box.column(align = True)
+    c.operator(OT_Utility_ChangeLanguage.bl_idname, text="Change Language", icon='FILE_FONT')
     # 行開始
-    col.operator(OT_Utility_ChangeLanguage.bl_idname, text="Change Language", icon='FILE_FONT')
     # from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
     # space_type, mode = ToolSelectPanelHelper._tool_key_from_context(context)
     # cls = ToolSelectPanelHelper._tool_class_from_space_type(space_type)
@@ -136,24 +142,26 @@ def PieMenu_Utility(pie, context):
     #     col.prop(props, "use_depth")
     #     col.prop(props, "orientation")
     # 行開始
-    row = col.row(align=False)
-    _DrawPivot(row)
-    _DrawOrientation(row)
+    r = c.row(align=True)
+    _DrawPivot(r)
+    _DrawOrientation(r)
     # 行開始
-    row = col.row(align=False)
-    r = row.row()
-    r.active = getattr(context.space_data, "overlay", None) != None
-    _Util.layout_prop(r, context.space_data.overlay, "show_overlays")
-    _Util.layout_prop(r, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays)
-    _Util.layout_prop(r, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays)
-    _Util.layout_prop(r, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
+    # row = col.row(align=False)
+    c = box.column(align = True)
+    c.active = getattr(context.space_data, "overlay", None) != None
+    _Util.layout_prop(c, context.space_data.overlay, "show_overlays")
+    _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays)
+    _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays)
+    _Util.layout_prop(c, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
     # 行開始
-    row = col.row(align=False)
-    r = row.row()
-    r.active = context.object != None
-    _Util.layout_prop(r, context.object, "show_in_front")
-    _Util.layout_prop(r, context.object, "show_wire")
-    _Util.layout_prop(r, context.object, "display_type", text="", expand=False)
+    box = row.box()
+    box.label(text = 'Object')
+    c = box.column()
+    c.active = context.object != None
+    _Util.layout_prop(c, context.object, "show_in_front")
+    _Util.layout_prop(c, context.object, "show_wire")
+    _Util.layout_prop(c, context.object, "display_type", text="", expand=False)
+
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"
     bl_label = ""

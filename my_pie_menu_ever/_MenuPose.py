@@ -5,9 +5,9 @@ from . import _Util
 # ポーズメニュー
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
-    arm = bpy.context.object.data;
     box = pie.split().box()
-    box.label(text = 'Pose')
+    box.label(text = 'Pose Primary')
+    arm = context.object.data;
     _Util.layout_operator(box, OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     box.row().prop(arm, "pose_position", expand=True)
     box.prop(arm, 'layers')
@@ -39,8 +39,8 @@ class OT_ClearTransform(bpy.types.Operator):
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
-    root = pie.split().row()
-    box = root.split(factor=1.0).box()
+    box = pie.split().box()
+    box.label(text = 'Pose Secondary')
     _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics") # if imported
 
 # --------------------------------------------------------------------------------

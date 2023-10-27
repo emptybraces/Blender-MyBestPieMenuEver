@@ -6,9 +6,8 @@ g_is_busy = False
 # --------------------------------------------------------------------------------
 # 選択履歴
 # --------------------------------------------------------------------------------
-def PanelHistory(pie, context):
-    box = pie.split().box()
-    box.prop(context.scene, "selection_history")
+def PanelHistory(layout, context):
+    layout.prop(context.scene, "selection_history")
 
 # --------------------------------------------------------------------------------
 def on_selection_changed(context):

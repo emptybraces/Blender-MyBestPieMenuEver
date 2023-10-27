@@ -8,7 +8,7 @@ from . import _AddonPreferences
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Sculpt')
+    box.label(text = 'Sculpt Primary')
 
     row = box.row(align=True) # Brush, Stroke, Blend...
 
@@ -47,6 +47,8 @@ def MenuPrimary(pie, context):
         if cnt % limit_rows == 0: col2 = row2.column()
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
+    box = pie.split().box()
+    box.label(text = 'Sculpt Secondary')
     pass
 
 # --------------------------------------------------------------------------------

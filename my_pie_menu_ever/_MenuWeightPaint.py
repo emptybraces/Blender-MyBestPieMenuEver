@@ -7,10 +7,9 @@ from . import _MenuPose
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'WeightPaint')
-    _Util.layout_prop(box, bpy.context.object.data, "use_paint_mask")
+    box.label(text = 'WeightPaint Primary')
     _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
-    r = box.row(align=False)
+    r = box.row(align=True)
     r.label(text="Copy Mirrored VG from ")
     _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
     _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname, isActive=_Util.is_armature_in_selected())
@@ -18,6 +17,7 @@ def MenuPrimary(pie, context):
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
+    box.label(text = 'WeightPaint Secondary')
     r = box.row(align=True)
     unified_paint_settings = context.tool_settings.unified_paint_settings
     brush = context.tool_settings.weight_paint.brush
@@ -39,6 +39,7 @@ def MenuSecondary(pie, context):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.OT_SetterBase.operator(r, _Util.OT_SetString.bl_idname, i, brush, "blend", i, depress=is_use)
+    _Util.layout_prop(box, bpy.context.object.data, "use_paint_mask")
 
 # --------------------------------------------------------------------------------
 class OT_MirrorVGFromSelectedBone(bpy.types.Operator):

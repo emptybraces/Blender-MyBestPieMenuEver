@@ -7,40 +7,44 @@ from . import _AddonPreferences
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Edit Mesh')
-    r = box.row()
-    box2 = r.box()
-
-    box2.label(text = 'Selection')
-    r2 = box2.row()
+    box.label(text = 'Edit Mesh Primary')
+    r = box.row(align=True)
+    
+    box = r.box()
+    box.label(text = 'Selection')
+    c = box.column(align=True)
+    r2 = c.row(align=True)
     _Util.layout_prop(r2, context.scene.tool_settings, "use_proportional_edit", text="")
     _Util.layout_prop(r2, context.scene.tool_settings, "use_proportional_connected", isActive=context.scene.tool_settings.use_proportional_edit)
     _Util.layout_prop(r2, context.scene.tool_settings, "proportional_edit_falloff", text="", isActive=context.scene.tool_settings.use_proportional_edit)
-    _Util.layout_prop(box2, context.scene.tool_settings, "use_snap")
-    _Util.layout_operator(box2, "mesh.select_mirror")
-    op = _Util.layout_operator(box2, "mesh.select_face_by_sides", "Ngons")
+    _Util.layout_prop(c, context.scene.tool_settings, "use_snap")
+    _Util.layout_operator(c, "mesh.select_mirror")
+    op = _Util.layout_operator(c, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
     op.type='GREATER'
 
-    box2 = r.box()
-    box2.label(text = 'UV')
-    r2 = box2.row(align=True)
+    box = r.box()
+    box.label(text = 'UV')
+    c = box.column(align=True)
+    r2 = c.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_seam").clear = False
     _Util.layout_operator(r2, "mesh.mark_seam", "", icon='REMOVE').clear = True
     _Util.layout_operator(r2, OT_MirrorSeam.bl_idname, "", icon='MOD_MIRROR')
-    _Util.layout_operator(box2, "uv.unwrap")
+    _Util.layout_operator(c, "uv.unwrap")
 
-    box2 = r.box()
-    box2.label(text = 'Etc')
-    r2 = box2.row(align=True)
+    box = r.box()
+    box.label(text = 'Etc')
+    c = box.column(align=True)
+    r2 = c.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
     _Util.layout_operator(r2, "mesh.mark_sharp", "", icon='REMOVE').clear = True
     _Util.layout_operator(r2, OT_MirrorSharp.bl_idname, "", icon='MOD_MIRROR')
-    _Util.layout_operator(box2, "mesh.normals_make_consistent").inside=False
+    _Util.layout_operator(c, "mesh.normals_make_consistent").inside=False
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
+    box.label(text = 'Edit Mesh Secondary')
 
 # --------------------------------------------------------------------------------
 class OT_MirrorSeam(bpy.types.Operator):

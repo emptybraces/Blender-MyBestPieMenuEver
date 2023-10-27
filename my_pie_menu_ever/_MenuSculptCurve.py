@@ -7,7 +7,7 @@ from . import _Util
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Sculpt Curves')
+    box.label(text = 'Sculpt Curves Primary')
 
     rowinbox = box.row()
     col2 = rowinbox.column()
@@ -29,6 +29,8 @@ def MenuPrimary(pie, context):
     #     col2.operator(OT_TexturePaint_StrokeMethod.bl_idname, text=i, depress = is_use).methodName = i
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
+    box = pie.split().box()
+    box.label(text = 'Sculpt Curves Secondary')
     pass
 
 # --------------------------------------------------------------------------------
