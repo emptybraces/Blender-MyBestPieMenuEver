@@ -1,7 +1,7 @@
 # Blender_MyBestPieMenuEver
 
 Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.
-(Blender 3.6.3)
+(Blender 3.6.5)
 
 ## Features
 
@@ -46,35 +46,29 @@ Placement in left and right sections are common functions, and upper and lower s
 #
 Selection history
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/6de59e65-f433-49ad-abb2-a4bb1ee52c0d)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/a12ea186-048b-43c9-9c6d-a5e5e7eeed0b)
 
 #
 OBJECT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/79bd65bf-289e-4a3a-adb5-fd61bcd6f462)
-
-Enable shortcut if installed:
-- wiggle2: ResetPhysics
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/d41e7176-3e89-46fa-8a06-f7d2f64b24d4)
 
 #
 PAINT_TEXTURE Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/edf44a76-33bf-414d-9ca0-277dae6a5a1f)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/bb4ac573-b50b-411e-a32d-09854f0f9cc3)
 
 #
 PAINT_WEIGHT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/99194f7e-0539-47e5-b5b3-db6311006b5d)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/8c07df1c-0d74-460a-bba9-5c10d0690073)
 
 #
 SCULPT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/bec00b31-d67e-4e37-b51a-80df282383e2)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/90827754-da21-40b6-801c-37e469374344)
 
 #
 POSE Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/4668674f-64ff-472c-b912-a85a1b0c66f9)
-
-Enable shortcut if installed:
-- wiggle2: ResetPhysics
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/47347dbe-bb80-4e68-a400-59a57faef310)
