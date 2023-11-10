@@ -118,6 +118,11 @@ def reset_pose_bone_scale(armature):
         for b in armature.pose.bones:
             b.scale = Vector((1, 1, 1))
 def reset_pose_bone(armature):
+    if armature.type == 'MESH':
+        for i in bpy.context.selected_objects:
+            for j in i.modifiers:
+                if j.type == 'ARMATURE' and j.object != None:
+                    armature = j.object
     reset_pose_bone_location(armature)
     reset_pose_bone_rotation(armature)
     reset_pose_bone_scale(armature)
@@ -134,6 +139,8 @@ def unregister_classes(classes):
 def is_armature_in_selected():
     for obj in bpy.context.selected_objects:
         if obj.type == 'ARMATURE':
+            return True
+        if 0 < len([m for m in obj.modifiers if m.type == 'ARMATURE' and m.object != None]):
             return True
     return False
 def show_msgbox(message, title = "", icon = 'INFO'):

@@ -8,7 +8,6 @@ def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Pose Primary')
     arm = context.object.data;
-    _Util.layout_operator(box, OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     box.row().prop(arm, "pose_position", expand=True)
     box.prop(arm, 'layers')
 

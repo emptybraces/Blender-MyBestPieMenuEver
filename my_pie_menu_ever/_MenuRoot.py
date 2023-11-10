@@ -30,7 +30,6 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
-
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
@@ -38,7 +37,7 @@ class VIEW3D_MT_my_pie_menu(Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
-    bl_label = "My Pie Menu"
+    bl_label = "My Pie Menu v1.01"
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
@@ -128,10 +127,15 @@ def PieMenu_Utility(pie, context):
     box = pie.split().box()
     box.label(text = 'Utilities')
     row = box.row(align = True)
+    row.operator("screen.userpref_show", icon='PREFERENCES', text="")
+    row.operator("wm.console_toggle", icon='CONSOLE', text="")
+    row.operator("import_scene.fbx", icon='IMPORT', text="")
+    row.operator(OT_Utility_ChangeLanguage.bl_idname, text="", icon='FILE_FONT')
+
+    row = box.row(align = True)
     box = row.box()
     box.label(text = 'Tool')
     c = box.column(align = True)
-    c.operator(OT_Utility_ChangeLanguage.bl_idname, text="Change Language", icon='FILE_FONT')
     # 行開始
     # from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
     # space_type, mode = ToolSelectPanelHelper._tool_key_from_context(context)
@@ -161,10 +165,12 @@ def PieMenu_Utility(pie, context):
     _Util.layout_prop(c, context.object, "show_in_front")
     _Util.layout_prop(c, context.object, "show_wire")
     _Util.layout_prop(c, context.object, "display_type", text="", expand=False)
+    _Util.layout_operator(c, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode", expand=False)
 
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"
-    bl_label = ""
+    bl_label = "Change Language"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         if bpy.context.preferences.view.language == "en_US":
@@ -238,7 +244,7 @@ classes = (
     OT_ChangeOrientations,
     OT_Utility_ChangeLanguage,
 )
-modules = (
+modules = [
     _MenuObject,
     _MenuEditMesh,
     _MenuWeightPaint,
@@ -247,7 +253,7 @@ modules = (
     _MenuSculpt,
     _MenuSculptCurve,
     _PanelSelectionHistory,
-)
+]
 def register():
     _Util.register_classes(classes)
     for m in modules:

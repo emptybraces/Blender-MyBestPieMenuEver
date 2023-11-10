@@ -1,14 +1,12 @@
 import bpy
 from bpy.types import Panel, Menu, Operator
 from . import _Util
-from . import _MenuPose
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint Primary')
-    _Util.layout_operator(box, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     r = box.row(align=True)
     r.label(text="Copy Mirrored VG from ")
     _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
