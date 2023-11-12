@@ -20,15 +20,17 @@ class OT_SetterBase():
         setattr(target, self.propName, self.value)
         return {'FINISHED'}
     @staticmethod
-    def operator(layout, clsid, text, targetObj, propName, value=None, depress=None, isActive=True, ctxt=''):
+    def operator(layout, clsid, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
         layout.context_pointer_set(name=propName, data=targetObj)
         if depress is None:
             cur_value = getattr(targetObj, propName, False) if value is None else value
             depress = cur_value if isinstance(cur_value, bool) else False
-        op = layout.operator(clsid, text=text, text_ctxt=ctxt, depress=depress)
+        if isActive != None:
+            layout = layout.row(align=True)
+            layout.enabled = isActive and targetObj != None
+        op = layout.operator(clsid, text=text, icon=icon, depress=depress)
         op.propName = propName
-        op.value = not getattr(targetObj, propName) if clsid == "mpme.set_invert" else value
-        layout.enabled = isActive and targetObj != None
+        op.value = not getattr(targetObj, propName, False) if clsid == OT_SetBoolToggle.bl_idname else value
 class OT_SetPointer(bpy.types.Operator):
     bl_idname = "mpme.set_pointer"
     bl_label = ""
@@ -65,6 +67,10 @@ class OT_SetBoolToggle(OT_SetterBase, bpy.types.Operator):
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.BoolProperty()
+    @staticmethod
+    def operator(layout, text, targetObj, propName, icon="NONE", depress=None, isActive=None):
+        OT_SetterBase.operator(layout, OT_SetBoolToggle.bl_idname, text, targetObj, propName, None, icon, depress, isActive)
+
 class OT_SetSingle(OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpme.set_signel"
     bl_label = ""
@@ -75,6 +81,9 @@ class OT_SetString(OT_SetterBase, bpy.types.Operator):
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.StringProperty()
+    @staticmethod
+    def operator(layout, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
+        OT_SetterBase.operator(layout, OT_SetString.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class OT_Empty(bpy.types.Operator):
     bl_idname = "mpme.empty"
     bl_label = "empty"
@@ -85,12 +94,12 @@ def show_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
 def enum_values(obj, prop_name):
     return [item.identifier for item in obj.bl_rna.properties[prop_name].enum_items]
-def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, toggle=-1):
+def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, toggle=-1, icon_only=False):
     if target != None:
         if isActive != None:
             layout = layout.row()
             layout.active = isActive
-        layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True)
+        layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True, icon_only=icon_only)
     else:
         layout.label(text='None')
 def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon='NONE'):
@@ -118,14 +127,19 @@ def reset_pose_bone_scale(armature):
         for b in armature.pose.bones:
             b.scale = Vector((1, 1, 1))
 def reset_pose_bone(armature):
-    if armature.type == 'MESH':
-        for i in bpy.context.selected_objects:
-            for j in i.modifiers:
-                if j.type == 'ARMATURE' and j.object != None:
-                    armature = j.object
+    armature = get_armature()
     reset_pose_bone_location(armature)
     reset_pose_bone_rotation(armature)
     reset_pose_bone_scale(armature)
+def get_armature(obj):
+    if obj.type == "MESH":
+        for m in obj.modifiers:
+            if m.type == "ARMATURE" and m.object != None:
+                return m.object
+    elif obj.type == "ARMATURE":
+        return obj
+    else:
+        return None
 def register_classes(classes):
     for cls in classes:
         try:

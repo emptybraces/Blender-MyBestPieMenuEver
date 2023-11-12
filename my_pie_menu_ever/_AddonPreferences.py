@@ -100,7 +100,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
 class Accessor():
     @staticmethod
-    def get_ref(): return bpy.context.preferences.addons["my_pie_menu_ever"].preferences
+    def get_ref(): return bpy.context.preferences.addons[__package__].preferences
     @staticmethod
     def get_second_language(): return Accessor.get_ref().secondLanguage
     @staticmethod

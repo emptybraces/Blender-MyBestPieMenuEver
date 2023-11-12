@@ -21,6 +21,7 @@ else:
     from . import _MenuSculptCurve
     from . import _MenuPose
     from . import _PanelSelectionHistory
+    from . import g
 import copy
 import bpy
 from bpy.types import Panel, Menu, Operator
@@ -37,28 +38,26 @@ class VIEW3D_MT_my_pie_menu(Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
-    bl_label = "My Pie Menu v1.01"
+    bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}"
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
         # 西、東、南、北、北西、北東、南西、南東
-        PieMenu_ObjectMode(pie, context)
-        PieMenu_Utility(pie, context)
+        PieMenuDraw_ObjectMode(pie, context)
+        PieMenuDraw_Utility(pie, context)
 
-        PieMenu_Primary(pie, context);
-        PieMenu_Secondary(pie, context);
+        PieMenuDraw_Primary(pie, context);
+        PieMenuDraw_Secondary(pie, context);
 
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
-def PieMenu_ObjectMode(pie, context):
+def PieMenuDraw_ObjectMode(pie, context):
     active = context.active_object
     object_mode = 'OBJECT' if active is None else context.mode
     active_type_is_mesh = active != None and active.type == 'MESH'
     active_type_is_armature = active != None and active.type == 'ARMATURE'
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
-
-
 
     row = pie.split().row()
     box = row.box()
@@ -71,7 +70,8 @@ def PieMenu_ObjectMode(pie, context):
     # print(object_mode)
     # print(bpy.types.Object.bl_rna.properties["mode"].enum_items[object_mode].name)
     r.active = object_mode != 'OBJECT'
-    r.operator("object.mode_set", text=iface_('Object', act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == 'OBJECT').mode = 'OBJECT'
+    op = r.operator("object.mode_set", text=iface_('Object', act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == 'OBJECT')
+    op.mode = 'OBJECT'
 
     r = col.row()
     r.active = object_mode != 'EDIT_MESH'
@@ -100,7 +100,7 @@ def PieMenu_ObjectMode(pie, context):
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
-def PieMenu_Utility(pie, context):
+def PieMenuDraw_Utility(pie, context):
     def _DrawPivot(layout):
         text = context.scene.tool_settings.transform_pivot_point
         if text == 'ACTIVE_ELEMENT':
@@ -160,13 +160,17 @@ def PieMenu_Utility(pie, context):
     # 行開始
     box = row.box()
     box.label(text = 'Object')
-    c = box.column()
+    c = box.column(align = True)
     c.active = context.object != None
-    _Util.layout_prop(c, context.object, "show_in_front")
+    r = c.row(align = True)
+    _Util.layout_prop(r, context.object, "show_in_front")
+    armature = _Util.get_armature(context.object)
+    _Util.OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature!=None)
+
     _Util.layout_prop(c, context.object, "show_wire")
-    _Util.layout_prop(c, context.object, "display_type", text="", expand=False)
+    _Util.layout_prop(c, context.object, "display_type")
     _Util.layout_operator(c, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
-    _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode", expand=False)
+    _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.changelanguage"
@@ -197,7 +201,7 @@ class OT_ChangeOrientations(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
-def PieMenu_Primary(pie, context):
+def PieMenuDraw_Primary(pie, context):
     current_mode = context.mode
     if current_mode == 'OBJECT':                _MenuObject.MenuPrimary(pie, context)
     elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuPrimary(pie, context)
@@ -214,7 +218,7 @@ def PieMenu_Primary(pie, context):
     elif current_mode == 'GPENCIL_SCULPT':      Placeholder(pie, context, 'Primary')
     elif current_mode == 'GPENCIL_WEIGHT_PAINT':Placeholder(pie, context, 'Primary')
 
-def PieMenu_Secondary(pie, context):
+def PieMenuDraw_Secondary(pie, context):
     current_mode = context.mode
     if current_mode == 'OBJECT':                _MenuObject.MenuSecondary(pie, context)
     elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuSecondary(pie, context)

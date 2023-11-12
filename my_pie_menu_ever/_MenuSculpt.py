@@ -42,7 +42,7 @@ def MenuPrimary(pie, context):
     col2 = row2.column()
     for i in _Util.enum_values(tool.brush, 'stroke_method'):
         is_use = tool.brush.stroke_method == i
-        _Util.OT_SetterBase.operator(col2, _Util.OT_SetString.bl_idname, i, tool.brush, "stroke_method", i, depress=is_use)
+        _Util.OT_SetString.operator(col2, i, tool.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
 # --------------------------------------------------------------------------------

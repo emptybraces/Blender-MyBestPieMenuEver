@@ -1,7 +1,7 @@
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (3, 6, 5),
     "location": "3D View",
     "description": "My Best Pie Menu EVER!",
@@ -9,6 +9,8 @@ bl_info = {
     "doc_url": "",
     "category": "3D View",
 }
+from . import g
+g.ver = bl_info["version"]
 if "bpy" in locals():
     import imp
     imp.reload(_Util)
