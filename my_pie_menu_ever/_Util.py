@@ -17,7 +17,8 @@ class OT_SetterBase():
     propName: bpy.props.StringProperty()
     def execute(self, context):
         target = getattr(context, self.propName, None)
-        setattr(target, self.propName, self.value)
+        if target != None:
+            setattr(target, self.propName, self.value)
         return {'FINISHED'}
     @staticmethod
     def operator(layout, clsid, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
@@ -127,7 +128,7 @@ def reset_pose_bone_scale(armature):
         for b in armature.pose.bones:
             b.scale = Vector((1, 1, 1))
 def reset_pose_bone(armature):
-    armature = get_armature()
+    armature = get_armature(armature)
     reset_pose_bone_location(armature)
     reset_pose_bone_rotation(armature)
     reset_pose_bone_scale(armature)
