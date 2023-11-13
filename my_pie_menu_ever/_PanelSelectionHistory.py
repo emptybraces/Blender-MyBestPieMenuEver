@@ -10,11 +10,11 @@ g_is_busy = False
 # 選択履歴
 # --------------------------------------------------------------------------------
 def PanelHistory(layout, context):
-    layout.operator_menu_enum(SelectionHistory_OT_Menu.bl_idname, 'historyEnum')
+    layout.operator_menu_enum(MPM_OT_SelectionHistory.bl_idname, 'historyEnum')
 
 # --------------------------------------------------------------------------------
-class SelectionHistory_OT_Menu(bpy.types.Operator):
-    bl_idname = "selection_history.menu"
+class MPM_OT_SelectionHistory(bpy.types.Operator):
+    bl_idname = "op.mpm_selection_history"
     bl_description = "selection history"
     bl_label = "Selection History"
 
@@ -141,7 +141,7 @@ def on_selection_changed(context):
 
 # --------------------------------------------------------------------------------
 classes = [
-    SelectionHistory_OT_Menu,
+    MPM_OT_SelectionHistory,
 ]
 def register():
     bpy.app.handlers.depsgraph_update_post.append(on_selection_changed)
@@ -149,11 +149,11 @@ def register():
 
 def unregister():
     _Util.unregister_classes(classes)
+    bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
     global g_history
     global g_history_no
     global g_history_current_no
     global g_is_busy
-    bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
     del bpy.types.Scene.selection_history
     g_history.clear()
     g_history_no = 0

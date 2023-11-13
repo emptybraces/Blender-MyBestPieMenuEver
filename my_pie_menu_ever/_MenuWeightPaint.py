@@ -7,10 +7,7 @@ from . import _Util
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint Primary')
-    r = box.row(align=True)
-    r.label(text="Copy Mirrored VG from ")
-    _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
-    _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname, isActive=_Util.is_armature_in_selected())
+    MirrorVertexGroup(box)
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
@@ -38,12 +35,24 @@ def MenuSecondary(pie, context):
             is_use = brush.blend == i
             _Util.OT_SetterBase.operator(r, _Util.OT_SetString.bl_idname, i, brush, "blend", i, depress=is_use)
     _Util.layout_prop(box, bpy.context.object.data, "use_paint_mask")
+# --------------------------------------------------------------------------------
+def MirrorVertexGroup(layout):
+    r = layout.row(align=True)
+    r.label(text="Copy Mirrored VG from ")
+    _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
+    _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname)
 
 # --------------------------------------------------------------------------------
 class OT_MirrorVGFromSelectedBone(bpy.types.Operator):
     bl_idname = "op.mirror_vgroup_from_bone"
     bl_label = "Selected Bones"
     bl_options = {'REGISTER', 'UNDO'}
+    @classmethod
+    def poll(cls, context):
+        for obj in bpy.context.selected_objects:
+            if obj.type == 'ARMATURE' and 0 < len([bone for bone in obj.data.bones if bone.select]):
+                return True
+        return False
     def get_selected_bone_names(self, obj):
         if obj and obj.type == 'ARMATURE':
             armature = obj.data
@@ -58,12 +67,11 @@ class OT_MirrorVGFromSelectedBone(bpy.types.Operator):
         names = []
         for obj in selected_objects:
             names = self.get_selected_bone_names(obj)
-            if names != None: break
-        if names != None and context.active_object.type == 'MESH':
-            for name in names:
-                new_vg = mirror_vgroup(context.active_object, name)
-                if new_vg:
-                    msg += f"{name} -> {new_vg}\n"
+            if names != None and context.active_object.type == 'MESH':
+                for name in names:
+                    new_vg = mirror_vgroup(context.active_object, name)
+                    if new_vg:
+                        msg += f"{name} -> {new_vg}\n"
         _Util.show_msgbox(msg if msg else "Invalid selection!", "Mirror VGroup from selected bones")
         return {'FINISHED'}
 class OT_MirrorVGFromSelectedListItem(bpy.types.Operator):

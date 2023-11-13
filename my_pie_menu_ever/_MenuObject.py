@@ -3,6 +3,8 @@ from bpy.types import Panel, Menu, Operator
 from . import _Util
 from . import _AddonPreferences
 from . import _MenuPose
+from . import _MenuWeightPaint
+
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -11,6 +13,7 @@ def MenuPrimary(pie, context):
     box.label(text = 'Object Primary')
     c = box.column(align = True)
     _Util.layout_operator(c, "wiggle.reset", "Wiggle2: ResetPhysics") # if imported
+    _MenuWeightPaint.MirrorVertexGroup(c)
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):

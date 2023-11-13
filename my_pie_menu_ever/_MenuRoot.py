@@ -169,7 +169,7 @@ def PieMenuDraw_Utility(pie, context):
 
     _Util.layout_prop(c, context.object, "show_wire")
     _Util.layout_prop(c, context.object, "display_type")
-    _Util.layout_operator(c, _MenuPose.OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    _Util.layout_operator(c, _MenuPose.MPM_OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
 class OT_Utility_ChangeLanguage(bpy.types.Operator):
