@@ -9,16 +9,19 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [Common]
 
-- Change Modes
+- Change Modes.
+- Change to WeightPaint mode with select linked armature.
 - Quickly editable view settings.
 - Quickly editable object settings.
-- Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes.
+- Quickly Open Preference.
+- Quickly Open Console.
+- Quickly Import settings.
+- Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
-- Shortcut 3rdparty functions.
+- Shortcut call 3rdparty functions. Wiggle2, AutoRigPro.
 
 ### [OBJECT mode]
-
-- Quickly Open Preference.
+- 
 
 ### [PAINT_TEXTURE mode]
 
@@ -51,7 +54,7 @@ Selection history
 #
 OBJECT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/d41e7176-3e89-46fa-8a06-f7d2f64b24d4)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/17bbd6b7-db29-4f6c-bf36-c1e1fd4f49d1)
 
 #
 PAINT_TEXTURE Mode
