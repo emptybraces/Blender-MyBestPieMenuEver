@@ -87,16 +87,33 @@ def PieMenuDraw_ObjectMode(pie, context):
     op = r.operator("object.mode_set", text=iface_("Pose", act_mode_i18n_context), icon='POSE_HLT', depress=object_mode == 'POSE')
     if active_type_is_armature: op.mode = 'POSE'
 
-    r = col.row()
+    r = col.row(align=True)
     r.active = object_mode != 'PAINT_WEIGHT' and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_('Weight Paint', act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == 'PAINT_WEIGHT')
-    if active_type_is_mesh: op.mode = 'WEIGHT_PAINT'
+    if active_type_is_mesh: 
+        op.mode = 'WEIGHT_PAINT'
+        arm = _Util.get_armature(active)
+        _Util.layout_operator(r, MPM_OT_WeightPaintModeWithArmature.bl_idname, "", icon="BONE_DATA")
 
     r = col.row()
     r.active = object_mode != 'PAINT_TEXTURE' and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == 'PAINT_TEXTURE')
     if active_type_is_mesh: op.mode = 'TEXTURE_PAINT'
 
+class MPM_OT_WeightPaintModeWithArmature(bpy.types.Operator):
+    bl_idname = "op.mpm_weight_paint_mode_with_armature"
+    bl_label = "Changed Weight Paint Mode With Armature"
+    bl_options = {'REGISTER', 'UNDO'}
+    @classmethod
+    def poll(cls, context):
+        active = context.active_object
+        return active != None and active.type == 'MESH' and _Util.get_armature(active) != None
+
+    def execute(self, context):
+        active = context.active_object
+        _Util.get_armature(active).select_set(True)
+        bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
+        return {'FINISHED'}
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
@@ -118,11 +135,11 @@ def PieMenuDraw_Utility(pie, context):
         elif text == 'MEDIAN_POINT':
             text = "Median"
             icon = "PIVOT_MEDIAN"
-        layout.operator(OT_ChangePivot.bl_idname, text=text, icon=icon)
+        layout.operator(MPM_OT_ChangePivot.bl_idname, text=text, icon=icon)
     def _DrawOrientation(layout):
         text = bpy.context.scene.transform_orientation_slots[0].type
         icon = "ORIENTATION_" + text
-        layout.operator(OT_ChangeOrientations.bl_idname, text=text, icon=icon)
+        layout.operator(MPM_OT_ChangeOrientations.bl_idname, text=text, icon=icon)
     
     box = pie.split().box()
     box.label(text = 'Utilities')
@@ -130,7 +147,7 @@ def PieMenuDraw_Utility(pie, context):
     row.operator("screen.userpref_show", icon='PREFERENCES', text="")
     row.operator("wm.console_toggle", icon='CONSOLE', text="")
     row.operator("import_scene.fbx", icon='IMPORT', text="")
-    row.operator(OT_Utility_ChangeLanguage.bl_idname, text="", icon='FILE_FONT')
+    row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon='FILE_FONT')
 
     row = box.row(align = True)
     box = row.box()
@@ -172,8 +189,8 @@ def PieMenuDraw_Utility(pie, context):
     _Util.layout_operator(c, _MenuPose.MPM_OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
-class OT_Utility_ChangeLanguage(bpy.types.Operator):
-    bl_idname = "op.changelanguage"
+class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
+    bl_idname = "op.mpm_change_language"
     bl_label = "Change Language"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
@@ -183,16 +200,16 @@ class OT_Utility_ChangeLanguage(bpy.types.Operator):
             bpy.context.preferences.view.language = "en_US"
         return {'FINISHED'}
         
-class OT_ChangePivot(bpy.types.Operator):
-    bl_idname = "op.pivot"
+class MPM_OT_ChangePivot(bpy.types.Operator):
+    bl_idname = "op.mpm_change_pivot"
     bl_label = "Change Pivot"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_pivot_pie")
         return {'FINISHED'}
     
-class OT_ChangeOrientations(bpy.types.Operator):
-    bl_idname = "op.orientations"
+class MPM_OT_ChangeOrientations(bpy.types.Operator):
+    bl_idname = "op.mpm_change_orientations"
     bl_label = "Change Orientations"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
@@ -244,9 +261,10 @@ def Placeholder(pie, context, text):
 
 classes = (
     VIEW3D_MT_my_pie_menu,
-    OT_ChangePivot,
-    OT_ChangeOrientations,
-    OT_Utility_ChangeLanguage,
+    MPM_OT_ChangePivot,
+    MPM_OT_ChangeOrientations,
+    MPM_OT_Utility_ChangeLanguage,
+    MPM_OT_WeightPaintModeWithArmature,
 )
 modules = [
     _MenuObject,
