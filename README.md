@@ -18,7 +18,8 @@ Placement in left and right sections are common functions, and upper and lower s
 - Quickly Import settings.
 - Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
-- Shortcut call 3rdparty functions. Wiggle2, AutoRigPro.
+- Reset bone Transform.
+- Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
 ### [OBJECT mode]
 - Copy the mirrored Vertex Group. Also possible from selected bones.
@@ -44,6 +45,7 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [POSE mode]
 
 - Quickly change showing bone layer group.
+- AutoRigPro: Snap FKIKs of four limbs at once.
 
 #
 Selection history
