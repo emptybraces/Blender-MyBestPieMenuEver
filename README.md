@@ -10,7 +10,9 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [Common]
 
 - Quickly Change Modes.
+  
   Change to WeightPaint mode with selecting a linked armature.
+  
   Change to Pose mode without selecting an armature.
 - Quickly editable view settings.
 - Quickly editable object settings.
