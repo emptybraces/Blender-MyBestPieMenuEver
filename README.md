@@ -21,7 +21,7 @@ Placement in left and right sections are common functions, and upper and lower s
 - Shortcut call 3rdparty functions. Wiggle2, AutoRigPro.
 
 ### [OBJECT mode]
-- 
+- Copy the mirrored Vertex Group. Also possible from selected bones.
 
 ### [PAINT_TEXTURE mode]
 
@@ -34,7 +34,7 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [PAINT_WEIGHT mode]
 
 - Shortcut PaintMask switch.
-- Copy the mirrored Vertex Group. Possible from selected bones.
+- Copy the mirrored Vertex Group. Also possible from selected bones.
 
 ### [SCULPT mode]
 
@@ -44,7 +44,6 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [POSE mode]
 
 - Quickly change showing bone layer group.
-- Reset bone transform. (Also Object mode and WeightPaint mode.)
 
 #
 Selection history
