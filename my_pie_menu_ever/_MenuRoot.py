@@ -83,9 +83,7 @@ def PieMenuDraw_ObjectMode(pie, context):
     if active_type_is_mesh: op.mode = 'SCULPT'
 
     r = col.row()
-    r.active = object_mode != 'POSE' and active_type_is_armature
-    op = r.operator("object.mode_set", text=iface_("Pose", act_mode_i18n_context), icon='POSE_HLT', depress=object_mode == 'POSE')
-    if active_type_is_armature: op.mode = 'POSE'
+    _Util.layout_operator(r, MPM_OT_PoseMode.bl_idname, text=iface_("Pose", act_mode_i18n_context), icon="POSE_HLT")
 
     r = col.row(align=True)
     r.active = object_mode != 'PAINT_WEIGHT' and active_type_is_mesh
@@ -113,6 +111,27 @@ class MPM_OT_WeightPaintModeWithArmature(bpy.types.Operator):
         active = context.active_object
         _Util.get_armature(active).select_set(True)
         bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
+        return {'FINISHED'}
+
+class MPM_OT_PoseMode(bpy.types.Operator):
+    bl_idname = "op.mpm_pose_mode"
+    bl_label = "Changed to Pose Mode"
+    bl_options = {'REGISTER', 'UNDO'}
+    @classmethod
+    def poll(cls, context):
+        if context.mode == "POSE":
+            return False
+        active = context.active_object
+        return active != None and (active.type == "ARMATURE" or (active.type == 'MESH' and _Util.get_armature(active) != None))
+
+    def execute(self, context):
+        active = context.active_object
+        if active.type == "MESH":
+            bpy.ops.object.select_all(action='DESELECT')
+            arm = _Util.get_armature(active)
+            arm.select_set(True)
+            context.view_layer.objects.active = arm
+        bpy.ops.object.mode_set(mode="POSE")
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
@@ -264,6 +283,7 @@ classes = (
     MPM_OT_ChangePivot,
     MPM_OT_ChangeOrientations,
     MPM_OT_Utility_ChangeLanguage,
+    MPM_OT_PoseMode,
     MPM_OT_WeightPaintModeWithArmature,
 )
 modules = [
