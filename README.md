@@ -76,7 +76,7 @@ PAINT_TEXTURE Mode
 #
 PAINT_WEIGHT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/8c07df1c-0d74-460a-bba9-5c10d0690073)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/72bbc009-4602-40fc-9440-79cab5b714be)
 
 #
 SCULPT Mode
