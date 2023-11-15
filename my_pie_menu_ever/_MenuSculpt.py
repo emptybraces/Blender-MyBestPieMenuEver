@@ -25,13 +25,13 @@ def MenuPrimary(pie, context):
         for filter_name in filters.split(','):
             for brush_data in bpy.data.brushes:
                 if brush_data.use_paint_sculpt and filter_name.strip().lower() == brush_data.name.lower():
-                    op = _Util.OT_SetPointer.operator(col2, brush_data.name, tool, "brush", brush_data, depress=current_brush == brush_data)
+                    op = _Util.MPM_OT_SetPointer.operator(col2, brush_data.name, tool, "brush", brush_data, depress=current_brush == brush_data)
                     cnt += 1
                     if cnt % limit_rows == 0: col2 = row2.column()
     else:
         for i in bpy.data.brushes:
             if i.use_paint_sculpt:
-                op = _Util.OT_SetPointer.operator(col2, i.name, tool, "brush", i, depress=current_brush == i)
+                op = _Util.MPM_OT_SetPointer.operator(col2, i.name, tool, "brush", i, depress=current_brush == i)
                 cnt += 1;
                 if cnt % limit_rows == 0: col2 = row2.column()
     # Strokes
@@ -42,7 +42,7 @@ def MenuPrimary(pie, context):
     col2 = row2.column()
     for i in _Util.enum_values(tool.brush, 'stroke_method'):
         is_use = tool.brush.stroke_method == i
-        _Util.OT_SetString.operator(col2, i, tool.brush, "stroke_method", i, depress=is_use)
+        _Util.MPM_OT_SetString.operator(col2, i, tool.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
 # --------------------------------------------------------------------------------

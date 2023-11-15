@@ -18,7 +18,7 @@ def MenuPrimary(pie, context):
     for i in bpy.data.brushes:
         if i.use_paint_sculpt_curves:
             is_use = current_brush.name == i.name
-            op = _Util.OT_SetPointer.operator(col2, i.name.replace(" Curves", ""), tool, "brush", i)
+            op = _Util.MPM_OT_SetPointer.operator(col2, i.name.replace(" Curves", ""), tool, "brush", i)
             cnt += 1;
             if cnt == 10:
                  col2 = rowinbox.column()

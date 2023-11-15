@@ -27,7 +27,7 @@ def MenuPrimary(pie, context):
     for i in bpy.data.brushes:
         if i.use_paint_image and i.name.lower() not in brush_exclude_list:
             is_use = context.tool_settings.image_paint.brush.name == i.name
-            _Util.OT_SetPointer.operator(col2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
+            _Util.MPM_OT_SetPointer.operator(col2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
             cnt += 1;
             if cnt % limit_rows == 0: col2 = row2.column()
 
@@ -51,7 +51,7 @@ def MenuPrimary(pie, context):
     col2 = row2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = context.tool_settings.image_paint.brush.stroke_method == i
-        _Util.OT_SetterBase.operator(col2, _Util.OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
+        _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
     #Blends
@@ -65,7 +65,7 @@ def MenuPrimary(pie, context):
         if i.lower() in blend_include_list:
             is_use = context.tool_settings.image_paint.brush.blend == i
             # col2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i  
-            _Util.OT_SetterBase.operator(col2, _Util.OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "blend", i, depress=is_use)
+            _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "blend", i, depress=is_use)
             # context.tool_settings.image_paint.brush.blend = self.methodName  
             cnt += 1;
             if cnt % limit_rows == 0: col2 = row2.column()
@@ -81,24 +81,24 @@ def MenuSecondary(pie, context):
     ctrl_behaviour = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     if ctrl_behaviour: # Erase Alpha mode
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=False)
-        _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
+        _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
     else:
-        _Util.layout_operator(row, _Util.OT_Empty.bl_idname, "SubColor", False, depress=True)
+        _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "SubColor", False, depress=True)
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
 
     row = c.row(align=True)
     row.label(text = "Angle")
     from math import pi
-    _Util.OT_SetterBase.operator(row, _Util.OT_SetSingle.bl_idname, "0", context.tool_settings.image_paint.brush.texture_slot, "angle", 0)
-    _Util.OT_SetterBase.operator(row, _Util.OT_SetSingle.bl_idname, "180", context.tool_settings.image_paint.brush.texture_slot, "angle", pi)
+    _Util.MPM_OT_SetterBase.operator(row, _Util.MPM_OT_SetSingle.bl_idname, "0", context.tool_settings.image_paint.brush.texture_slot, "angle", 0)
+    _Util.MPM_OT_SetterBase.operator(row, _Util.MPM_OT_SetSingle.bl_idname, "180", context.tool_settings.image_paint.brush.texture_slot, "angle", pi)
 
     mrow, msub = _Util.layout_for_mirror(row)
     # _Util.layout_prop(msub, context.object, "use_mesh_mirror_x", text="X", toggle=True)
     # _Util.layout_prop(msub, context.object, "use_mesh_mirror_y", text="Y", toggle=True)
     # _Util.layout_prop(msub, context.object, "use_mesh_mirror_z", text="Z", toggle=True)
-    _Util.OT_SetterBase.operator(msub, _Util.OT_SetBoolToggle.bl_idname, "X", context.object, "use_mesh_mirror_x")
-    _Util.OT_SetterBase.operator(msub, _Util.OT_SetBoolToggle.bl_idname, "Y", context.object, "use_mesh_mirror_y")
-    _Util.OT_SetterBase.operator(msub, _Util.OT_SetBoolToggle.bl_idname, "Z", context.object, "use_mesh_mirror_z")
+    _Util.MPM_OT_SetterBase.operator(msub, _Util.MPM_OT_SetBoolToggle.bl_idname, "X", context.object, "use_mesh_mirror_x")
+    _Util.MPM_OT_SetterBase.operator(msub, _Util.MPM_OT_SetBoolToggle.bl_idname, "Y", context.object, "use_mesh_mirror_y")
+    _Util.MPM_OT_SetterBase.operator(msub, _Util.MPM_OT_SetBoolToggle.bl_idname, "Z", context.object, "use_mesh_mirror_z")
 
 # --------------------------------------------------------------------------------
 class OT_TexPaint_SwapColor(bpy.types.Operator):

@@ -201,7 +201,7 @@ def PieMenuDraw_Utility(pie, context):
     r = c.row(align = True)
     _Util.layout_prop(r, context.object, "show_in_front")
     armature = _Util.get_armature(context.object)
-    _Util.OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature!=None)
+    _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature!=None)
 
     _Util.layout_prop(c, context.object, "show_wire")
     _Util.layout_prop(c, context.object, "display_type")

@@ -9,16 +9,27 @@ def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Edit Mesh Primary')
 
+    r = box.row()
+    r2 = r.row(align=True)
+    tool_settings = context.scene.tool_settings
+    _Util.layout_prop(r2, tool_settings, "use_proportional_edit", text="")
+    r2.prop_with_popover(tool_settings, "proportional_edit_falloff", text="", icon_only=True, panel="VIEW3D_PT_proportional_edit",)
+
+    r2 = r.row(align=True)
+    _Util.layout_prop(r2, tool_settings, "use_snap", text="")
+    snap_items = bpy.types.ToolSettings.bl_rna.properties["snap_elements"].enum_items
+    for elem in tool_settings.snap_elements:
+        icon = snap_items[elem].icon
+        break
+    del snap_items
+    r2.popover(panel="VIEW3D_PT_snapping", icon=icon, text="",)
+
     r = box.row(align=True)
     
     box = r.box()
     box.label(text = 'Selection')
     c = box.column(align=True)
-    r2 = c.row(align=True)
-    _Util.layout_prop(r2, context.scene.tool_settings, "use_proportional_edit", text="")
-    _Util.layout_prop(r2, context.scene.tool_settings, "use_proportional_connected", isActive=context.scene.tool_settings.use_proportional_edit)
-    _Util.layout_prop(r2, context.scene.tool_settings, "proportional_edit_falloff", text="", isActive=context.scene.tool_settings.use_proportional_edit)
-    _Util.layout_prop(c, context.scene.tool_settings, "use_snap")
+
     _Util.layout_operator(c, "mesh.select_mirror")
     op = _Util.layout_operator(c, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
@@ -30,7 +41,7 @@ def MenuPrimary(pie, context):
     r2 = c.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_seam").clear = False
     _Util.layout_operator(r2, "mesh.mark_seam", "", icon='REMOVE').clear = True
-    _Util.layout_operator(r2, OT_MirrorSeam.bl_idname, "", icon='MOD_MIRROR')
+    _Util.layout_operator(r2, MPM_OT_MirrorSeam.bl_idname, "", icon='MOD_MIRROR')
     _Util.layout_operator(c, "uv.unwrap")
 
     box = r.box()
@@ -39,8 +50,15 @@ def MenuPrimary(pie, context):
     r2 = c.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
     _Util.layout_operator(r2, "mesh.mark_sharp", "", icon='REMOVE').clear = True
-    _Util.layout_operator(r2, OT_MirrorSharp.bl_idname, "", icon='MOD_MIRROR')
+    _Util.layout_operator(r2, MPM_OT_MirrorSharp.bl_idname, "", icon='MOD_MIRROR')
     _Util.layout_operator(c, "mesh.normals_make_consistent").inside=False
+    r2 = c.row(align=True)
+    op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
+    op.direction = 'POSITIVE_X'
+    op.factor = 1
+    op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
+    op.direction = 'NEGATIVE_X'
+    op.factor = 1
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
@@ -48,7 +66,7 @@ def MenuSecondary(pie, context):
     box.label(text = 'Edit Mesh Secondary')
 
 # --------------------------------------------------------------------------------
-class OT_MirrorSeam(bpy.types.Operator):
+class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "editmesh.mirror_seam"
     bl_label = "Mirror Seam"
     bl_options = {'REGISTER', 'UNDO'}
@@ -61,7 +79,7 @@ class OT_MirrorSeam(bpy.types.Operator):
         bpy.ops.mesh.mark_seam(clear=False)
         context.object.data.use_mirror_topology = mirror_settings
         return {'FINISHED'}
-class OT_MirrorSharp(bpy.types.Operator):
+class MPM_OT_MirrorSharp(bpy.types.Operator):
     bl_idname = "editmesh.mirror_sharp"
     bl_label = "Mirror Sharp"
     bl_options = {'REGISTER', 'UNDO'}
@@ -76,8 +94,8 @@ class OT_MirrorSharp(bpy.types.Operator):
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 classes = (
-    OT_MirrorSeam,
-    OT_MirrorSharp,
+    MPM_OT_MirrorSeam,
+    MPM_OT_MirrorSharp,
 )
 def register():
     _Util.register_classes(classes)

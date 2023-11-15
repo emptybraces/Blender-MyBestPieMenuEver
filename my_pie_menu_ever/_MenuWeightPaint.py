@@ -17,23 +17,23 @@ def MenuSecondary(pie, context):
     unified_paint_settings = context.tool_settings.unified_paint_settings
     brush = context.tool_settings.weight_paint.brush
     _Util.layout_prop(r, unified_paint_settings, "weight")
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.0", unified_paint_settings, "weight", 0.0)
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.1", unified_paint_settings, "weight", 0.1)
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.5", unified_paint_settings, "weight", 0.5)
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "1.0", unified_paint_settings, "weight", 1.0)
+    _Util.MPM_OT_SetSingle.operator(r, "0.0", unified_paint_settings, "weight", 0.0)
+    _Util.MPM_OT_SetSingle.operator(r, "0.1", unified_paint_settings, "weight", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r, "0.5", unified_paint_settings, "weight", 0.5)
+    _Util.MPM_OT_SetSingle.operator(r, "1.0", unified_paint_settings, "weight", 1.0)
     r = box.row(align=True)
     _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "2x", brush, "strength", brush.strength * 2)
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "1/2", brush, "strength", brush.strength / 2)
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "0.1", brush, "strength", 0.1)
-    _Util.OT_SetterBase.operator(r, _Util.OT_SetSingle.bl_idname, "1.0", brush, "strength", 1.0)
+    _Util.MPM_OT_SetSingle.operator(r, "2x", brush, "strength", brush.strength * 2)
+    _Util.MPM_OT_SetSingle.operator(r, "1/2", brush, "strength", brush.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush, "strength", 1.0)
     #Blends
     r = box.row(align=True)
     target_blends = ['mix', 'add', 'sub']
     for i in _Util.enum_values(brush, 'blend'):
         if i.lower() in target_blends:
             is_use = brush.blend == i
-            _Util.OT_SetterBase.operator(r, _Util.OT_SetString.bl_idname, i, brush, "blend", i, depress=is_use)
+            _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
     _Util.layout_prop(box, bpy.context.object.data, "use_paint_mask")
 # --------------------------------------------------------------------------------
 def MirrorVertexGroup(layout):
@@ -89,13 +89,19 @@ class OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 def mirror_vgroup(obj, name):
-    # 接尾辞のみリプレースする。
+    # 接尾辞のリプレース
     postfix = name[-2:]
     new_name = name
-    if postfix == '.L': new_name = new_name[:-2] + '.R'
-    elif postfix == '.R': new_name = new_name[:-2] + '.l'
-    elif postfix == '.l': new_name = new_name[:-2] + '.r'
-    elif postfix == '.r': new_name = new_name[:-2] + '.l'
+    if postfix == ".L": new_name = new_name[:-2] + ".R"
+    elif postfix == ".R": new_name = new_name[:-2] + ".l"
+    elif postfix == ".l": new_name = new_name[:-2] + ".r"
+    elif postfix == ".r": new_name = new_name[:-2] + ".l"
+    # 中間のリプレース
+    if ".L." in new_name:    new_name = new_name.replace(".L.", ".R.")
+    elif ".R." in new_name:  new_name = new_name.replace(".R.", ".L.")
+    elif ".l." in new_name:  new_name = new_name.replace(".l.", ".r.")
+    elif ".r." in new_name:  new_name = new_name.replace(".r.", ".l.")
+
     # vgroup = obj.vertex_groups.get(name)
     bpy.ops.object.vertex_group_set_active(group=name)
     bpy.ops.object.vertex_group_copy()
