@@ -27,6 +27,9 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [OBJECT mode]
 - Copy the mirrored Vertex Group. Also possible from selected bones.
 
+### [EDIT mode]
+- Shortcuts various functions.
+
 ### [PAINT_TEXTURE mode]
 
 - Quickly changeable to Brushs, Strokes, Blends.
@@ -59,6 +62,11 @@ Selection history
 OBJECT Mode
 
 ![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/17bbd6b7-db29-4f6c-bf36-c1e1fd4f49d1)
+
+#
+Edit Mode
+
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/78abeb16-af55-41c0-be1b-13688fa3b189)
 
 #
 PAINT_TEXTURE Mode
