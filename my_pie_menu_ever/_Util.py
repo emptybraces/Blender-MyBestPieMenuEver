@@ -116,7 +116,7 @@ def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, to
             layout.active = isActive
         layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True, icon_only=icon_only)
     else:
-        layout.label(text='None')
+        layout.label(text="None")
 def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon='NONE'):
     if isActive != None:
         layout = layout.row()
@@ -147,14 +147,14 @@ def reset_pose_bone(armature):
     reset_pose_bone_rotation(armature)
     reset_pose_bone_scale(armature)
 def get_armature(obj):
-    if obj.type == "MESH":
-        for m in obj.modifiers:
-            if m.type == "ARMATURE" and m.object != None:
-                return m.object
-    elif obj.type == "ARMATURE":
-        return obj
-    else:
-        return None
+    if obj:
+        if obj.type == "MESH":
+            for m in obj.modifiers:
+                if m.type == "ARMATURE" and m.object != None:
+                    return m.object
+        elif obj.type == "ARMATURE":
+            return obj
+    return None
 def register_classes(classes):
     for cls in classes:
         try:

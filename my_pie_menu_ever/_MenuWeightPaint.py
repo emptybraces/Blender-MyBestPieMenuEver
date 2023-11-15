@@ -13,7 +13,8 @@ def MenuPrimary(pie, context):
 def MenuSecondary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint Secondary')
-    r = box.row(align=True)
+    c = box.column(align=True)
+    r = c.row(align=True)
     unified_paint_settings = context.tool_settings.unified_paint_settings
     brush = context.tool_settings.weight_paint.brush
     _Util.layout_prop(r, unified_paint_settings, "weight")
@@ -21,20 +22,20 @@ def MenuSecondary(pie, context):
     _Util.MPM_OT_SetSingle.operator(r, "0.1", unified_paint_settings, "weight", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", unified_paint_settings, "weight", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", unified_paint_settings, "weight", 1.0)
-    r = box.row(align=True)
+    r = c.row(align=True)
     _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
     _Util.MPM_OT_SetSingle.operator(r, "2x", brush, "strength", brush.strength * 2)
     _Util.MPM_OT_SetSingle.operator(r, "1/2", brush, "strength", brush.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush, "strength", 1.0)
     #Blends
-    r = box.row(align=True)
+    r = c.row(align=True)
     target_blends = ['mix', 'add', 'sub']
     for i in _Util.enum_values(brush, 'blend'):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
-    _Util.layout_prop(box, bpy.context.object.data, "use_paint_mask")
+    _Util.layout_prop(c, bpy.context.object.data, "use_paint_mask")
 # --------------------------------------------------------------------------------
 def MirrorVertexGroup(layout):
     r = layout.row(align=True)
@@ -78,6 +79,9 @@ class OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
     bl_idname = "op.mirror_vgroup_from_list"
     bl_label = "Selected VGroup"
     bl_options = {'REGISTER', 'UNDO'}
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None
     def execute(self, context):
         msg = ""
         obj = context.active_object

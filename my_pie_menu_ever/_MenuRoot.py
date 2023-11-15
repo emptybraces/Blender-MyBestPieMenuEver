@@ -75,7 +75,8 @@ def PieMenuDraw_ObjectMode(pie, context):
 
     r = col.row()
     r.active = object_mode != 'EDIT_MESH'
-    r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT_MESH').mode = 'EDIT'
+    op = r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT_MESH')
+    if active_type_is_mesh: op.mode = 'EDIT'
 
     r = col.row()
     r.active = object_mode != 'SCULPT' and active_type_is_mesh
@@ -197,14 +198,14 @@ def PieMenuDraw_Utility(pie, context):
     box = row.box()
     box.label(text = 'Object')
     c = box.column(align = True)
-    c.active = context.object != None
+    c.active = context.active_object != None
     r = c.row(align = True)
-    _Util.layout_prop(r, context.object, "show_in_front")
-    armature = _Util.get_armature(context.object)
+    _Util.layout_prop(r, context.active_object, "show_in_front")
+    armature = _Util.get_armature(context.active_object)
     _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature!=None)
 
-    _Util.layout_prop(c, context.object, "show_wire")
-    _Util.layout_prop(c, context.object, "display_type")
+    _Util.layout_prop(c, context.active_object, "show_wire")
+    _Util.layout_prop(c, context.active_object, "display_type")
     _Util.layout_operator(c, _MenuPose.MPM_OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
