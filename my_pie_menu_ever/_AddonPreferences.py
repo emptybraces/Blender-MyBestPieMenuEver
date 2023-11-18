@@ -9,6 +9,7 @@ addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
     secondLanguage: StringProperty(name="Second Language", default="ja_JP")
+    openFilePathList: StringProperty(name="Open File or Explorer Path List")
     isDebug: BoolProperty(name="Debug Mode")
     imagePaintBrushExclude: StringProperty(name="Brush Exclude", default="", description="Specify by comma separated.")
     imagePaintBlendInclude: StringProperty(name="Blend Include", default="mix,screen,overlay,erase_alpha", description="Specify by comma separated.")
@@ -16,7 +17,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
     imagePaintLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5)
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5)
-    sculptBrushFilterByName: StringProperty(name="Filter by brush name")
+    sculptBrushFilterByName: StringProperty(name="Filter by brush name", description="Specify by comma separated.")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
@@ -58,6 +59,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         layout = self.layout
         box = layout.box().column(heading='Utility')
         box.prop(self, "secondLanguage")
+        box.prop(self, "openFilePathList")
         box.prop(self, "isDebug")
 
         box = layout.box()
@@ -85,6 +87,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     def dict(self):
         return {
             "secondLanguage": self.secondLanguage,
+            "openFilePathList": self.openFilePathList,
             "isDebug": getattr(self, "isDebug", False),
             "imagePaintBrushExclude": self.imagePaintBrushExclude,
             "imagePaintBlendInclude": self.imagePaintBlendInclude,
@@ -119,6 +122,8 @@ class Accessor():
     def get_sculpt_limit_row_count(): return Accessor.get_ref().sculptLimitRowCount
     @staticmethod
     def get_sculpt_brush_filter_by_name(): return Accessor.get_ref().sculptBrushFilterByName
+    @staticmethod
+    def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
     @staticmethod
     def get_is_debug(): return Accessor.get_ref().isDebug
 

@@ -128,7 +128,7 @@ class MPM_OT_PoseMode(bpy.types.Operator):
     def execute(self, context):
         active = context.active_object
         if active.type == "MESH":
-            bpy.ops.object.select_all(action='DESELECT')
+            # bpy.ops.object.select_all(action='DESELECT')
             arm = _Util.get_armature(active)
             arm.select_set(True)
             context.view_layer.objects.active = arm
@@ -138,37 +138,21 @@ class MPM_OT_PoseMode(bpy.types.Operator):
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
 def PieMenuDraw_Utility(pie, context):
-    def _DrawPivot(layout):
-        text = context.scene.tool_settings.transform_pivot_point
-        if text == 'ACTIVE_ELEMENT':
-            text = "Active"
-            icon = "PIVOT_ACTIVE"
-        elif text == 'BOUNDING_BOX_CENTER':
-            text = "BoundingBox"
-            icon = "PIVOT_BOUNDBOX"
-        elif text == 'CURSOR':
-            text = "Cursor"
-            icon = "PIVOT_CURSOR"
-        elif text == 'INDIVIDUAL_ORIGINS':
-            text = "Origin"
-            icon = "PIVOT_INDIVIDUAL"
-        elif text == 'MEDIAN_POINT':
-            text = "Median"
-            icon = "PIVOT_MEDIAN"
-        layout.operator(MPM_OT_ChangePivot.bl_idname, text=text, icon=icon)
-    def _DrawOrientation(layout):
-        text = bpy.context.scene.transform_orientation_slots[0].type
-        icon = "ORIENTATION_" + text
-        layout.operator(MPM_OT_ChangeOrientations.bl_idname, text=text, icon=icon)
-    
     box = pie.split().box()
     box.label(text = 'Utilities')
-    row = box.row(align = True)
+    row_parent = box.row()
+    row = row_parent.row(align = True)
     row.operator("screen.userpref_show", icon='PREFERENCES', text="")
     row.operator("wm.console_toggle", icon='CONSOLE', text="")
     row.operator("import_scene.fbx", icon='IMPORT', text="")
-    row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon='FILE_FONT')
-
+    row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
+    row = row_parent.row(align = True)
+    file_path_list = _AddonPreferences.Accessor.get_open_file_path_list().strip()
+    if file_path_list:
+        for path in file_path_list.split(','):
+            op = _Util.layout_operator(row, MPM_OT_Utility_OpenFile.bl_idname, icon="FILE_FOLDER")
+            op.path = path
+    # -------------------------------
     row = box.row(align = True)
     box = row.box()
     box.label(text = 'Tool')
@@ -184,9 +168,12 @@ def PieMenuDraw_Utility(pie, context):
     #     col.prop(props, "orientation")
     # 行開始
     r = c.row(align=True)
-    _DrawPivot(r)
-    _DrawOrientation(r)
-    # 行開始
+    r.prop(context.tool_settings, "transform_pivot_point", text="", icon_only=True)
+    r.prop_with_popover(context.scene.transform_orientation_slots[0], "type", text="", panel="VIEW3D_PT_transform_orientations",)
+    r = c.row(align=True)
+    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSetDefault.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSetCursorOrigin.bl_idname)
+    # オーバーレイメニュー
     # row = col.row(align=False)
     c = box.column(align = True)
     c.active = getattr(context.space_data, "overlay", None) != None
@@ -194,7 +181,7 @@ def PieMenuDraw_Utility(pie, context):
     _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays)
     _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays)
     _Util.layout_prop(c, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
-    # 行開始
+    # オブジェクトメニュー
     box = row.box()
     box.label(text = 'Object')
     c = box.column(align = True)
@@ -220,21 +207,31 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
             bpy.context.preferences.view.language = "en_US"
         return {'FINISHED'}
         
-class MPM_OT_ChangePivot(bpy.types.Operator):
-    bl_idname = "op.mpm_change_pivot"
-    bl_label = "Change Pivot"
+class MPM_OT_Utility_PivotOrientationSetDefault(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_orientation_set_default"
+    bl_label = "Reset"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
-        bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_pivot_pie")
+        context.scene.transform_orientation_slots[0].type = 'GLOBAL'
+        context.scene.tool_settings.transform_pivot_point = 'INDIVIDUAL_ORIGINS'
         return {'FINISHED'}
-    
-class MPM_OT_ChangeOrientations(bpy.types.Operator):
-    bl_idname = "op.mpm_change_orientations"
-    bl_label = "Change Orientations"
+class MPM_OT_Utility_PivotOrientationSetCursorOrigin(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_orientation_set_cursor_origin"
+    bl_label = "Cursor"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
-        bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_orientations_pie")
+        context.scene.transform_orientation_slots[0].type = 'CURSOR'
+        context.scene.tool_settings.transform_pivot_point = 'CURSOR'
         return {'FINISHED'}
+class MPM_OT_Utility_OpenFile(bpy.types.Operator):
+    bl_idname = "op.mpm_open_file"
+    bl_label = ""
+    path: bpy.props.StringProperty()
+    def execute(self, context):
+        import subprocess
+        subprocess.Popen(['start', self.path], shell=True)
+        return {'FINISHED'}
+        
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
@@ -281,11 +278,12 @@ def Placeholder(pie, context, text):
 
 classes = (
     VIEW3D_MT_my_pie_menu,
-    MPM_OT_ChangePivot,
-    MPM_OT_ChangeOrientations,
     MPM_OT_Utility_ChangeLanguage,
+    MPM_OT_Utility_PivotOrientationSetDefault,
+    MPM_OT_Utility_PivotOrientationSetCursorOrigin,
     MPM_OT_PoseMode,
     MPM_OT_WeightPaintModeWithArmature,
+    MPM_OT_Utility_OpenFile,
 )
 modules = [
     _MenuObject,
