@@ -19,6 +19,7 @@ Placement in left and right sections are common functions, and upper and lower s
 - Quickly Open Preference.
 - Quickly Open Console.
 - Quickly Import settings.
+- Craete shortcut button for open file|explorer with any path.
 - Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
 - Reset bone Transform.
