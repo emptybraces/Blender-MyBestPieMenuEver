@@ -150,7 +150,7 @@ def PieMenuDraw_Utility(pie, context):
     file_path_list = _AddonPreferences.Accessor.get_open_file_path_list().strip()
     if file_path_list:
         for path in file_path_list.split(','):
-            op = _Util.layout_operator(row, MPM_OT_Utility_OpenFile.bl_idname, icon="FILE_FOLDER")
+            op = _Util.layout_operator(row, MPM_OT_Utility_OpenFile.bl_idname, text="", icon="FILE_FOLDER")
             op.path = path
     # -------------------------------
     row = box.row(align = True)
@@ -225,7 +225,7 @@ class MPM_OT_Utility_PivotOrientationSetCursorOrigin(bpy.types.Operator):
         return {'FINISHED'}
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
     bl_idname = "op.mpm_open_file"
-    bl_label = ""
+    bl_label = "Open Path"
     path: bpy.props.StringProperty()
     def execute(self, context):
         import subprocess

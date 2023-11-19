@@ -14,16 +14,20 @@ def MenuSecondary(pie, context):
     box = pie.split().box()
     box.label(text = 'WeightPaint Secondary')
     c = box.column(align=True)
-    r = c.row(align=True)
+    r = c.row()
+    _Util.layout_prop(r, bpy.context.object.data, "use_paint_mask")
     unified_paint_settings = context.tool_settings.unified_paint_settings
     brush = context.tool_settings.weight_paint.brush
+    r = c.row()
     _Util.layout_prop(r, unified_paint_settings, "weight")
+    r = r.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "0.0", unified_paint_settings, "weight", 0.0)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", unified_paint_settings, "weight", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", unified_paint_settings, "weight", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", unified_paint_settings, "weight", 1.0)
-    r = c.row(align=True)
+    r = c.row()
     _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
+    r = r.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "2x", brush, "strength", brush.strength * 2)
     _Util.MPM_OT_SetSingle.operator(r, "1/2", brush, "strength", brush.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
@@ -35,7 +39,6 @@ def MenuSecondary(pie, context):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
-    _Util.layout_prop(c, bpy.context.object.data, "use_paint_mask")
 # --------------------------------------------------------------------------------
 def MirrorVertexGroup(layout):
     r = layout.row(align=True)
