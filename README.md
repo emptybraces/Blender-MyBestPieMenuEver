@@ -62,29 +62,29 @@ Selection history
 #
 OBJECT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/17bbd6b7-db29-4f6c-bf36-c1e1fd4f49d1)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/9cf9cf57-f246-4929-823b-7271788c0d73)
 
 #
 Edit Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/78abeb16-af55-41c0-be1b-13688fa3b189)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/be85f594-d210-4a29-bc81-9153405cbc77)
 
 #
 PAINT_TEXTURE Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/bb4ac573-b50b-411e-a32d-09854f0f9cc3)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/43069e49-db28-4c5e-a4fa-1d24af1a0006)
 
 #
 PAINT_WEIGHT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/72bbc009-4602-40fc-9440-79cab5b714be)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/36bb97e4-1e21-44ab-9b55-9c2df7831d92)
 
 #
 SCULPT Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/90827754-da21-40b6-801c-37e469374344)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/02d37582-2c76-4b2f-979c-2072179cec84)
 
 #
 POSE Mode
 
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/47347dbe-bb80-4e68-a400-59a57faef310)
+![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/c7169fb1-75c1-4cd4-9e96-b45b40747670)
