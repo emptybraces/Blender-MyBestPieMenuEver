@@ -154,7 +154,6 @@ def unregister():
     global g_history_no
     global g_history_current_no
     global g_is_busy
-    del bpy.types.Scene.selection_history
     g_history.clear()
     g_history_no = 0
     g_history_current_no = -1

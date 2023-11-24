@@ -38,7 +38,7 @@ class VIEW3D_MT_my_pie_menu(Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
-    bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}"
+    bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}.{g.ver[2]}"
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()

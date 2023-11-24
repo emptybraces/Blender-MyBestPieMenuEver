@@ -1,8 +1,8 @@
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
-    "version": (1, 2),
-    "blender": (3, 6, 5),
+    "version": (1, 3, 0),
+    "blender": (4, 0, 1),
     "location": "3D View",
     "description": "My Best Pie Menu EVER!",
     "warning": "",
