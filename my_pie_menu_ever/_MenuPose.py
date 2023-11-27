@@ -9,10 +9,11 @@ def MenuPrimary(pie, context):
     box.label(text = 'Pose Primary')
     arm = context.object.data;
     box.row().prop(arm, "pose_position", expand=True)
-    box.prop(arm, 'layers')
+    if bpy.app.version < (4,0,0):
+        box.prop(arm, 'layers')
 
 class MPM_OT_ClearTransform(bpy.types.Operator):
-    bl_idname = "op.clear_transform"
+    bl_idname = "op.mpm_clear_transform"
     bl_label = "Reset Bone Transform"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):

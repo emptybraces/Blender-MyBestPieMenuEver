@@ -1,4 +1,4 @@
-if "bpy" in locals():
+﻿if "bpy" in locals():
     import imp
     imp.reload(_Util)
     imp.reload(_AddonPreferences)
@@ -155,24 +155,22 @@ def PieMenuDraw_Utility(pie, context):
     # -------------------------------
     row = box.row(align = True)
     box = row.box()
+    # ツールメニュー
     box.label(text = 'Tool')
     c = box.column(align = True)
-    # 行開始
-    # from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
-    # space_type, mode = ToolSelectPanelHelper._tool_key_from_context(context)
-    # cls = ToolSelectPanelHelper._tool_class_from_space_type(space_type)
-    # item, tool, _ = cls._tool_get_active(context, space_type, mode, with_icon=True)
-    # if item != None:
-    #     props = tool.operator_properties("view3d.cursor3d")
-    #     col.prop(props, "use_depth")
-    #     col.prop(props, "orientation")
     # 行開始
     r = c.row(align=True)
     r.prop(context.tool_settings, "transform_pivot_point", text="", icon_only=True)
     r.prop_with_popover(context.scene.transform_orientation_slots[0], "type", text="", panel="VIEW3D_PT_transform_orientations",)
     r = c.row(align=True)
-    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSetDefault.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSetCursorOrigin.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet.bl_idname, text="Reset").args = "GLOBAL,INDIVIDUAL_ORIGINS"
+    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet.bl_idname, text="Cursor").args = "CURSOR,CURSOR"
+
+    r = c.row(align=True)
+    r.label(text="3d_cursor", icon="CURSOR")
+    _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="OBJECT_ORIGIN")
+    _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="GROUP_VERTEX")
+
     # オーバーレイメニュー
     # row = col.row(align=False)
     c = box.column(align = True)
@@ -207,21 +205,15 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
             bpy.context.preferences.view.language = "en_US"
         return {'FINISHED'}
         
-class MPM_OT_Utility_PivotOrientationSetDefault(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_orientation_set_default"
-    bl_label = "Reset"
+class MPM_OT_Utility_PivotOrientationSet(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_orientation_set"
+    bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
+    args: bpy.props.StringProperty()
     def execute(self, context):
-        context.scene.transform_orientation_slots[0].type = 'GLOBAL'
-        context.scene.tool_settings.transform_pivot_point = 'INDIVIDUAL_ORIGINS'
-        return {'FINISHED'}
-class MPM_OT_Utility_PivotOrientationSetCursorOrigin(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_orientation_set_cursor_origin"
-    bl_label = "Cursor"
-    bl_options = {'REGISTER', 'UNDO'}
-    def execute(self, context):
-        context.scene.transform_orientation_slots[0].type = 'CURSOR'
-        context.scene.tool_settings.transform_pivot_point = 'CURSOR'
+        ori, pivot = self.args.replace(" ", "").split(",")
+        context.scene.transform_orientation_slots[0].type = ori
+        context.scene.tool_settings.transform_pivot_point = pivot
         return {'FINISHED'}
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
     bl_idname = "op.mpm_open_file"
@@ -279,8 +271,7 @@ def Placeholder(pie, context, text):
 classes = (
     VIEW3D_MT_my_pie_menu,
     MPM_OT_Utility_ChangeLanguage,
-    MPM_OT_Utility_PivotOrientationSetDefault,
-    MPM_OT_Utility_PivotOrientationSetCursorOrigin,
+    MPM_OT_Utility_PivotOrientationSet,
     MPM_OT_PoseMode,
     MPM_OT_WeightPaintModeWithArmature,
     MPM_OT_Utility_OpenFile,
