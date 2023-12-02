@@ -16,13 +16,15 @@ Placement in left and right sections are common functions, and upper and lower s
   Change to Pose mode without selecting an armature.
 - Quickly editable view settings.
 - Quickly editable object settings.
-- Quickly Open Preference.
-- Quickly Open Console.
-- Quickly Import settings.
-- Craete shortcut button for open file|explorer with any path.
+- Quickly open Preference.
+- Quickly open Console.
+- Quickly open ImportFbx settings.
+- Quickly open ExportFbx settings.
+- Shortcut to call ARP's ExportFBX with objects tied to the armature related to selected object.
+- Create shortcut for open file or directory with any path.
 - Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
-- Reset bone Transform.
+- Reset all bone Transform.
 - Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
 ### [OBJECT mode]
@@ -52,6 +54,7 @@ Placement in left and right sections are common functions, and upper and lower s
 ### [POSE mode]
 
 - Quickly change showing bone layer group.
+- Wiggle2: Shortcut ResetPhysics.
 - AutoRigPro: Snap FKIKs of four limbs at once.
 
 #
