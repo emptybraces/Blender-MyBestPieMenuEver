@@ -20,7 +20,7 @@ Placement in left and right sections are common functions, and upper and lower s
 - Quickly open Console.
 - Quickly open ImportFbx settings.
 - Quickly open ExportFbx settings.
-- Shortcut to call ARP's ExportFBX with objects tied to the armature related to selected object.
+- Shortcut to call ARP's ExportFBX with selecting objects tied to an armature related to selected object.
 - Create shortcut for open file or directory with any path.
 - Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
