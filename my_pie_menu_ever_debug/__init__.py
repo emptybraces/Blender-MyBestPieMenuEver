@@ -18,9 +18,11 @@ class OT_ReinstallAddon(bpy.types.Operator):
     def execute(self, context):
         exist_module = False
         if 'my_pie_menu_ever._AddonPreferences' in sys.modules:
-            exist_module = True
             from my_pie_menu_ever import _AddonPreferences
-            self.dict = _AddonPreferences.Accessor.get_ref().dict()
+            ref = _AddonPreferences.Accessor.get_ref()
+            if ref:
+                exist_module = True
+                self.dict = ref.dict()
         addon_name = "my_pie_menu_ever"
         bpy.ops.preferences.addon_remove(module=addon_name)
         bpy.ops.preferences.addon_refresh()
@@ -28,8 +30,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
         bpy.ops.preferences.addon_enable(module=addon_name)
         if exist_module:
             _AddonPreferences.Accessor.get_ref().dict_apply(self.dict)
-        self.dict = None
-        
+            self.dict = None
         def draw(self, context):
             self.layout.label(text="reinstalled!")
         context.window_manager.popup_menu(draw)

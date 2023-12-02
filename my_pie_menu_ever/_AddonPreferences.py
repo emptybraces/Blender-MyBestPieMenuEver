@@ -103,7 +103,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
 class Accessor():
     @staticmethod
-    def get_ref(): return bpy.context.preferences.addons[__package__].preferences
+    def get_ref(): return bpy.context.preferences.addons[__package__].preferences if __package__ in bpy.context.preferences.addons else None
     @staticmethod
     def get_second_language(): return Accessor.get_ref().secondLanguage
     @staticmethod

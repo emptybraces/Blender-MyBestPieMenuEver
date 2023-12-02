@@ -31,6 +31,7 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
+
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
@@ -141,10 +142,14 @@ def PieMenuDraw_Utility(pie, context):
     box = pie.split().box()
     box.label(text = 'Utilities')
     row_parent = box.row()
+    # -------------------------------
     row = row_parent.row(align = True)
     row.operator("screen.userpref_show", icon='PREFERENCES', text="")
     row.operator("wm.console_toggle", icon='CONSOLE', text="")
     row.operator("import_scene.fbx", icon='IMPORT', text="")
+    row.operator("export_scene.fbx", icon='EXPORT', text="")
+    row.operator(MPM_OT_Utility_ARPExport.bl_idname, icon='EXPORT', text="")
+
     row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
     row = row_parent.row(align = True)
     file_path_list = _AddonPreferences.Accessor.get_open_file_path_list().strip()
@@ -224,6 +229,31 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
         subprocess.Popen(['start', self.path], shell=True)
         return {'FINISHED'}
         
+class MPM_OT_Utility_ARPExport(bpy.types.Operator):
+    bl_idname = "op.arp_export"
+    bl_label = "Export with ARP"
+    @classmethod
+    def poll(cls, context):
+        active = context.active_object
+        return context.mode == "OBJECT" and active != None and _Util.get_armature(active) != None
+        
+    def execute(self, context):
+        active_arm = _Util.get_armature(context.active_object)
+        if active_arm is None:
+            _Util.show_msgbox("Invalid selection!", icon="ERROR")
+        else:
+            sels = []
+            for obj in context.selectable_objects:
+                if obj.type == "MESH" and active_arm == _Util.get_armature(obj):
+                    sels.append(obj)
+            if 0 < len(sels):
+                bpy.ops.object.select_all(action='DESELECT')
+                for obj in sels:
+                    obj.select_set(True)
+                active_arm.select_set(True)
+                context.view_layer.objects.active = active_arm
+                bpy.ops.id.arp_export_fbx_panel('INVOKE_DEFAULT')
+        return {'FINISHED'}
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
@@ -275,6 +305,7 @@ classes = (
     MPM_OT_PoseMode,
     MPM_OT_WeightPaintModeWithArmature,
     MPM_OT_Utility_OpenFile,
+    MPM_OT_Utility_ARPExport,
 )
 modules = [
     _MenuObject,
