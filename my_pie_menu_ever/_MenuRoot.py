@@ -31,11 +31,13 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
+import math
+from mathutils import Vector
 
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
-class VIEW3D_MT_my_pie_menu(Menu):
+class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
@@ -46,9 +48,31 @@ class VIEW3D_MT_my_pie_menu(Menu):
         # 西、東、南、北、北西、北東、南西、南東
         PieMenuDraw_ObjectMode(pie, context)
         PieMenuDraw_Utility(pie, context)
-
         PieMenuDraw_Primary(pie, context);
         PieMenuDraw_Secondary(pie, context);
+class MPM_OT_OpenPieMenu(bpy.types.Operator):
+    bl_idname = "op.mpm_open_pie_menu"
+    bl_label = ""
+    def modal(self, context, event):
+        if event.type == 'LEFTMOUSE':
+            return {'FINISHED'}
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            return {'CANCELLED'}
+        else:
+            d = math.dist(self._initial_mouse, Vector((event.mouse_x, event.mouse_y)))
+            if 500 < d:
+                context.window.screen = context.window.screen
+                return {'FINISHED'}
+            # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
+        return {'RUNNING_MODAL'}
+    def invoke(self, context, event):
+        if context.space_data.type == 'VIEW_3D':
+            self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
+            context.window_manager.modal_handler_add(self)
+            bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
+            return {'RUNNING_MODAL'}
+        else:
+            return {'CANCELLED'}
 
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
@@ -306,6 +330,7 @@ classes = (
     MPM_OT_WeightPaintModeWithArmature,
     MPM_OT_Utility_OpenFile,
     MPM_OT_Utility_ARPExport,
+    MPM_OT_OpenPieMenu,
 )
 modules = [
     _MenuObject,
