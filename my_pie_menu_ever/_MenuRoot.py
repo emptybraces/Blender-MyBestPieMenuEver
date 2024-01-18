@@ -60,7 +60,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
             return {'CANCELLED'}
         else:
             d = math.dist(self._initial_mouse, Vector((event.mouse_x, event.mouse_y)))
-            if 500 < d:
+            if 700 < d:
                 context.window.screen = context.window.screen
                 return {'FINISHED'}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))

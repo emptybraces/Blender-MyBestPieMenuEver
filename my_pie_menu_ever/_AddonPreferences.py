@@ -130,14 +130,14 @@ class Accessor():
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
-        # km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
-        # kmi = km.keymap_items.new('wm.call_menu_pie', 'W', 'PRESS')
-        # kmi.properties.name = "VIEW3D_MT_my_pie_menu"
-        # addon_keymaps.append((km, kmi))
+       #km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+       #kmi = km.keymap_items.new('wm.call_menu_pie', 'W', 'PRESS')
+       #kmi.properties.name = "VIEW3D_MT_my_pie_menu"
+       #addon_keymaps.append((km, kmi))
 
-        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
-        kmi = km.keymap_items.new('op.mpm_pie_menu_close_check', 'W', 'PRESS')
-        addon_keymaps.append((km, kmi))
+       km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+       kmi = km.keymap_items.new(_MenuRoot.MPM_OT_OpenPieMenu.bl_idname, 'W', 'PRESS')
+       addon_keymaps.append((km, kmi))
         
 def unregisterKeyMap():
     for km, kmi in addon_keymaps:
