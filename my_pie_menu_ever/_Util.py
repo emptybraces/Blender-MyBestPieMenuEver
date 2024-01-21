@@ -109,12 +109,12 @@ def show_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
 def enum_values(obj, prop_name):
     return [item.identifier for item in obj.bl_rna.properties[prop_name].enum_items]
-def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, toggle=-1, icon_only=False):
+def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, toggle=-1, icon="NONE", icon_only=False):
     if target != None:
         if isActive != None:
             layout = layout.row()
             layout.active = isActive
-        layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True, icon_only=icon_only)
+        layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True, icon=icon, icon_only=icon_only)
     else:
         layout.label(text="None")
 def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon='NONE'):

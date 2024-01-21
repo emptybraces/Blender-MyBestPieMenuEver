@@ -138,7 +138,7 @@ class MPM_OT_WeightPaintModeWithArmature(bpy.types.Operator):
         active = context.active_object
         _Util.get_armature(active).select_set(True)
         bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 class MPM_OT_PoseMode(bpy.types.Operator):
     bl_idname = "op.mpm_pose_mode"
@@ -159,7 +159,7 @@ class MPM_OT_PoseMode(bpy.types.Operator):
             arm.select_set(True)
             context.view_layer.objects.active = arm
         bpy.ops.object.mode_set(mode="POSE")
-        return {'FINISHED'}
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
@@ -205,9 +205,9 @@ def PieMenuDraw_Utility(pie, context):
     # row = col.row(align=False)
     c = box.column(align = True)
     c.active = getattr(context.space_data, "overlay", None) != None
-    _Util.layout_prop(c, context.space_data.overlay, "show_overlays")
-    _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays)
-    _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays)
+    _Util.layout_prop(c, context.space_data.overlay, "show_overlays", icon="OVERLAY")
+    _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays, icon="BONE_DATA")
+    _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays, icon="SHADING_WIRE")
     _Util.layout_prop(c, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
     # オブジェクトメニュー
     box = row.box()
@@ -233,7 +233,7 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
             bpy.context.preferences.view.language = _AddonPreferences.Accessor.get_second_language()
         else:
             bpy.context.preferences.view.language = "en_US"
-        return {'FINISHED'}
+        return {"FINISHED"}
         
 class MPM_OT_Utility_PivotOrientationSet(bpy.types.Operator):
     bl_idname = "op.mpm_pivot_orientation_set"
@@ -244,7 +244,7 @@ class MPM_OT_Utility_PivotOrientationSet(bpy.types.Operator):
         ori, pivot = self.args.replace(" ", "").split(",")
         context.scene.transform_orientation_slots[0].type = ori
         context.scene.tool_settings.transform_pivot_point = pivot
-        return {'FINISHED'}
+        return {"FINISHED"}
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
     bl_idname = "op.mpm_open_file"
     bl_label = "Open Path"
@@ -252,7 +252,7 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
     def execute(self, context):
         import subprocess
         subprocess.Popen(['start', self.path], shell=True)
-        return {'FINISHED'}
+        return {"FINISHED"}
         
 class MPM_OT_Utility_ARPExport(bpy.types.Operator):
     bl_idname = "op.arp_export"
@@ -278,7 +278,7 @@ class MPM_OT_Utility_ARPExport(bpy.types.Operator):
                 active_arm.select_set(True)
                 context.view_layer.objects.active = active_arm
                 bpy.ops.id.arp_export_fbx_panel('INVOKE_DEFAULT')
-        return {'FINISHED'}
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
