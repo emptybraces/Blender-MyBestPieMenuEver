@@ -54,80 +54,81 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
     bl_idname = "op.mpm_open_pie_menu"
     bl_label = ""
     def modal(self, context, event):
-        if event.type == 'LEFTMOUSE':
-            return {'FINISHED'}
-        elif event.type in {'RIGHTMOUSE', 'ESC'}:
-            return {'CANCELLED'}
+        if event.type in {"LEFTMOUSE", "NONE"}:
+            return {"FINISHED"}
+        elif event.type in {"RIGHTMOUSE", "ESC"}:
+            return {"CANCELLED"}
         else:
             d = math.dist(self._initial_mouse, Vector((event.mouse_x, event.mouse_y)))
             if 700 < d:
                 context.window.screen = context.window.screen
-                return {'FINISHED'}
+                return {"FINISHED"}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
         return {'RUNNING_MODAL'}
     def invoke(self, context, event):
-        if context.space_data.type == 'VIEW_3D':
+        if context.space_data.type == "VIEW_3D":
             self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
             context.window_manager.modal_handler_add(self)
             bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
-            return {'RUNNING_MODAL'}
+            return {"RUNNING_MODAL"}
         else:
-            return {'CANCELLED'}
+            return {"CANCELLED"}
 
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
 def PieMenuDraw_ObjectMode(pie, context):
     active = context.active_object
-    object_mode = 'OBJECT' if active is None else context.mode
-    active_type_is_mesh = active != None and active.type == 'MESH'
-    active_type_is_armature = active != None and active.type == 'ARMATURE'
+    object_mode = "OBJECT" if active is None else context.mode
+    active_type_is_mesh = active != None and active.type == "MESH"
+    active_type_is_armature = active != None and active.type == "ARMATURE"
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
 
     row = pie.split().row()
     box = row.box()
     _PanelSelectionHistory.PanelHistory(box, context)
     box = row.box()
-    box.label(text='Mode');
+    box.label(text="Mode");
     col = box.column(align = True)
 
     r = col.row()
     # print(object_mode)
     # print(bpy.types.Object.bl_rna.properties["mode"].enum_items[object_mode].name)
-    r.active = object_mode != 'OBJECT'
-    op = r.operator("object.mode_set", text=iface_('Object', act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == 'OBJECT')
-    op.mode = 'OBJECT'
+    r.active = object_mode != "OBJECT"
+    op = r.operator("object.mode_set", text=iface_("Object", act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == "OBJECT")
+    op.mode = "OBJECT"
 
     r = col.row()
-    r.active = object_mode != 'EDIT_MESH'
-    op = r.operator("object.mode_set", text=iface_('Edit', act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == 'EDIT_MESH')
-    if active_type_is_mesh: op.mode = 'EDIT'
+    r.active = object_mode != "EDIT_MESH" and active_type_is_mesh or active_type_is_armature
+    depress_comp = "EDIT_MESH" if active_type_is_mesh else "EDIT_ARMATURE"
+    op = r.operator("object.mode_set", text=iface_("Edit", act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == depress_comp)
+    if active_type_is_mesh or active_type_is_armature: op.mode = "EDIT"
 
     r = col.row()
-    r.active = object_mode != 'SCULPT' and active_type_is_mesh
-    op = r.operator("object.mode_set", text=iface_('Sculpt', act_mode_i18n_context), icon="SCULPTMODE_HLT", depress=object_mode == 'SCULPT')
-    if active_type_is_mesh: op.mode = 'SCULPT'
+    r.active = object_mode != "SCULPT" and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_("Sculpt", act_mode_i18n_context), icon="SCULPTMODE_HLT", depress=object_mode == "SCULPT")
+    if active_type_is_mesh: op.mode = "SCULPT"
 
     r = col.row()
     _Util.layout_operator(r, MPM_OT_PoseMode.bl_idname, text=iface_("Pose", act_mode_i18n_context), icon="POSE_HLT")
 
     r = col.row(align=True)
-    r.active = object_mode != 'PAINT_WEIGHT' and active_type_is_mesh
-    op = r.operator("object.mode_set", text=iface_('Weight Paint', act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == 'PAINT_WEIGHT')
+    r.active = object_mode != "PAINT_WEIGHT" and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_("Weight Paint", act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == "PAINT_WEIGHT")
     if active_type_is_mesh: 
-        op.mode = 'WEIGHT_PAINT'
+        op.mode = "WEIGHT_PAINT"
         arm = _Util.get_armature(active)
         _Util.layout_operator(r, MPM_OT_WeightPaintModeWithArmature.bl_idname, "", icon="BONE_DATA")
 
     r = col.row()
-    r.active = object_mode != 'PAINT_TEXTURE' and active_type_is_mesh
-    op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == 'PAINT_TEXTURE')
-    if active_type_is_mesh: op.mode = 'TEXTURE_PAINT'
+    r.active = object_mode != "PAINT_TEXTURE" and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == "PAINT_TEXTURE")
+    if active_type_is_mesh: op.mode = "TEXTURE_PAINT"
 
 class MPM_OT_WeightPaintModeWithArmature(bpy.types.Operator):
     bl_idname = "op.mpm_weight_paint_mode_with_armature"
     bl_label = "Changed Weight Paint Mode With Armature"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     @classmethod
     def poll(cls, context):
         active = context.active_object
@@ -142,7 +143,7 @@ class MPM_OT_WeightPaintModeWithArmature(bpy.types.Operator):
 class MPM_OT_PoseMode(bpy.types.Operator):
     bl_idname = "op.mpm_pose_mode"
     bl_label = "Changed to Pose Mode"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     @classmethod
     def poll(cls, context):
         if context.mode == "POSE":
@@ -226,7 +227,7 @@ def PieMenuDraw_Utility(pie, context):
 class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.mpm_change_language"
     bl_label = "Change Language"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     def execute(self, context):
         if bpy.context.preferences.view.language == "en_US":
             bpy.context.preferences.view.language = _AddonPreferences.Accessor.get_second_language()
@@ -237,7 +238,7 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
 class MPM_OT_Utility_PivotOrientationSet(bpy.types.Operator):
     bl_idname = "op.mpm_pivot_orientation_set"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     args: bpy.props.StringProperty()
     def execute(self, context):
         ori, pivot = self.args.replace(" ", "").split(",")

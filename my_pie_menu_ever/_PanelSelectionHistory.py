@@ -10,7 +10,8 @@ g_is_busy = False
 # 選択履歴
 # --------------------------------------------------------------------------------
 def PanelHistory(layout, context):
-    layout.operator_menu_enum(MPM_OT_SelectionHistory.bl_idname, 'historyEnum')
+    layout.label(text="v4 dont work...")
+    #layout.operator_menu_enum(MPM_OT_SelectionHistory.bl_idname, 'historyEnum')
 
 # --------------------------------------------------------------------------------
 class MPM_OT_SelectionHistory(bpy.types.Operator):
@@ -144,17 +145,19 @@ classes = [
     MPM_OT_SelectionHistory,
 ]
 def register():
-    bpy.app.handlers.depsgraph_update_post.append(on_selection_changed)
-    _Util.register_classes(classes)
+    pass
+    #bpy.app.handlers.depsgraph_update_post.append(on_selection_changed)
+    #_Util.register_classes(classes)
 
 def unregister():
-    _Util.unregister_classes(classes)
-    bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
-    global g_history
-    global g_history_no
-    global g_history_current_no
-    global g_is_busy
-    g_history.clear()
-    g_history_no = 0
-    g_history_current_no = -1
-    g_is_busy = False
+    pass
+    #_Util.unregister_classes(classes)
+    #bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
+    #global g_history
+    #global g_history_no
+    #global g_history_current_no
+    #global g_is_busy
+    #g_history.clear()
+    #g_history_no = 0
+    #g_history_current_no = -1
+    #g_is_busy = False
