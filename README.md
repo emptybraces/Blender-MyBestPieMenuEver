@@ -9,11 +9,7 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [Common]
 
-- Quickly Change Modes.
-  
-  Change to WeightPaint mode with selecting a linked armature.
-  
-  Change to Pose mode without selecting an armature.
+- Quickly switch modes. You can switch to Pose mode or Weight Paint mode with mesh only, without having to select the linked armature.
 - Quickly editable view settings.
 - Quickly editable object settings.
 - Quickly open Preference.
@@ -35,9 +31,9 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [PAINT_TEXTURE mode]
 
-- Quickly changeable to Brushs, Strokes, Blends.
+- Quickly switchable to Brushs, Strokes, Blends.
 - Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
-- Customizable change brush by Shift+LMB.(Setting in preference, default is Soften.)
+- Customizable switch brush by Shift+LMB.(Setting in preference, default is Soften.)
 - Filterable brushes and blend modes to displayed.
 - Shortcut button "Save All Images".
   
@@ -48,14 +44,14 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [SCULPT mode]
 
-- Quickly changeable to any Brushs, Strokes.
+- Quickly switchable to any Brushs, Strokes.
 - Filterable brushes to displayed.
 
 ### [POSE mode]
 
-- Quickly change showing bone layer group.
+- Quickly switch to showing bone layer group.
 - Wiggle2: Shortcut ResetPhysics.
-- AutoRigPro: Snap FKIKs of four limbs at once.
+- AutoRigPro: Snap FKIKs of four limbs in one click.
 
 #
 Selection history
