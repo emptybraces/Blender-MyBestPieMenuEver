@@ -56,15 +56,15 @@ def MenuPrimary(pie, context):
     row, sub = _Util.layout_for_mirror(r2)
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='ADD').is_seam = False
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='REMOVE').is_seam = False
-    r2 = c.row(align=True)
+    r2 = c.row(align=False)
     r2.label(text="Symmetry");
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
     op.direction = 'POSITIVE_X'
-    #op.factor = 1
+    # op.factor = 1.0
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
     op.direction = 'NEGATIVE_X'
-    #op.factor = 1
-
+    # op.factor = 1.0
+ 
     _Util.layout_operator(c, "mesh.normals_make_consistent").inside=False
     _Util.layout_operator(c, "mesh.remove_doubles")
 # --------------------------------------------------------------------------------

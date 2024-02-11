@@ -144,6 +144,9 @@ g_lastBrushName = ""
 class OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
     bl_idname = "mpme.texpaint_switch_ctrl_behaviour"
     bl_label = "Switch Ctrl Behaviour"
+    @classmethod
+    def poll(cls, context):
+        return context.tool_settings.image_paint.brush.stroke_method != "CURVE"
     def modal(self, context, event):
         context.area.tag_redraw()
         if event.ctrl:
