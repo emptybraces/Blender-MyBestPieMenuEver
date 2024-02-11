@@ -9,6 +9,7 @@ def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Edit Mesh Primary')
 
+    # ヘッダー
     r = box.row()
     r2 = r.row(align=True)
     tool_settings = context.scene.tool_settings
@@ -25,28 +26,31 @@ def MenuPrimary(pie, context):
     r2.popover(panel="VIEW3D_PT_snapping", icon=icon, text="",)
 
     r = box.row(align=True)
+    c = r.column(align=True)
     
-    box = r.box()
+    # 選択ボックス
+    box = c.box()
     box.label(text = 'Selection')
-    c = box.column(align=True)
+    cc = box.column(align=True)
 
-    _Util.layout_operator(c, "mesh.select_mirror")
-    _Util.layout_operator(c, "mesh.shortest_path_select").edge_mode = "SELECT"
-    op = _Util.layout_operator(c, "mesh.select_face_by_sides", "Ngons")
+    _Util.layout_operator(cc, "mesh.select_mirror")
+    _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
+    op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
     op.type='GREATER'
 
-    box = r.box()
+    # UVボックス
+    box = c.box()
     box.label(text = 'UV')
-    c = box.column(align=True)
-    r2 = c.row(align=True)
+    cc = box.column(align=True)
+    r2 = cc.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_seam").clear = False
     _Util.layout_operator(r2, "mesh.mark_seam", "", icon='REMOVE').clear = True
     row, sub = _Util.layout_for_mirror(r2)
     _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='ADD').is_seam = False
     _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='REMOVE').is_seam = True
-    _Util.layout_operator(c, "uv.unwrap")
-
+    _Util.layout_operator(cc, "uv.unwrap")
+    # Etcボックス
     box = r.box()
     box.label(text = 'Etc')
     c = box.column(align=True)
@@ -64,9 +68,17 @@ def MenuPrimary(pie, context):
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
     op.direction = 'NEGATIVE_X'
     # op.factor = 1.0
- 
+    # 法線 
     _Util.layout_operator(c, "mesh.normals_make_consistent").inside=False
+    # マージ
+    r2 = c.row(align=True)
+    r2.label(text="Merge");
+    _Util.layout_operator(r2, "mesh.merge", "Center").type="CENTER"
+    _Util.layout_operator(r2, "mesh.merge", "First").type="FIRST"
+    _Util.layout_operator(r2, "mesh.merge", "Last").type="LAST"
+
     _Util.layout_operator(c, "mesh.remove_doubles")
+
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):
     box = pie.split().box()
