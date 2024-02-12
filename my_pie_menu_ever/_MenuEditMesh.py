@@ -47,8 +47,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(r2, "mesh.mark_seam").clear = False
     _Util.layout_operator(r2, "mesh.mark_seam", "", icon='REMOVE').clear = True
     row, sub = _Util.layout_for_mirror(r2)
-    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='ADD').is_seam = False
-    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='REMOVE').is_seam = True
+    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='ADD').is_clear = False
+    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='REMOVE').is_clear = True
     _Util.layout_operator(cc, "uv.unwrap")
     # Etcボックス
     box = r.box()
@@ -58,8 +58,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
     _Util.layout_operator(r2, "mesh.mark_sharp", "", icon='REMOVE').clear = True
     row, sub = _Util.layout_for_mirror(r2)
-    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='ADD').is_seam = False
-    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='REMOVE').is_seam = False
+    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='ADD').is_clear = False
+    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='REMOVE').is_clear = True
     r2 = c.row(align=False)
     r2.label(text="Symmetry");
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
@@ -89,28 +89,28 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "editmesh.mirror_seam"
     bl_label = "Mirror Seam"
     bl_options = {'REGISTER', 'UNDO'}
-    is_seam: bpy.props.BoolProperty()
+    is_clear: bpy.props.BoolProperty()
     def execute(self, context):
         mirror_settings = context.object.data.use_mirror_topology
         bpy.ops.mesh.select_mirror(extend=True)
-        bpy.ops.mesh.mark_seam(clear=self.is_seam)
+        bpy.ops.mesh.mark_seam(clear=self.is_clear)
         context.object.data.use_mirror_topology = True
         bpy.ops.mesh.select_mirror(extend=True)
-        bpy.ops.mesh.mark_seam(clear=self.is_seam)
+        bpy.ops.mesh.mark_seam(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
         return {'FINISHED'}
 class MPM_OT_MirrorSharp(bpy.types.Operator):
     bl_idname = "editmesh.mirror_sharp"
     bl_label = "Mirror Sharp"
     bl_options = {'REGISTER', 'UNDO'}
-    is_seam: bpy.props.BoolProperty()
+    is_clear: bpy.props.BoolProperty()
     def execute(self, context):
         mirror_settings = context.object.data.use_mirror_topology
         bpy.ops.mesh.select_mirror(extend=True)
-        bpy.ops.mesh.mark_sharp(clear=self.is_seam)
+        bpy.ops.mesh.mark_sharp(clear=self.is_clear)
         context.object.data.use_mirror_topology = True
         bpy.ops.mesh.select_mirror(extend=True)
-        bpy.ops.mesh.mark_sharp(clear=self.is_seam)
+        bpy.ops.mesh.mark_sharp(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
