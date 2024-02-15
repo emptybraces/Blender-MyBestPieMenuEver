@@ -1,7 +1,6 @@
 # Blender_MyBestPieMenuEver
 
-Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.
-(Blender 3.6.5)
+Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.(Blender version: 4.0.2)
 
 ## Features
 
