@@ -201,14 +201,30 @@ def PieMenuDraw_Utility(pie, context):
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="OBJECT_ORIGIN")
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="GROUP_VERTEX")
 
-    # オーバーレイメニュー
-    # row = col.row(align=False)
-    c = box.column(align = True)
+    # オーバーレイメニュー（左）
+    r = box.row(align=True)
+    c = r.column(align=True)
     c.active = getattr(context.space_data, "overlay", None) != None
     _Util.layout_prop(c, context.space_data.overlay, "show_overlays", icon="OVERLAY")
     _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays, icon="BONE_DATA")
     _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays, icon="SHADING_WIRE")
     _Util.layout_prop(c, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
+    # オーバーレイメニュー（右）
+    c = r.column(align=False)
+    r = c.row(align=True)
+    r.label(icon="OVERLAY")
+    r.label(icon="SHADING_SOLID")
+    r.scale_x = 0.7
+    r = r.row(align=True)
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="1").args = "True,SOLID"
+
+    r = c.row(align=True)
+    r.label(icon="RADIOBUT_OFF")
+    r.label(icon="SHADING_TEXTURE")
+    r.scale_x = 0.7
+    r = r.row(align=True)
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="2").args = "False,MATERIAL"
+    
     # オブジェクトメニュー
     box = row.box()
     box.label(text = 'Object')
@@ -244,6 +260,16 @@ class MPM_OT_Utility_PivotOrientationSet(bpy.types.Operator):
         ori, pivot = self.args.replace(" ", "").split(",")
         context.scene.transform_orientation_slots[0].type = ori
         context.scene.tool_settings.transform_pivot_point = pivot
+        return {"FINISHED"}
+class MPM_OT_Utility_ViewportSet(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_viewport_set"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    args: bpy.props.StringProperty()
+    def execute(self, context):
+        overlay, solid = self.args.replace(" ", "").split(",")
+        context.space_data.overlay.show_overlays = overlay == "True"
+        context.space_data.shading.type = solid
         return {"FINISHED"}
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
     bl_idname = "op.mpm_open_file"
@@ -327,6 +353,7 @@ classes = (
     VIEW3D_MT_my_pie_menu,
     MPM_OT_Utility_ChangeLanguage,
     MPM_OT_Utility_PivotOrientationSet,
+    MPM_OT_Utility_ViewportSet,
     MPM_OT_PoseMode,
     MPM_OT_WeightPaintModeWithArmature,
     MPM_OT_Utility_OpenFile,
