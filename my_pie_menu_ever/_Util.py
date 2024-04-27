@@ -105,7 +105,11 @@ class MPM_OT_CallPanel(bpy.types.Operator):
         bpy.ops.wm.call_panel(name=self.name, keep_open=self.keep_open)
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
-def show_enum_values(obj, prop_name):
+def select_active(obj):
+    bpy.context.view_layer.objects.active = obj
+def select_add(obj):
+    obj.select_set(True)
+def print_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
 def enum_values(obj, prop_name):
     return [item.identifier for item in obj.bl_rna.properties[prop_name].enum_items]
@@ -148,12 +152,7 @@ def reset_pose_bone(armature):
     reset_pose_bone_scale(armature)
 def get_armature(obj):
     if obj:
-        if obj.type == "MESH":
-            for m in obj.modifiers:
-                if m.type == "ARMATURE" and m.object != None:
-                    return m.object
-        elif obj.type == "ARMATURE":
-            return obj
+        return obj if obj.type == "ARMATURE" else obj.find_armature()
     return None
 def register_classes(classes):
     for cls in classes:

@@ -91,6 +91,7 @@ def PieMenuDraw_ObjectMode(pie, context):
     box.label(text="Mode");
     col = box.column(align = True)
 
+    # Object
     r = col.row()
     # print(object_mode)
     # print(bpy.types.Object.bl_rna.properties["mode"].enum_items[object_mode].name)
@@ -98,46 +99,57 @@ def PieMenuDraw_ObjectMode(pie, context):
     op = r.operator("object.mode_set", text=iface_("Object", act_mode_i18n_context), icon="OBJECT_DATA", depress=object_mode == "OBJECT")
     op.mode = "OBJECT"
 
-    r = col.row()
+    # Edit
+    r = col.row(align=True)
     r.active = object_mode != "EDIT_MESH" and active_type_is_mesh or active_type_is_armature
     depress_comp = "EDIT_MESH" if active_type_is_mesh else "EDIT_ARMATURE"
     op = r.operator("object.mode_set", text=iface_("Edit", act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == depress_comp)
     if active_type_is_mesh or active_type_is_armature: op.mode = "EDIT"
+    if active_type_is_mesh: 
+        arm = _Util.get_armature(active)
+        _Util.layout_operator(r, MPM_OT_ChangeModeWithArmature.bl_idname, "", icon="BONE_DATA").mode = "EDIT"
 
+    # Sculpt
     r = col.row()
     r.active = object_mode != "SCULPT" and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_("Sculpt", act_mode_i18n_context), icon="SCULPTMODE_HLT", depress=object_mode == "SCULPT")
     if active_type_is_mesh: op.mode = "SCULPT"
 
+    # Pose
     r = col.row()
     _Util.layout_operator(r, MPM_OT_PoseMode.bl_idname, text=iface_("Pose", act_mode_i18n_context), icon="POSE_HLT")
 
+    # Weight Paint
     r = col.row(align=True)
     r.active = object_mode != "PAINT_WEIGHT" and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_("Weight Paint", act_mode_i18n_context), icon="WPAINT_HLT", depress=object_mode == "PAINT_WEIGHT")
     if active_type_is_mesh: 
         op.mode = "WEIGHT_PAINT"
         arm = _Util.get_armature(active)
-        _Util.layout_operator(r, MPM_OT_WeightPaintModeWithArmature.bl_idname, "", icon="BONE_DATA")
+        _Util.layout_operator(r, MPM_OT_ChangeModeWithArmature.bl_idname, "", icon="BONE_DATA").mode = "WEIGHT_PAINT"
 
+    # Texture Paint
     r = col.row()
     r.active = object_mode != "PAINT_TEXTURE" and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == "PAINT_TEXTURE")
     if active_type_is_mesh: op.mode = "TEXTURE_PAINT"
 
-class MPM_OT_WeightPaintModeWithArmature(bpy.types.Operator):
-    bl_idname = "op.mpm_weight_paint_mode_with_armature"
-    bl_label = "Changed Weight Paint Mode With Armature"
+class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
+    bl_idname = "op.mpm_change_mode_with_armature"
+    bl_label = "Changed Mode With Armature"
     bl_options = {"REGISTER", "UNDO"}
+    mode: bpy.props.StringProperty()
     @classmethod
     def poll(cls, context):
         active = context.active_object
         return active != None and active.type == 'MESH' and _Util.get_armature(active) != None
-
     def execute(self, context):
         active = context.active_object
-        _Util.get_armature(active).select_set(True)
-        bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
+        if self.mode == "WEIGHT_PAINT":
+            _Util.get_armature(active).select_set(True)
+        elif self.mode == "EDIT":
+            _Util.select_active(_Util.get_armature(active))
+        bpy.ops.object.mode_set(mode=self.mode)
         return {"FINISHED"}
 
 class MPM_OT_PoseMode(bpy.types.Operator):
@@ -355,7 +367,7 @@ classes = (
     MPM_OT_Utility_PivotOrientationSet,
     MPM_OT_Utility_ViewportSet,
     MPM_OT_PoseMode,
-    MPM_OT_WeightPaintModeWithArmature,
+    MPM_OT_ChangeModeWithArmature,
     MPM_OT_Utility_OpenFile,
     MPM_OT_Utility_ARPExport,
     MPM_OT_OpenPieMenu,

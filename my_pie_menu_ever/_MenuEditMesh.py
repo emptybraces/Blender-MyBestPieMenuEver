@@ -33,7 +33,7 @@ def MenuPrimary(pie, context):
     box.label(text = 'Selection')
     cc = box.column(align=True)
 
-    _Util.layout_operator(cc, "mesh.select_mirror")
+    _Util.layout_operator(cc, "mesh.select_mirror").extend=True
     _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
     op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
