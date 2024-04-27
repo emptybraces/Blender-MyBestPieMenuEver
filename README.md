@@ -1,6 +1,6 @@
 # Blender_MyBestPieMenuEver
 
-Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.(Blender version: 4.0.2)
+Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.(Blender version: 4.1.1)
 
 ## Features
 
@@ -8,7 +8,8 @@ Placement in left and right sections are common functions, and upper and lower s
 
 ### [Common]
 
-- Quickly switch modes. You can switch to Pose mode or Weight Paint mode with mesh only, without having to select the linked armature.
+- Quickly switch each modes.
+  You can switch with one click from selecting MeshObject to BoneEdit/WeightPaint mode without having to select the linked armature.
 - Quickly editable view settings.
 - Quickly editable object settings.
 - Quickly open Preference.
