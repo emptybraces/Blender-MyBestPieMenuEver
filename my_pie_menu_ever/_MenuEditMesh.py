@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 from bpy.types import Panel, Menu, Operator
 from . import _Util
 from . import _AddonPreferences
@@ -71,10 +72,31 @@ def MenuPrimary(pie, context):
     # マージ
     r2 = c.row(align=True)
     r2.label(text="Merge");
-    _Util.layout_operator(r2, "mesh.merge", "Center").type="CENTER"
-    _Util.layout_operator(r2, "mesh.merge", "First").type="FIRST"
-    _Util.layout_operator(r2, "mesh.merge", "Last").type="LAST"
-
+    # 選択されている頂点を調べる
+    is_any_select_verts = False
+    if context.object:
+        bm = bmesh.from_edit_mesh(context.object.data)
+        for v in bm.verts:
+             is_any_select_verts = v.select
+             if is_any_select_verts:
+                break
+    merge_operator = bpy.ops.mesh.merge.get_rna_type()
+    props = merge_operator.properties['type']
+    is_vertex_mode = context.tool_settings.mesh_select_mode[0]
+    i = 0
+    for item in props.enum_items:
+        if item.identifier in ("FIRST", "LAST"):
+            if not is_vertex_mode: # 頂点モードじゃなかったら中断
+                continue;
+            if not is_any_select_verts: # 選択している頂点がなければ中断
+                continue
+        _Util.layout_operator(r2, "mesh.merge", item.name, is_any_select_verts).type=item.identifier
+        # 3ボタンずつ開業
+        i += 1
+        if i % 3 == 0:
+            r2 = c.row(align=True)
+            r2.label(text="     ");
+    # 距離でマージ
     _Util.layout_operator(c, "mesh.remove_doubles")
 
 # --------------------------------------------------------------------------------
