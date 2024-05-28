@@ -12,12 +12,20 @@ def MenuPrimary(pie, context):
 
     # ヘッダー
     r = box.row()
-    r2 = r.row(align=True)
+    box2 = r.box()
+    box2.label(text = "Proportional")
+    # プロポーショナル
+    r2 = box2.row(align=True)
     tool_settings = context.scene.tool_settings
     _Util.layout_prop(r2, tool_settings, "use_proportional_edit", text="")
     r2.prop_with_popover(tool_settings, "proportional_edit_falloff", text="", icon_only=True, panel="VIEW3D_PT_proportional_edit",)
+    _Util.layout_prop(r2, tool_settings, "use_proportional_connected")
+    r2.label(text="                                          ")
 
-    r2 = r.row(align=True)
+    # スナップ
+    box2 = r.box()
+    box2.label(text = "Snap")
+    r2 = box2.row(align=True)
     _Util.layout_prop(r2, tool_settings, "use_snap", text="")
     snap_items = bpy.types.ToolSettings.bl_rna.properties["snap_elements"].enum_items
     for elem in tool_settings.snap_elements:
@@ -31,7 +39,7 @@ def MenuPrimary(pie, context):
     
     # 選択ボックス
     box = c.box()
-    box.label(text = 'Selection')
+    box.label(text = "Selection")
     cc = box.column(align=True)
 
     _Util.layout_operator(cc, "mesh.select_mirror").extend=True
