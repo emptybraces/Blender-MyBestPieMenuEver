@@ -252,6 +252,14 @@ def PieMenuDraw_Utility(pie, context):
     _Util.layout_operator(c, _MenuPose.MPM_OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
+    view = context.space_data
+    shading = view.shading if view.type == 'VIEW_3D' else context.scene.display.shading
+
+    r = c.row()
+    _Util.layout_prop(r, shading, "show_xray", text="")
+    r = r.row()
+    _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
+
 class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.mpm_change_language"
     bl_label = "Change Language"
