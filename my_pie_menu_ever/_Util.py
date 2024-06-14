@@ -121,7 +121,7 @@ def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, to
         layout.prop(target, prop, text=text, expand=expand, toggle=toggle, emboss=True, icon=icon, icon_only=icon_only)
     else:
         layout.label(text="None")
-def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon='NONE'):
+def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon="NONE"):
     if isActive != None:
         layout = layout.row()
         layout.active = isActive
@@ -133,16 +133,16 @@ def layout_for_mirror(layout):
     sub.scale_x = 0.9
     return row, sub
 def reset_pose_bone_location(armature):
-    if armature.type == 'ARMATURE':
+    if armature != None and armature.type == "ARMATURE":
         for b in armature.pose.bones:
             b.location = Vector((0, 0, 0))
 def reset_pose_bone_rotation(armature):
-    if armature.type == 'ARMATURE':
+    if armature != None and armature.type == "ARMATURE":
         for b in armature.pose.bones:
             b.rotation_euler = (0, 0, 0)
             b.rotation_quaternion = (1, 0, 0, 0)
 def reset_pose_bone_scale(armature):
-    if armature.type == 'ARMATURE':
+    if armature != None and armature.type == "ARMATURE":
         for b in armature.pose.bones:
             b.scale = Vector((1, 1, 1))
 def reset_pose_bone(armature):
@@ -166,12 +166,12 @@ def unregister_classes(classes):
         bpy.utils.unregister_class(cls)
 def is_armature_in_selected():
     for obj in bpy.context.selected_objects:
-        if obj.type == 'ARMATURE':
+        if obj.type == "ARMATURE":
             return True
-        if 0 < len([m for m in obj.modifiers if m.type == 'ARMATURE' and m.object != None]):
+        if 0 < len([m for m in obj.modifiers if m.type == "ARMATURE" and m.object != None]):
             return True
     return False
-def show_msgbox(message, title = "", icon = 'INFO'):
+def show_msgbox(message, title = "", icon = "INFO"):
     def draw(self, context):
         lines = message.split('\n')
         for line in lines:

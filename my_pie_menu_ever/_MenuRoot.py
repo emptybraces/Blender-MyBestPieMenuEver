@@ -213,30 +213,30 @@ def PieMenuDraw_Utility(pie, context):
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="OBJECT_ORIGIN")
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="GROUP_VERTEX")
 
-    # オーバーレイメニュー（左）
+    # オーバーレイ
     r = box.row(align=True)
     c = r.column(align=True)
     c.active = getattr(context.space_data, "overlay", None) != None
-    _Util.layout_prop(c, context.space_data.overlay, "show_overlays", icon="OVERLAY")
+    r = c.row(align=True);
+    _Util.layout_prop(r, context.space_data.overlay, "show_overlays", icon="OVERLAY")
+    r = r.row(align=True)
+    r.scale_x = 0.7
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="1").args = "True,SOLID"
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="2").args = "False,MATERIAL"
+
+    # 
     _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays, icon="BONE_DATA")
     _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays, icon="SHADING_WIRE")
     _Util.layout_prop(c, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
-    # オーバーレイメニュー（右）
-    c = r.column(align=False)
-    r = c.row(align=True)
-    r.label(icon="OVERLAY")
-    r.label(icon="SHADING_SOLID")
-    r.scale_x = 0.7
-    r = r.row(align=True)
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="1").args = "True,SOLID"
+    # 透過
+    view = context.space_data
+    shading = view.shading if view.type == 'VIEW_3D' else context.scene.display.shading
+    r = c.row()
+    _Util.layout_prop(r, shading, "show_xray", text="")
+    r = r.row()
+    _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
 
-    r = c.row(align=True)
-    r.label(icon="RADIOBUT_OFF")
-    r.label(icon="SHADING_TEXTURE")
-    r.scale_x = 0.7
-    r = r.row(align=True)
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="2").args = "False,MATERIAL"
-    
+
     # オブジェクトメニュー
     box = row.box()
     box.label(text = 'Object')
@@ -249,16 +249,11 @@ def PieMenuDraw_Utility(pie, context):
 
     _Util.layout_prop(c, context.active_object, "show_wire")
     _Util.layout_prop(c, context.active_object, "display_type")
+    if armature != None:
+        _Util.layout_prop(c, armature.data, "display_type", isActive=armature!=None)
     _Util.layout_operator(c, _MenuPose.MPM_OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
-    view = context.space_data
-    shading = view.shading if view.type == 'VIEW_3D' else context.scene.display.shading
-
-    r = c.row()
-    _Util.layout_prop(r, shading, "show_xray", text="")
-    r = r.row()
-    _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
 
 class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
     bl_idname = "op.mpm_change_language"
