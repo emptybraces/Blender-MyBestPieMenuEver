@@ -1,10 +1,10 @@
 # Blender_MyBestPieMenuEver
 
-Press W key, then open my best pie menu ever... working on my project and updating this addon as needed.(Blender version: 4.1.1)
+Press W key will open custum pie menu. working on my project and updating this addon as needed.(Blender version: 4.2.0)
 
 ## Features
 
-Placement in left and right sections are common functions, and upper and lower sections are arranged by mode.
+Placement in bottom sections are common functions, and upper sections are arranged by mode.
 
 ### [Common]
 
