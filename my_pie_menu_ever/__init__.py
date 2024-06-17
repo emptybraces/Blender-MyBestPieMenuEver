@@ -1,8 +1,8 @@
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
-    "version": (1, 3, 0),
-    "blender": (4, 0, 2),
+    "version": (1, 3, 1),
+    "blender": (4, 2, 0),
     "location": "3D View",
     "description": "My Best Pie Menu EVER!",
     "warning": "",
@@ -38,4 +38,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-    #bpy.ops.wm.call_menu_pie(name=_MenuRoot.MT_Root.bl_idname)    

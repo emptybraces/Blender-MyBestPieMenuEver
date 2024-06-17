@@ -11,12 +11,15 @@ key_keydown_ctrl = None
 # テクスチャペイントメニュー
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
-    box = pie.split().box()
-    box.label(text = 'Texture Paint Primary')
+    box_root = pie.split().box()
+    box_root.label(text = 'TexturePaint Primary')
 
-    row = box.row(align=True) # Brush, Stroke, Blend...
+    # Utility
+    box_root.operator("image.save_all_modified", text="Save All Image") 
 
-    # Brushes
+
+    # Brush, Stroke, Blend...
+    row = box_root.row(align=True) 
     box = row.box()
     box.label(text = "Brush")
     row2 = box.row()
@@ -54,7 +57,7 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
-    #Blends
+    # Blends
     blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_include().lower().split(',')]
     cnt = 0
     box = row.box()
@@ -69,15 +72,40 @@ def MenuPrimary(pie, context):
             # context.tool_settings.image_paint.brush.blend = self.methodName  
             cnt += 1;
             if cnt % limit_rows == 0: col2 = row2.column()
-# --------------------------------------------------------------------------------
-def MenuSecondary(pie, context):
-    box = pie.split().box()
-    box.label(text = 'Texture Paint Seconday')
-    c = box.column(align=True)
-    c.operator("image.save_all_modified", text="Save All Image") 
 
-    row = c.row(align=True)
-    row.label(text = "Hold Ctrl Behaviour")
+    # brush proeprty
+    c = box_root.column(align=True)
+    r = c.row()
+    unified_paint_settings = context.tool_settings.unified_paint_settings
+    brush = context.tool_settings.image_paint.brush
+    r = c.row()
+    _Util.layout_prop(r, unified_paint_settings, "size")
+    r = r.row(align=True)
+    r.scale_x = 0.5
+    _Util.MPM_OT_SetInt.operator(r, "50%", unified_paint_settings, "size", int(unified_paint_settings.size * 0.5))
+    _Util.MPM_OT_SetInt.operator(r, "80%", unified_paint_settings, "size", int(unified_paint_settings.size * 0.8))
+    _Util.MPM_OT_SetInt.operator(r, "150%", unified_paint_settings, "size", int(unified_paint_settings.size * 1.5))
+    _Util.MPM_OT_SetInt.operator(r, "200%", unified_paint_settings, "size", int(unified_paint_settings.size * 2.0))
+    r = c.row()
+    _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
+    r = r.row(align=True)
+    r.scale_x = 0.5
+    _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
+    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush, "strength", 1.0)
+    
+    # Etc
+    c = box_root.column(align=True)
+    row = c.row();
+    DrawBrushAngle(context, row);
+    DrawMirrorOption(context, row);
+
+    DrawBehaviourOfControlKey(c)
+
+def DrawBehaviourOfControlKey(layout):
+    row = layout.row(align=True)
+    row.label(text = "Holding Ctrl Key is")
     ctrl_behaviour = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     if ctrl_behaviour: # Erase Alpha mode
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=False)
@@ -86,19 +114,25 @@ def MenuSecondary(pie, context):
         _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "SubColor", False, depress=True)
         _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
 
-    row = c.row(align=True)
+def DrawBrushAngle(context, layout):
+    row = layout.row(align=True)
     row.label(text = "Angle")
     from math import pi
     _Util.MPM_OT_SetterBase.operator(row, _Util.MPM_OT_SetSingle.bl_idname, "0", context.tool_settings.image_paint.brush.texture_slot, "angle", 0)
     _Util.MPM_OT_SetterBase.operator(row, _Util.MPM_OT_SetSingle.bl_idname, "180", context.tool_settings.image_paint.brush.texture_slot, "angle", pi)
 
-    mrow, msub = _Util.layout_for_mirror(row)
+def DrawMirrorOption(context, layout):
+    mrow, msub = _Util.layout_for_mirror(layout)
     # _Util.layout_prop(msub, context.object, "use_mesh_mirror_x", text="X", toggle=True)
     # _Util.layout_prop(msub, context.object, "use_mesh_mirror_y", text="Y", toggle=True)
     # _Util.layout_prop(msub, context.object, "use_mesh_mirror_z", text="Z", toggle=True)
     _Util.MPM_OT_SetterBase.operator(msub, _Util.MPM_OT_SetBoolToggle.bl_idname, "X", context.object, "use_mesh_mirror_x")
     _Util.MPM_OT_SetterBase.operator(msub, _Util.MPM_OT_SetBoolToggle.bl_idname, "Y", context.object, "use_mesh_mirror_y")
     _Util.MPM_OT_SetterBase.operator(msub, _Util.MPM_OT_SetBoolToggle.bl_idname, "Z", context.object, "use_mesh_mirror_z")
+# --------------------------------------------------------------------------------
+def MenuSecondary(pie, context):
+    box = pie.split().box()
+    box.label(text = 'Texture Paint Seconday')
 
 # --------------------------------------------------------------------------------
 class OT_TexPaint_SwapColor(bpy.types.Operator):

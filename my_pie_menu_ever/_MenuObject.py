@@ -9,10 +9,13 @@ from . import _MenuWeightPaint
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
-    box = pie.split().box()
+    pie = pie.split()
+    box = pie.box()
     box.label(text = 'Object Primary')
     c = box.column(align = True)
-    _Util.layout_operator(c, "wiggle.reset", "Wiggle2: ResetPhysics") # if imported
+     # if imported
+    if "wiggle_2" in context.preferences.addons.keys():
+        _Util.layout_operator(c, "wiggle.reset", "Wiggle2: ResetPhysics")
     _MenuWeightPaint.MirrorVertexGroup(c)
 
 # --------------------------------------------------------------------------------

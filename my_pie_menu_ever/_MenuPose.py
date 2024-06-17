@@ -7,10 +7,27 @@ from . import _Util
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Pose Primary')
+    row = box.row()
+
+    # pose
     arm = context.object.data;
+    box = row.box()
     box.row().prop(arm, "pose_position", expand=True)
+
+    # thirdparty shortcut
+    box = row.box()
+    box.label(text="3rdParty Shortcut")
+    enabled_addons = context.preferences.addons.keys()
+    if "wiggle_2" in enabled_addons:
+        _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics")
+    if "auto_rig_pro-master" in enabled_addons:
+        _Util.layout_operator(box, MPM_OT_ARP_SNAPIKFK.bl_idname) # if imported
+
+
     if bpy.app.version < (4,0,0):
         box.prop(arm, 'layers')
+
+
 
 class MPM_OT_ClearTransform(bpy.types.Operator):
     bl_idname = "op.mpm_clear_transform"
@@ -41,8 +58,6 @@ class MPM_OT_ClearTransform(bpy.types.Operator):
 def MenuSecondary(pie, context):
     box = pie.split().box()
     box.label(text = 'Pose Secondary')
-    _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics") # if imported
-    _Util.layout_operator(box, MPM_OT_ARP_SNAPIKFK.bl_idname) # if imported
 
 class MPM_OT_ARP_SNAPIKFK(bpy.types.Operator):
     bl_idname = "op.mpm_arp_snapikfk"

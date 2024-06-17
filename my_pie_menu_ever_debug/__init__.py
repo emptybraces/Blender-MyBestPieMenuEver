@@ -17,7 +17,12 @@ class OT_ReinstallAddon(bpy.types.Operator):
     bl_label = "Reinstall Addon"
     def execute(self, context):
         exist_module = False
+        # 検索
         addon_name = "my_pie_menu_ever"
+        for i in bpy.context.preferences.addons.keys():
+            if "pie_menu_ever" in i:
+                addon_anme = i
+                break
         if is_addon_enabled(addon_name):
             #if 'my_pie_menu_ever._AddonPreferences' in sys.modules:
             from my_pie_menu_ever import _AddonPreferences
@@ -28,7 +33,12 @@ class OT_ReinstallAddon(bpy.types.Operator):
                     self.dict = ref.dict()
         bpy.ops.preferences.addon_remove(module=addon_name)
         bpy.ops.preferences.addon_refresh()
-        bpy.ops.preferences.addon_install(filepath="D:/googledrive/blender/plugin/MyBestPieMenuEver/my_pie_menu_ever.zip")
+        bpy.ops.preferences.addon_install(filepath="D:/googledrive/blender/plugin/MyBestPieMenuEver/my_pie_menu_ever-1.3.1.zip")
+        # 再度検索
+        for i in bpy.context.preferences.addons.keys():
+            if "pie_menu_ever" in i:
+                addon_anme = i
+                break
         bpy.ops.preferences.addon_enable(module=addon_name)
         if exist_module:
             _AddonPreferences.Accessor.get_ref().dict_apply(self.dict)

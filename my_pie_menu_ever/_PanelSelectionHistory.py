@@ -10,7 +10,8 @@ g_is_busy = False
 # 選択履歴
 # --------------------------------------------------------------------------------
 def PanelHistory(layout, context):
-    layout.label(text="v4 dont work...")
+    pass
+    #layout.label(text="v4 dont work...")
     #layout.operator_menu_enum(MPM_OT_SelectionHistory.bl_idname, 'historyEnum')
 
 # --------------------------------------------------------------------------------

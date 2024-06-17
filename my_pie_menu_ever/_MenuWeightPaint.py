@@ -6,16 +6,28 @@ from . import _Util
 # --------------------------------------------------------------------------------
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'WeightPaint Primary')
+    box.label(text = "WeightPaint Primary")
+
+    # icons
+    row = box.row(align=True)
+    _Util.layout_prop(row, bpy.context.object.data, "use_paint_mask", icon_only=True)
+    _Util.layout_prop(row, bpy.context.object.data, "use_paint_mask_vertex", icon_only=True)
+    # row.operator("screen.userpref_show", icon='PREFERENCES', text="")
+    # row.operator("wm.console_toggle", icon='CONSOLE', text="")
+
+    # box menu
+    row = box.row()
+
+    # util
+    box = row.box()
+    box.label(text = "Utility")
     MirrorVertexGroup(box)
 
-# --------------------------------------------------------------------------------
-def MenuSecondary(pie, context):
-    box = pie.split().box()
-    box.label(text = 'WeightPaint Secondary')
+    # brushes
+    box = row.box()
+    box.label(text = "Brush Property")
     c = box.column(align=True)
     r = c.row()
-    _Util.layout_prop(r, bpy.context.object.data, "use_paint_mask")
     unified_paint_settings = context.tool_settings.unified_paint_settings
     brush = context.tool_settings.weight_paint.brush
     r = c.row()
@@ -28,21 +40,27 @@ def MenuSecondary(pie, context):
     r = c.row()
     _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
     r = r.row(align=True)
-    _Util.MPM_OT_SetSingle.operator(r, "2x", brush, "strength", brush.strength * 2)
-    _Util.MPM_OT_SetSingle.operator(r, "1/2", brush, "strength", brush.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush, "strength", 1.0)
-    #Blends
+    # Blends
     r = c.row(align=True)
     target_blends = ['mix', 'add', 'sub']
     for i in _Util.enum_values(brush, 'blend'):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
+
+# --------------------------------------------------------------------------------
+def MenuSecondary(pie, context):
+    box = pie.split().box()
+    box.label(text = 'WeightPaint Secondary')
 # --------------------------------------------------------------------------------
 def MirrorVertexGroup(layout):
-    r = layout.row(align=True)
-    r.label(text="Copy Mirrored VG from ")
+    r = layout.column(align=True)
+    r.label(text="Create VGroup Mirror:")
+    r = r.row(align=True)
     _Util.layout_operator(r, OT_MirrorVGFromSelectedListItem.bl_idname)
     _Util.layout_operator(r, OT_MirrorVGFromSelectedBone.bl_idname)
 

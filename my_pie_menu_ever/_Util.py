@@ -75,8 +75,16 @@ class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
     def operator(layout, text, targetObj, propName, icon="NONE", depress=None, isActive=None):
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetBoolToggle.bl_idname, text, targetObj, propName, None, icon, depress, isActive)
 
+class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
+    bl_idname = "op.mpm_set_int"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    value: bpy.props.IntProperty()
+    @staticmethod
+    def operator(layout, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
+        MPM_OT_SetterBase.operator(layout, MPM_OT_SetInt.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.mpm_set_signel"
+    bl_idname = "op.mpm_set_single"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
@@ -181,6 +189,7 @@ def show_msgbox(message, title = "", icon = "INFO"):
 classes = (
     MPM_OT_SetBool,
     MPM_OT_SetBoolToggle,
+    MPM_OT_SetInt,
     MPM_OT_SetSingle,
     MPM_OT_SetPointer,
     MPM_OT_SetString,
