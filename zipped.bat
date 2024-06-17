@@ -1,1 +1,0 @@
-powershell compress-archive -Force my_pie_menu_ever/* my_pie_menu_ever-1.3.1.zip

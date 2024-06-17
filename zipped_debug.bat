@@ -1,1 +1,1 @@
-powershell compress-archive -Force my_pie_menu_ever_debug my_pie_menu_ever_debug
+powershell compress-archive -Force my_best_pie_menu_ever_debug my_best_pie_menu_ever_debug

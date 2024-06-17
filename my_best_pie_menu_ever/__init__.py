@@ -1,7 +1,12 @@
+# ---------------------------
+# 1.3.3 - フォルダ名の変更
+# 1.3.2 - blender_manifest更新
+# 1.3.1 - BlenderExtension
+# ---------------------------
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
-    "version": (1, 3, 1),
+    "version": (1, 3, 3),
     "blender": (4, 2, 0),
     "location": "3D View",
     "description": "My Best Pie Menu EVER!",
