@@ -46,29 +46,37 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
     op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
-    op.type='GREATER'
+    op.type="GREATER"
 
     # UVボックス
     box = c.box()
-    box.label(text = 'UV')
+    box.label(text = "UV")
     cc = box.column(align=True)
     r2 = cc.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_seam").clear = False
-    _Util.layout_operator(r2, "mesh.mark_seam", "", icon='REMOVE').clear = True
+    _Util.layout_operator(r2, "mesh.mark_seam", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(r2)
-    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='ADD').is_clear = False
-    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon='REMOVE').is_clear = True
+    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="ADD").is_clear = False
+    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
     _Util.layout_operator(cc, "uv.unwrap")
+
+    # 頂点グループ
+    box = r.box()
+    box.label(text = "Vertex Group")
+    cc = box.column(align=True)
+    _Util.layout_operator(cc, MPM_OT_SelectVertexGroups.bl_idname)
+    _Util.layout_operator(cc, MPM_OT_AddVertexGroup.bl_idname)
+
     # Etcボックス
     box = r.box()
-    box.label(text = 'Etc')
+    box.label(text = "Etc")
     c = box.column(align=True)
     r2 = c.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
-    _Util.layout_operator(r2, "mesh.mark_sharp", "", icon='REMOVE').clear = True
+    _Util.layout_operator(r2, "mesh.mark_sharp", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(r2)
-    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='ADD').is_clear = False
-    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon='REMOVE').is_clear = True
+    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
+    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
     r2 = c.row(align=False)
     r2.label(text="Symmetry");
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
@@ -82,21 +90,19 @@ def MenuPrimary(pie, context):
     r2.operator_menu_enum("mesh.merge", "type")
     _Util.layout_operator(r2, "mesh.remove_doubles")
 
-    # 頂点グループ作成
-    _Util.layout_operator(c, MPM_OT_CreateVertexGroup.bl_idname)
 
 # --------------------------------------------------------------------------------
-class MPM_OT_CreateVertexGroup(Operator):
+class MPM_OT_AddVertexGroup(Operator):
     bl_idname = "editmesh.add_vertex_group"
     bl_label = "Add Vertex Group"
     bl_options = {'REGISTER', 'UNDO'}
-    vgroup_name: bpy.props.StringProperty(name="Name", description="Vertex group name")
+    vgroup_name: bpy.props.StringProperty(name="Name", default="Group", description="Vertex group name")
     weight: bpy.props.FloatProperty(name="Weight", default=1.0, min=0.0, max=1.0)
     @classmethod
     def poll(self, context):
         # 選択されたオブジェクトがメッシュであり、少なくとも1つの頂点が選択されているかどうかをチェック
         obj = context.object
-        return obj and obj.type == 'MESH' and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
+        return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
     def execute(self, context):
         obj = context.object
         if obj:
@@ -116,6 +122,52 @@ class MPM_OT_CreateVertexGroup(Operator):
         return {'FINISHED'}
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
+# --------------------------------------------------------------------------------
+class MPM_SelectVertexGroup(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name="")
+    select: bpy.props.BoolProperty(name="", default=False)
+# --------------------------------------------------------------------------------
+class MPM_OT_SelectVertexGroups(bpy.types.Operator):
+    bl_idname = "editmesh.select_vertex_groups"
+    bl_label = "Select Vertex Groups"
+    bl_options = {'REGISTER', 'UNDO'}
+    vertex_group_list: bpy.props.CollectionProperty(type=MPM_SelectVertexGroup)
+    @classmethod
+    def poll(self, context):
+        obj = context.object
+        return obj and obj.type == "MESH"
+    def execute(self, context):
+        obj = context.object
+        bpy.ops.object.mode_set(mode='EDIT')
+        bm = bmesh.from_edit_mesh(obj.data)
+        # すべての頂点の選択を解除
+        for v in bm.verts:
+            v.select = False
+        # 選択された頂点グループの頂点を選択
+        deform_layer = bm.verts.layers.deform.active
+        if deform_layer:
+            selected_vgroups = [vg.name for vg in self.vertex_group_list if vg.select]
+            selected_vgroups_indices = [obj.vertex_groups[name].index for name in selected_vgroups if name in obj.vertex_groups]
+            for v in bm.verts:
+                if any(vgroup_index in v[deform_layer] for vgroup_index in selected_vgroups_indices):
+                    v.select = True
+        # bmeshの更新
+        bmesh.update_edit_mesh(obj.data)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        self.vertex_group_list.clear()
+        # アクティブオブジェクトの頂点グループをリストに追加
+        for vgroup in context.object.vertex_groups:
+            item = self.vertex_group_list.add()
+            item.name = vgroup.name
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        for item in self.vertex_group_list:
+            col.prop(item, "select", text=item.name)
 # --------------------------------------------------------------------------------
 class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "editmesh.mirror_seam"
@@ -149,7 +201,9 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
 classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
-    MPM_OT_CreateVertexGroup,
+    MPM_OT_AddVertexGroup,
+    MPM_SelectVertexGroup,
+    MPM_OT_SelectVertexGroups
 )
 def register():
     _Util.register_classes(classes)
