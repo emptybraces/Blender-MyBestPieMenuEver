@@ -79,39 +79,43 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, "mesh.normals_make_consistent").inside=False
     # マージ
     r2 = c.row(align=True)
-    r2.label(text="Merge");
-    # 選択されている頂点を調べる
-    is_any_select_verts = False
-    if context.object:
-        bm = bmesh.from_edit_mesh(context.object.data)
-        for v in bm.verts:
-             is_any_select_verts = v.select
-             if is_any_select_verts:
-                break
-    merge_operator = bpy.ops.mesh.merge.get_rna_type()
-    props = merge_operator.properties['type']
-    is_vertex_mode = context.tool_settings.mesh_select_mode[0]
-    i = 0
-    for item in props.enum_items:
-        if item.identifier in ("FIRST", "LAST"):
-            if not is_vertex_mode: # 頂点モードじゃなかったら中断
-                continue;
-            if not is_any_select_verts: # 選択している頂点がなければ中断
-                continue
-        _Util.layout_operator(r2, "mesh.merge", item.name, is_any_select_verts).type=item.identifier
-        # 3ボタンずつ開業
-        i += 1
-        if i % 3 == 0:
-            r2 = c.row(align=True)
-            r2.label(text="     ");
-    # 距離でマージ
-    _Util.layout_operator(c, "mesh.remove_doubles")
+    r2.operator_menu_enum("mesh.merge", "type")
+    _Util.layout_operator(r2, "mesh.remove_doubles")
+
+    # 頂点グループ作成
+    _Util.layout_operator(c, MPM_OT_CreateVertexGroup.bl_idname)
 
 # --------------------------------------------------------------------------------
-def MenuSecondary(pie, context):
-    box = pie.split().box()
-    box.label(text = 'Edit Mesh Secondary')
-
+class MPM_OT_CreateVertexGroup(Operator):
+    bl_idname = "editmesh.add_vertex_group"
+    bl_label = "Add Vertex Group"
+    bl_options = {'REGISTER', 'UNDO'}
+    vgroup_name: bpy.props.StringProperty(name="Name", description="Vertex group name")
+    weight: bpy.props.FloatProperty(name="Weight", default=1.0, min=0.0, max=1.0)
+    @classmethod
+    def poll(self, context):
+        # 選択されたオブジェクトがメッシュであり、少なくとも1つの頂点が選択されているかどうかをチェック
+        obj = context.object
+        return obj and obj.type == 'MESH' and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
+    def execute(self, context):
+        obj = context.object
+        if obj:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            obj.vertex_groups.new(name=self.vgroup_name)
+            group = obj.vertex_groups[-1]
+            obj.vertex_groups.active_index = group.index;
+            for v in obj.data.vertices: #bmesh.from_edit_mesh(obj.data).verts:
+                if v.select:
+                    group.add([v.index], self.weight, 'REPLACE')
+            self.report({'INFO'}, f"Added vertex group '{self.name}' with weight {self.weight} to selected vertices")
+            bpy.ops.object.mode_set(mode='EDIT')
+            return {'FINISHED'}
+        else:
+            self.report({'ERROR'}, "No active object")
+            return {'CANCELLED'}
+        return {'FINISHED'}
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "editmesh.mirror_seam"
@@ -145,6 +149,7 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
 classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
+    MPM_OT_CreateVertexGroup,
 )
 def register():
     _Util.register_classes(classes)
