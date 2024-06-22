@@ -3,7 +3,7 @@ import rna_keymap_ui
 from rna_prop_ui import PropertyPanel
 from bpy.props import IntProperty, IntVectorProperty, StringProperty, BoolProperty
 from . import _Util
-from . import _MenuRoot
+from . import _PieMenu
 
 addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
@@ -136,7 +136,7 @@ def registerKeyMap():
        #addon_keymaps.append((km, kmi))
 
        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
-       kmi = km.keymap_items.new(_MenuRoot.MPM_OT_OpenPieMenu.bl_idname, 'W', 'PRESS')
+       kmi = km.keymap_items.new(_PieMenu.MPM_OT_OpenPieMenu.bl_idname, 'W', 'PRESS')
        addon_keymaps.append((km, kmi))
         
 def unregisterKeyMap():

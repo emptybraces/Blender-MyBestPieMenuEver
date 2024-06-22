@@ -123,7 +123,7 @@ class MPM_OT_AddVertexGroup(Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
-class MPM_SelectVertexGroup(bpy.types.PropertyGroup):
+class MPM_SelectVertexPropertyGroup(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name="")
     select: bpy.props.BoolProperty(name="", default=False)
 # --------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ class MPM_OT_SelectVertexGroups(bpy.types.Operator):
     bl_idname = "editmesh.select_vertex_groups"
     bl_label = "Select Vertex Groups"
     bl_options = {'REGISTER', 'UNDO'}
-    vertex_group_list: bpy.props.CollectionProperty(type=MPM_SelectVertexGroup)
+    vertex_group_list: bpy.props.CollectionProperty(type=MPM_SelectVertexPropertyGroup)
     @classmethod
     def poll(self, context):
         obj = context.object
@@ -202,7 +202,7 @@ classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
     MPM_OT_AddVertexGroup,
-    MPM_SelectVertexGroup,
+    MPM_SelectVertexPropertyGroup,
     MPM_OT_SelectVertexGroups
 )
 def register():
