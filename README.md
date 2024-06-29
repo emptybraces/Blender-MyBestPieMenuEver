@@ -14,12 +14,11 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - Quickly editable object settings.
 - Quickly open Preference.
 - Quickly open Console.
-- Quickly open ImportFbx settings.
-- Quickly open ExportFbx settings.
+- Quickly open Import/Export Fbx settings.
 - Shortcut to call ARP's ExportFBX with selecting objects tied to an armature related to selected object.
 - Create shortcut for open file or directory with any path.
 - Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
-- Switchable language to English <-> SecondLanguage.(Setting in preference)(デフォルトは日本語)
+- Switchable language to English <-> SecondLanguage.(Setting in preference)(Default is Japanese)
 - Reset all bone Transform.
 - Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
