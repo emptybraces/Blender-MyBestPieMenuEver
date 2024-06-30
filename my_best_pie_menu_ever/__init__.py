@@ -1,4 +1,5 @@
 # ---------------------------
+# 1.3.5 - ビューポートカメラの位置角度保存復元ボタン。Pivotセット、シェーディングセットボタン説明追加。
 # 1.3.4 - 頂点グループ追加ボタン。頂点グループ選択ボタン。頂点マージボタンの修正。３Dカーソルをビュー平面上移動。選択オブジェクトのPRSコピー。
 # 1.3.3 - フォルダ名の変更
 # 1.3.2 - blender_manifest更新
@@ -7,7 +8,7 @@
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
-    "version": (1, 3, 4),
+    "version": (1, 3, 5),
     "blender": (4, 2, 0),
     "location": "3D View",
     "description": "My Best Pie Menu EVER!",

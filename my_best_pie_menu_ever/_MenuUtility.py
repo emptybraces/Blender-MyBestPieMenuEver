@@ -4,7 +4,6 @@ from . import _AddonPreferences
 from . import _MenuPose
 import mathutils
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d
-
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
@@ -38,8 +37,8 @@ def PieMenuDraw_Utility(layout, context):
     r.prop(context.tool_settings, "transform_pivot_point", text="", icon_only=True)
     r.prop_with_popover(context.scene.transform_orientation_slots[0], "type", text="", panel="VIEW3D_PT_transform_orientations",)
     r = c.row(align=True)
-    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet.bl_idname, text="Reset").args = "GLOBAL,INDIVIDUAL_ORIGINS"
-    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet.bl_idname, text="Cursor").args = "CURSOR,CURSOR"
+    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Reset.bl_idname, text="Reset")
+    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Cursor.bl_idname, text="Cursor")
 
     # 3Dカーソル
     r = c.row(align=True)
@@ -47,7 +46,6 @@ def PieMenuDraw_Utility(layout, context):
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
     _Util.layout_operator(r, MPM_OT_Utility_Move3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
-
 
     # オーバーレイ
     r = box.row(align=True)
@@ -57,8 +55,8 @@ def PieMenuDraw_Utility(layout, context):
     _Util.layout_prop(r, context.space_data.overlay, "show_overlays", icon="OVERLAY")
     r = r.row(align=True)
     r.scale_x = 0.7
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="1").args = "True,SOLID"
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportSet.bl_idname, text="2").args = "False,MATERIAL"
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="S")
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="M")
 
     # 
     _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays, icon="BONE_DATA")
@@ -72,10 +70,16 @@ def PieMenuDraw_Utility(layout, context):
     r = r.row()
     _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
 
+    # 3Dカーソル
+    r = c.row(align=True)
+    r.label(text="VPCamera", icon="VIEW_CAMERA")
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTranformSave.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTranformRestore.bl_idname)
 
     # オブジェクトメニュー
-    box = row.box()
-    box.label(text = 'Object')
+    c2 = row.column()
+    box = c2.box()
+    box.label(text = "Object")
 
     c = box.column(align = True)
     c.active = context.active_object != None
@@ -86,7 +90,6 @@ def PieMenuDraw_Utility(layout, context):
 
     _Util.layout_prop(c, context.active_object, "show_wire")
     _Util.layout_prop(c, context.active_object, "display_type")
-    _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
 
     c.separator()
 
@@ -103,8 +106,15 @@ def PieMenuDraw_Utility(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
     _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
 
+    # Animation
+    box = c2.box()
+    box.label(text = "Animation")
+    c = box.column(align = True)
+
+    _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
+
 # --------------------------------------------------------------------------------
-class MPM_OT_Utility_CopyPRS():
+class MPM_OT_Utility_CopyPRSBase():
     def execute(self, context):
         active_obj = context.active_object
         for obj in context.selected_objects:
@@ -116,19 +126,19 @@ class MPM_OT_Utility_CopyPRS():
                 elif type(self) is MPM_OT_Utility_CopyScale:
                     obj.scale = active_obj.scale
         return {'FINISHED'}
-class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRS, bpy.types.Operator):
+class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
     bl_idname = "op.mpm_copy_position"
     bl_label = "Position"
     bl_description = "Position copy from active_object to selections."
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context): return super().execute(context)
-class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRS, bpy.types.Operator):
+class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
     bl_idname = "op.mpm_copy_rosition"
     bl_label = "Rotation"
     bl_description = "Rotation copy from active_object to selections."
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context): return super().execute(context)
-class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRS, bpy.types.Operator):
+class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
     bl_idname = "op.mpm_copy_scale"
     bl_label = "Scale"
     bl_description = "Scale copy from active_object to selections."
@@ -146,26 +156,44 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
             bpy.context.preferences.view.language = "en_US"
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
-class MPM_OT_Utility_PivotOrientationSet(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_orientation_set"
+class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_orientation_set_reset"
     bl_label = ""
+    bl_description = "Pivit=Origin, Orientation=Global"
     bl_options = {"REGISTER", "UNDO"}
-    args: bpy.props.StringProperty()
     def execute(self, context):
-        ori, pivot = self.args.replace(" ", "").split(",")
-        context.scene.transform_orientation_slots[0].type = ori
-        context.scene.tool_settings.transform_pivot_point = pivot
+        context.scene.transform_orientation_slots[0].type = "GLOBAL"
+        context.scene.tool_settings.transform_pivot_point = "INDIVIDUAL_ORIGINS"
+        return {"FINISHED"}
+class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_orientation_set_cursor"
+    bl_label = ""
+    bl_description = "Pivit=Cursor, Orientation=Cursor"
+    bl_options = {"REGISTER", "UNDO"}
+    def execute(self, context):
+        context.scene.transform_orientation_slots[0].type = "CURSOR"
+        context.scene.tool_settings.transform_pivot_point = "CURSOR"
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
-class MPM_OT_Utility_ViewportSet(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_viewport_set"
+class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_viewport_shading_set_solid"
     bl_label = ""
+    bl_description = "Overlay=True, Shading=SOLID"
     bl_options = {"REGISTER", "UNDO"}
     args: bpy.props.StringProperty()
     def execute(self, context):
-        overlay, solid = self.args.replace(" ", "").split(",")
-        context.space_data.overlay.show_overlays = overlay == "True"
-        context.space_data.shading.type = solid
+        context.space_data.overlay.show_overlays = True
+        context.space_data.shading.type = "SOLID"
+        return {"FINISHED"}
+class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
+    bl_idname = "op.mpm_pivot_viewport_shading_set_material"
+    bl_label = ""
+    bl_description = "Overlay=True, Shading=MATERIAL"
+    bl_options = {"REGISTER", "UNDO"}
+    args: bpy.props.StringProperty()
+    def execute(self, context):
+        context.space_data.overlay.show_overlays = False
+        context.space_data.shading.type = "MATERIAL"
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
@@ -256,14 +284,50 @@ class MPM_OT_Utility_Move3DCursorOnViewPlane(bpy.types.Operator):
             self.report({"WARNING"}, "View3D not found, cannot run operator")
             return {"CANCELLED"}
 # --------------------------------------------------------------------------------
+saved_location = None
+saved_rotation = None
+class MPM_OT_Utility_ViewportCameraTranformSave(bpy.types.Operator):
+    bl_idname = "op.mpm_viewport_camera_transform_save"
+    bl_label = "Save"
+    bl_description = "Save the current viewport camera position and rotation"
+    def execute(self, context):
+        global saved_location, saved_rotation
+        area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
+        space = next(space for space in area.spaces if space.type == 'VIEW_3D')
+        saved_location = space.region_3d.view_location.copy()
+        saved_rotation = space.region_3d.view_rotation.copy()
+        self.report({'INFO'}, f"Saved Location: {saved_location}, Rotation: {saved_rotation}")
+        return {'FINISHED'}
+
+class MPM_OT_Utility_ViewportCameraTranformRestore(bpy.types.Operator):
+    bl_idname = "op.mpm_viewport_camera_transform_restore"
+    bl_label = "Restore"
+    bl_description = "Restore the saved viewport camera position and rotation"
+    @classmethod
+    def poll(cls, context):
+        global saved_location, saved_rotation
+        return saved_location is not None and saved_rotation is not None
+    def execute(self, context):
+        global saved_location, saved_rotation
+        area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
+        space = next(space for space in area.spaces if space.type == 'VIEW_3D')
+        space.region_3d.view_location = saved_location
+        space.region_3d.view_rotation = saved_rotation
+        self.report({'INFO'}, f"Restored Location: {saved_location}, Rotation: {saved_rotation}")
+        return {'FINISHED'}
+# --------------------------------------------------------------------------------
 
 classes = (
     MPM_OT_Utility_CopyPosition,
     MPM_OT_Utility_CopyRosition,
     MPM_OT_Utility_CopyScale,
     MPM_OT_Utility_ChangeLanguage,
-    MPM_OT_Utility_PivotOrientationSet,
-    MPM_OT_Utility_ViewportSet,
+    MPM_OT_Utility_PivotOrientationSet_Reset,
+    MPM_OT_Utility_PivotOrientationSet_Cursor,
+    MPM_OT_Utility_ViewportShadingSetSolid,
+    MPM_OT_Utility_ViewportShadingSetMaterial,
+    MPM_OT_Utility_ViewportCameraTranformSave,
+    MPM_OT_Utility_ViewportCameraTranformRestore,
     MPM_OT_Utility_OpenFile,
     MPM_OT_Utility_ARPExport,
     MPM_OT_Utility_Move3DCursorOnViewPlane,
