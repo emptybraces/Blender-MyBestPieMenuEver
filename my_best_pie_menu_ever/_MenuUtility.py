@@ -286,17 +286,19 @@ class MPM_OT_Utility_Move3DCursorOnViewPlane(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 saved_location = None
 saved_rotation = None
+saved_distance = None
 class MPM_OT_Utility_ViewportCameraTranformSave(bpy.types.Operator):
     bl_idname = "op.mpm_viewport_camera_transform_save"
     bl_label = "Save"
     bl_description = "Save the current viewport camera position and rotation"
     def execute(self, context):
-        global saved_location, saved_rotation
+        global saved_location, saved_rotation, saved_distance
         area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
         space = next(space for space in area.spaces if space.type == 'VIEW_3D')
         saved_location = space.region_3d.view_location.copy()
         saved_rotation = space.region_3d.view_rotation.copy()
-        self.report({'INFO'}, f"Saved Location: {saved_location}, Rotation: {saved_rotation}")
+        saved_distance = space.region_3d.view_distance
+        self.report({'INFO'}, f"Saved Location: {saved_location}, Rotation: {saved_rotation}, Distance: {saved_distance}")
         return {'FINISHED'}
 
 class MPM_OT_Utility_ViewportCameraTranformRestore(bpy.types.Operator):
@@ -305,15 +307,16 @@ class MPM_OT_Utility_ViewportCameraTranformRestore(bpy.types.Operator):
     bl_description = "Restore the saved viewport camera position and rotation"
     @classmethod
     def poll(cls, context):
-        global saved_location, saved_rotation
-        return saved_location is not None and saved_rotation is not None
+        global saved_location, saved_rotation, saved_distance
+        return saved_location is not None and saved_rotation is not None and saved_distance is not None
     def execute(self, context):
         global saved_location, saved_rotation
         area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
         space = next(space for space in area.spaces if space.type == 'VIEW_3D')
         space.region_3d.view_location = saved_location
         space.region_3d.view_rotation = saved_rotation
-        self.report({'INFO'}, f"Restored Location: {saved_location}, Rotation: {saved_rotation}")
+        space.region_3d.view_distance = saved_distance
+        self.report({'INFO'}, f"Restored Location: {saved_location}, Rotation: {saved_rotation}, Distance: {saved_distance}")
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 
