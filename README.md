@@ -15,7 +15,7 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - Quickly open Import/Export Fbx settings.
 - Shortcut to call ARP's ExportFBX with selecting objects tied to an armature related to selected object.
 - Create shortcut for open file or directory with any path.
-- # Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
+- (Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.)
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(Default is Japanese)
 - Oneshot changes to Pivot and Transform Orientation.
 - Move 3DCursor on ViewPlane.
