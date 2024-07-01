@@ -10,16 +10,17 @@ Placement in bottom sections are common functions, and upper sections are arrang
 
 - Quickly switch each modes.
   You can switch with one click from selecting MeshObject to BoneEdit/WeightPaint mode without having to select the linked armature.
-- Quickly editable view settings.
-- Quickly editable object settings.
-- Quickly open Preference.
-- Quickly open Console.
+- Quickly editable view/tools/object settings.
+- Quickly open Preference/Console.
 - Quickly open Import/Export Fbx settings.
 - Shortcut to call ARP's ExportFBX with selecting objects tied to an armature related to selected object.
 - Create shortcut for open file or directory with any path.
-- Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
+- # Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(Default is Japanese)
-- Reset all bone Transform.
+- Oneshot changes to Pivot and Transform Orientation.
+- Move 3DCursor on ViewPlane.
+- Reset all bone transform of selected object.
+- Viewport camera's current position/rotation/distance can be saved and restored.
 - Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
 ### [OBJECT mode]
