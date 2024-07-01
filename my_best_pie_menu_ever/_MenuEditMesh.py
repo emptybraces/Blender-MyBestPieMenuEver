@@ -67,18 +67,27 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(cc, MPM_OT_SelectVertexGroups.bl_idname)
     _Util.layout_operator(cc, MPM_OT_AddVertexGroup.bl_idname)
 
-    # Etcボックス
-    box = r.box()
-    box.label(text = "Etc")
+    # Edge
+    c3 = r.column();
+    box = c3.box()
+    box.label(text = "Edge")
     c = box.column(align=True)
     r2 = c.row(align=True)
+    # シャープ
     _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
     _Util.layout_operator(r2, "mesh.mark_sharp", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(r2)
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
+    # クリーズ
+    _Util.layout_operator(c, MPM_OT_AdjustCrease.bl_idname)
+
+    # Apply
+    box = c3.box()
+    box.label(text = "Apply")
+    c = box.column(align=True)
     r2 = c.row(align=False)
-    r2.label(text="Symmetry");
+    r2.label(text="Symmetrize");
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
     op.direction = 'POSITIVE_X'
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
@@ -197,15 +206,56 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
         bpy.ops.mesh.mark_sharp(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
         return {'FINISHED'}
+
+# --------------------------------------------------------------------------------
+class MPM_OT_AdjustCrease(bpy.types.Operator):
+    bl_idname = "editmesh.adjust_crease"
+    bl_label = "Edge Crease"
+    bl_options = {'REGISTER', 'UNDO'}
+    crease_value: bpy.props.FloatProperty(
+        name="Crease",
+        description="Adjust the crease value of selected edges",
+        min=0.0,
+        max=1.0,
+        default=0.0,
+        step=0.1,
+        precision=2
+    )
+    @classmethod
+    def poll(self, context):
+        obj = context.edit_object
+        bm = bmesh.from_edit_mesh(obj.data)
+        return obj and obj.type == "MESH" and any(e.select for e in bm.edges)
+    def execute(self, context):
+        mesh = context.object.data        
+        bm = bmesh.from_edit_mesh(mesh)
+        crease_layer = bm.edges.layers.float.get(mesh.attributes["crease_edge"].name)
+        for edge in [v for v in bm.edges if v.select]:
+            edge[crease_layer] = self.crease_value
+        return {'FINISHED'}
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
     MPM_OT_AddVertexGroup,
     MPM_SelectVertexPropertyGroup,
-    MPM_OT_SelectVertexGroups
+    MPM_OT_SelectVertexGroups,
+    MPM_OT_AdjustCrease
 )
 def register():
     _Util.register_classes(classes)
+    bpy.types.Scene.mpm_crease_value = bpy.props.FloatProperty(
+        name="Crease",
+        description="Adjust the crease value of selected edges",
+        min=0.0,
+        max=1.0,
+        default=0.0,
+        step=0.1,
+        precision=3,
+        update = cb_update_crease
+    )
 def unregister():
     _Util.unregister_classes(classes)
+    del bpy.types.Scene.mpm_crease_value
