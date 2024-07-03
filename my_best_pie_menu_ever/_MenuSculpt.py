@@ -59,10 +59,10 @@ def MenuPrimary(pie, context):
         _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength")
         r = r.row(align=True)
         r.scale_x = 0.8
-        _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength * 0.5)
-        _Util.MPM_OT_SetSingle.operator(r, "75%", brush, "strength", brush.strength * 0.75)
-        _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", brush.strength * 1.5)
-        _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
+        _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", max(0, brush.strength * 0.5))
+        _Util.MPM_OT_SetSingle.operator(r, "75%", brush, "strength", max(0, brush.strength * 0.75))
+        _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", min(1, brush.strength * 1.5))
+        _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
 # --------------------------------------------------------------------------------
 
 classes = (
