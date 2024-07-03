@@ -22,7 +22,7 @@ def MenuPrimary(pie, context):
     row = box_root.row(align=True) 
     box = row.box()
     box.label(text = "Brush")
-    row2 = box.row()
+    row2 = box.row(align=True)
     col2 = row2.column(align=True)
     cnt = 0
     limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
@@ -32,7 +32,7 @@ def MenuPrimary(pie, context):
             is_use = context.tool_settings.image_paint.brush.name == i.name
             _Util.MPM_OT_SetPointer.operator(col2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
             cnt += 1;
-            if cnt % limit_rows == 0: col2 = row2.column()
+            if cnt % limit_rows == 0: col2 = row2.column(align=True)
 
     #Color picker
     box = row.box()
@@ -50,19 +50,19 @@ def MenuPrimary(pie, context):
     cnt = 0
     box = row.box()
     box.label(text = "Stroke")
-    row2 = box.row()
+    row2 = box.row(align=True)
     col2 = row2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = context.tool_settings.image_paint.brush.stroke_method == i
         _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
-        if cnt % limit_rows == 0: col2 = row2.column()
+        if cnt % limit_rows == 0: col2 = row2.column(align=True)
     # Blends
     blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_include().lower().split(',')]
     cnt = 0
     box = row.box()
     box.label(text = "Blend")
-    row2 = box.row()
+    row2 = box.row(align=True)
     col2 = row2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'blend'):
         if i.lower() in blend_include_list:
@@ -71,7 +71,7 @@ def MenuPrimary(pie, context):
             _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "blend", i, depress=is_use)
             # context.tool_settings.image_paint.brush.blend = self.methodName  
             cnt += 1;
-            if cnt % limit_rows == 0: col2 = row2.column()
+            if cnt % limit_rows == 0: col2 = row2.column(align=True)
 
     # brush proeprty
     c = box_root.column(align=True)
@@ -87,7 +87,7 @@ def MenuPrimary(pie, context):
     _Util.MPM_OT_SetInt.operator(r, "150%", unified_paint_settings, "size", int(unified_paint_settings.size * 1.5))
     _Util.MPM_OT_SetInt.operator(r, "200%", unified_paint_settings, "size", int(unified_paint_settings.size * 2.0))
     r = c.row()
-    _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
+    _Util.layout_prop(r, brush, "strength")
     r = r.row(align=True)
     r.scale_x = 0.5
     _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
@@ -98,6 +98,9 @@ def MenuPrimary(pie, context):
     # Etc
     c = box_root.column(align=True)
     row = c.row();
+    _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
+    _Util.layout_prop(row, brush, "use_accumulate")
+
     DrawBrushAngle(context, row);
     DrawMirrorOption(context, row);
 

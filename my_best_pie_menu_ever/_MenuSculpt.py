@@ -10,7 +10,9 @@ def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text = 'Sculpt Primary')
 
-    row = box.row(align=True) # Brush, Stroke, Blend...
+    c = box.column()
+
+    row = c.row(align=True) # Brush, Stroke
 
     box = row.box()
     box.label(text = "Brush")
@@ -45,12 +47,22 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetString.operator(col2, i, tool.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
         if cnt % limit_rows == 0: col2 = row2.column()
-# --------------------------------------------------------------------------------
-def MenuSecondary(pie, context):
-    box = pie.split().box()
-    box.label(text = 'Sculpt Secondary')
-    pass
 
+    # Smoothブラシの強さ
+    smooth_brush = None
+    for brush in bpy.data.brushes:
+        if brush.use_paint_sculpt and brush.name.lower() == "smooth":
+            smooth_brush = brush
+            break
+    if smooth_brush:
+        r = c.row(align=False)
+        _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength")
+        r = r.row(align=True)
+        r.scale_x = 0.8
+        _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength * 0.5)
+        _Util.MPM_OT_SetSingle.operator(r, "75%", brush, "strength", brush.strength * 0.75)
+        _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", brush.strength * 1.5)
+        _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
 # --------------------------------------------------------------------------------
 
 classes = (

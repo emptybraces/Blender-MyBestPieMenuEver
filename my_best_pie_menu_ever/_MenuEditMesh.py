@@ -98,7 +98,7 @@ def MenuPrimary(pie, context):
     r2 = c.row(align=True)
     r2.operator_menu_enum("mesh.merge", "type")
     _Util.layout_operator(r2, "mesh.remove_doubles")
-
+    _Util.layout_operator(c, "mesh.delete_loose")
 
 # --------------------------------------------------------------------------------
 class MPM_OT_AddVertexGroup(Operator):
@@ -246,16 +246,5 @@ classes = (
 )
 def register():
     _Util.register_classes(classes)
-    bpy.types.Scene.mpm_crease_value = bpy.props.FloatProperty(
-        name="Crease",
-        description="Adjust the crease value of selected edges",
-        min=0.0,
-        max=1.0,
-        default=0.0,
-        step=0.1,
-        precision=3,
-        update = cb_update_crease
-    )
 def unregister():
     _Util.unregister_classes(classes)
-    del bpy.types.Scene.mpm_crease_value
