@@ -45,6 +45,7 @@ Placement in bottom sections are common functions, and upper sections are arrang
 ### [SCULPT mode]
 
 - Quickly switchable to any Brushs, Strokes.
+- Quickly tweak the Smooth brush strength.
 - Filterable brushes to displayed.
 
 ### [POSE mode]
