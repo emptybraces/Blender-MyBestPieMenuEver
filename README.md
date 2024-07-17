@@ -22,7 +22,7 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - World position/rotation/scale can be copy/paste to selected objects.
 - Viewport camera's current position/rotation/distance can be saved/restored.
 - (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
-- (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO if installed)
+- (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
 ### [OBJECT mode]
 - Copy the mirrored Vertex Group. Also possible from selected bones.
