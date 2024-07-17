@@ -13,9 +13,9 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - Quickly editable view/tools/object settings.
 - Quickly open Preference/Console.
 - Quickly open Import/Export Fbx settings.
-- Create shortcut for open file or directory with any path.
+- Create shortcut for open File/Directory with any path.
 - (Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.)
-- Switchable language to English <-> SecondLanguage.(Setting in preference)(Default is Japanese)
+- Switchable language to English <-> SecondLanguage.(Setting in preference)
 - Oneshot changes to Pivot and Transform Orientation.
 - Move 3DCursor on ViewPlane.
 - Reset all bone transform of selected object.
