@@ -13,15 +13,16 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - Quickly editable view/tools/object settings.
 - Quickly open Preference/Console.
 - Quickly open Import/Export Fbx settings.
-- Shortcut to call ARP's ExportFBX with selecting objects tied to an armature related to selected object.
 - Create shortcut for open file or directory with any path.
 - (Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.)
 - Switchable language to English <-> SecondLanguage.(Setting in preference)(Default is Japanese)
 - Oneshot changes to Pivot and Transform Orientation.
 - Move 3DCursor on ViewPlane.
 - Reset all bone transform of selected object.
+- World position/rotation/scale can be copy/paste to selected objects.
 - Viewport camera's current position/rotation/distance can be saved and restored.
-- Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
+- (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
+- (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO if installed)
 
 ### [OBJECT mode]
 - Copy the mirrored Vertex Group. Also possible from selected bones.
