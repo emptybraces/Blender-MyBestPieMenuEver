@@ -3,6 +3,7 @@ import bmesh
 from bpy.types import Panel, Menu, Operator
 from . import _Util
 from . import _AddonPreferences
+from . import _PieMenu
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -124,11 +125,11 @@ class MPM_OT_AddVertexGroup(Operator):
                     group.add([v.index], self.weight, 'REPLACE')
             self.report({'INFO'}, f"Added vertex group '{self.name}' with weight {self.weight} to selected vertices")
             bpy.ops.object.mode_set(mode='EDIT')
-            return {'FINISHED'}
+            return {"FINISHED"}
         else:
             self.report({'ERROR'}, "No active object")
             return {'CANCELLED'}
-        return {'FINISHED'}
+        return {"FINISHED"}
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
@@ -140,43 +141,72 @@ class MPM_OT_SelectVertexGroups(bpy.types.Operator):
     bl_idname = "editmesh.select_vertex_groups"
     bl_label = "Select Vertex Groups"
     bl_options = {'REGISTER', 'UNDO'}
-    vertex_group_list: bpy.props.CollectionProperty(type=MPM_SelectVertexPropertyGroup)
+    vgroup_names = []
+    init_verts = []
     @classmethod
     def poll(self, context):
         obj = context.object
-        return obj and obj.type == "MESH"
-    def execute(self, context):
-        obj = context.object
-        bpy.ops.object.mode_set(mode='EDIT')
-        bm = bmesh.from_edit_mesh(obj.data)
-        # すべての頂点の選択を解除
-        for v in bm.verts:
-            v.select = False
-        # 選択された頂点グループの頂点を選択
-        deform_layer = bm.verts.layers.deform.active
-        if deform_layer:
-            selected_vgroups = [vg.name for vg in self.vertex_group_list if vg.select]
-            selected_vgroups_indices = [obj.vertex_groups[name].index for name in selected_vgroups if name in obj.vertex_groups]
-            for v in bm.verts:
-                if any(vgroup_index in v[deform_layer] for vgroup_index in selected_vgroups_indices):
-                    v.select = True
-        # bmeshの更新
-        bmesh.update_edit_mesh(obj.data)
-        return {'FINISHED'}
-
+        return obj and obj.type == "MESH" and 0 < len(context.object.vertex_groups)
     def invoke(self, context, event):
-        self.vertex_group_list.clear()
+        self.vgroup_names.clear()
         # アクティブオブジェクトの頂点グループをリストに追加
         for vgroup in context.object.vertex_groups:
-            item = self.vertex_group_list.add()
-            item.name = vgroup.name
+            self.vgroup_names.append(vgroup.name)
+        # 現在選択中の頂点を保存
+        self.init_verts.clear()
+        for v in bmesh.from_edit_mesh(context.object.data).verts:
+            if v.select:
+                self.init_verts.append(v.index)
+        _PieMenu.MPM_OT_OpenPieMenu.is_force_cancelled = True
         return context.window_manager.invoke_props_dialog(self)
-
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        for item in self.vertex_group_list:
-            col.prop(item, "select", text=item.name)
+        col.label(text="Click the VGroup to Select/Unselect.")
+        for name in self.vgroup_names:
+            col.operator(MPM_OT_SelectVertex.bl_idname, text=name).vgroup_name = name
+    def cancel(self, context):
+        # 復元
+        bm = bmesh.from_edit_mesh(context.object.data)
+        for v in bm.verts:
+            v.select = False
+        for index in self.init_verts:
+            bm.verts[index].select = True
+        bmesh.update_edit_mesh(context.object.data)
+        return {"FINISHED"}
+    def execute(self, context):
+        return {"FINISHED"}
+class MPM_OT_SelectVertex(bpy.types.Operator):
+    bl_idname = "editmesh.select_vertex"
+    bl_label = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    vgroup_name: bpy.props.StringProperty()
+    def execute(self, context):
+        obj = context.object
+        if self.vgroup_name not in obj.vertex_groups:
+            self.report({"WARNING"}, f"Can't found VGroup: {self.vgroup_name}")
+            return {"CANCELLED"}
+        vg_idx = obj.vertex_groups[self.vgroup_name].index
+        bm = bmesh.from_edit_mesh(obj.data)
+        deform_layer = bm.verts.layers.deform.active
+        if not deform_layer:
+            self.report({"WARNING"}, f"Unexptected: {self.vgroup_name}")
+            return {"CANCELLED"}
+
+        # 選択されている頂点があるかどう調べる
+        is_select = True
+        for v in bm.verts:
+            if vg_idx in v[deform_layer]:
+                if v.select:
+                    is_select = False
+                    break
+                v.select = True
+        if not is_select:
+            for v in bm.verts:
+                if vg_idx in v[deform_layer]:
+                    v.select = False
+        bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "editmesh.mirror_seam"
@@ -191,7 +221,7 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
         bpy.ops.mesh.select_mirror(extend=True)
         bpy.ops.mesh.mark_seam(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
-        return {'FINISHED'}
+        return {"FINISHED"}
 class MPM_OT_MirrorSharp(bpy.types.Operator):
     bl_idname = "editmesh.mirror_sharp"
     bl_label = "Mirror Sharp"
@@ -205,7 +235,7 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
         bpy.ops.mesh.select_mirror(extend=True)
         bpy.ops.mesh.mark_sharp(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
 class MPM_OT_AdjustCrease(bpy.types.Operator):
@@ -232,7 +262,7 @@ class MPM_OT_AdjustCrease(bpy.types.Operator):
         crease_layer = bm.edges.layers.float.get(mesh.attributes["crease_edge"].name)
         for edge in [v for v in bm.edges if v.select]:
             edge[crease_layer] = self.crease_value
-        return {'FINISHED'}
+        return {"FINISHED"}
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
@@ -240,6 +270,7 @@ classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
     MPM_OT_AddVertexGroup,
+    MPM_OT_SelectVertex,
     MPM_SelectVertexPropertyGroup,
     MPM_OT_SelectVertexGroups,
     MPM_OT_AdjustCrease
