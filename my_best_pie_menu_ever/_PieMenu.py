@@ -55,7 +55,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
     bl_label = ""
     is_force_cancelled = False
     def modal(self, context, event):
-        print(event.type)
+        #print(event.type)
         if event.type in {"LEFTMOUSE", "NONE"} or self.is_force_cancelled:
             return {"FINISHED"}
         elif event.type in {"RIGHTMOUSE", "ESC"}:

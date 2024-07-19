@@ -173,7 +173,7 @@ class MPM_OT_SelectVertexGroups(bpy.types.Operator):
         for index in self.init_verts:
             bm.verts[index].select = True
         bmesh.update_edit_mesh(context.object.data)
-        return {"FINISHED"}
+        context.object.update_from_editmode()
     def execute(self, context):
         return {"FINISHED"}
 class MPM_OT_SelectVertex(bpy.types.Operator):
@@ -194,6 +194,7 @@ class MPM_OT_SelectVertex(bpy.types.Operator):
             return {"CANCELLED"}
 
         # 選択されている頂点があるかどう調べる
+        bm.select_flush(False)
         is_select = True
         for v in bm.verts:
             if vg_idx in v[deform_layer]:
@@ -206,6 +207,7 @@ class MPM_OT_SelectVertex(bpy.types.Operator):
                 if vg_idx in v[deform_layer]:
                     v.select = False
         bmesh.update_edit_mesh(obj.data)
+        obj.update_from_editmode()
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 class MPM_OT_MirrorSeam(bpy.types.Operator):
