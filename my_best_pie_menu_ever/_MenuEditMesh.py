@@ -269,6 +269,8 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
         mesh = context.object.data        
         bm = bmesh.from_edit_mesh(mesh)
         crease_layer = bm.verts.layers.float.get("crease_vert", None)
+        if crease_layer is None:
+            crease_layer = bm.verts.layers.float.new("crease_vert")
         for v in [v for v in bm.verts if v.select]:
             v[crease_layer] = self.crease_value
         bmesh.update_edit_mesh(context.object.data)
@@ -298,11 +300,10 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
         mesh = context.object.data        
         bm = bmesh.from_edit_mesh(mesh)
         crease_layer = bm.edges.layers.float.get("crease_edge", None)
+        if crease_layer is None:
+            crease_layer = bm.edges.layers.float.new("crease_edge")
         for edge in [v for v in bm.edges if v.select]:
             edge[crease_layer] = self.crease_value
-        # crease_layer = bm.verts.layers.float.get("crease_vert", None)
-        # for v in [v for v in bm.verts if v.select]:
-        #     v[crease_layer] = self.crease_value
         bmesh.update_edit_mesh(context.object.data)
         return {"FINISHED"}
     def invoke(self, context, event):
