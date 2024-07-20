@@ -53,10 +53,9 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
 class MPM_OT_OpenPieMenu(bpy.types.Operator):
     bl_idname = "op.mpm_open_pie_menu"
     bl_label = ""
-    is_force_cancelled = False
     def modal(self, context, event):
-        #print(event.type)
-        if event.type in {"LEFTMOUSE", "NONE"} or self.is_force_cancelled:
+        # print(event.type)
+        if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu:
             return {"FINISHED"}
         elif event.type in {"RIGHTMOUSE", "ESC"}:
             return {"CANCELLED"}
@@ -69,7 +68,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
         return {'RUNNING_MODAL'}
     def invoke(self, context, event):
         if context.space_data.type == "VIEW_3D":
-            is_force_cancelled = False
+            g.is_force_cancelled_piemenu = False
             self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
             context.window_manager.modal_handler_add(self)
             bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")

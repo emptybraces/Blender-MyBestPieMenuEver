@@ -65,8 +65,8 @@ def MenuPrimary(pie, context):
     box = r.box()
     box.label(text = "Vertex Group")
     cc = box.column(align=True)
-    _Util.layout_operator(cc, MPM_OT_SelectVertexGroups.bl_idname)
-    _Util.layout_operator(cc, MPM_OT_AddVertexGroup.bl_idname)
+    _Util.layout_operator(cc, MPM_OT_SelectVertexGroupPanel.bl_idname)
+    _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
 
     # Edge
     c3 = r.column();
@@ -102,8 +102,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, "mesh.delete_loose")
 
 # --------------------------------------------------------------------------------
-class MPM_OT_AddVertexGroup(Operator):
-    bl_idname = "editmesh.add_vertex_group"
+class MPM_OT_AddVertexGroupPanel(Operator):
+    bl_idname = "op.mpm_editmesh_add_vertex_group_panel"
     bl_label = "Add Vertex Group"
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_name: bpy.props.StringProperty(name="Name", default="Group", description="Vertex group name")
@@ -133,12 +133,8 @@ class MPM_OT_AddVertexGroup(Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
-class MPM_SelectVertexPropertyGroup(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(name="")
-    select: bpy.props.BoolProperty(name="", default=False)
-# --------------------------------------------------------------------------------
-class MPM_OT_SelectVertexGroups(bpy.types.Operator):
-    bl_idname = "editmesh.select_vertex_groups"
+class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
+    bl_idname = "op.mpm_editmesh_select_vertex_group_panel"
     bl_label = "Select Vertex Groups"
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_names = []
@@ -157,14 +153,18 @@ class MPM_OT_SelectVertexGroups(bpy.types.Operator):
         for v in bmesh.from_edit_mesh(context.object.data).verts:
             if v.select:
                 self.init_verts.append(v.index)
-        _PieMenu.MPM_OT_OpenPieMenu.is_force_cancelled = True
+        g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
     def draw(self, context):
-        layout = self.layout
-        col = layout.column()
-        col.label(text="Click the VGroup to Select/Unselect.")
+        self.layout.label(text="Click the VGroup to Select/Unselect.")
+        cnt = 0
+        limit_rows = 25
+        r = self.layout.row(align=True)
+        cc = r.column(align=True)
         for name in self.vgroup_names:
-            col.operator(MPM_OT_SelectVertex.bl_idname, text=name).vgroup_name = name
+            cc.operator(MPM_OT_SelectVertex.bl_idname, text=name).vgroup_name = name
+            cnt += 1
+            if cnt % limit_rows == 0: cc = r.column(align=True)
     def cancel(self, context):
         # 復元
         bm = bmesh.from_edit_mesh(context.object.data)
@@ -176,8 +176,8 @@ class MPM_OT_SelectVertexGroups(bpy.types.Operator):
         context.object.update_from_editmode()
     def execute(self, context):
         return {"FINISHED"}
-class MPM_OT_SelectVertex(bpy.types.Operator):
-    bl_idname = "editmesh.select_vertex"
+class MPM_OT_SelectVertexGroup(bpy.types.Operator):
+    bl_idname = "op.mpm_editmesh_select_vertex_group"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_name: bpy.props.StringProperty()
@@ -211,7 +211,7 @@ class MPM_OT_SelectVertex(bpy.types.Operator):
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 class MPM_OT_MirrorSeam(bpy.types.Operator):
-    bl_idname = "editmesh.mirror_seam"
+    bl_idname = "op.mpm_editmesh_mirror_seam"
     bl_label = "Mirror Seam"
     bl_options = {'REGISTER', 'UNDO'}
     is_clear: bpy.props.BoolProperty()
@@ -225,7 +225,7 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
         context.object.data.use_mirror_topology = mirror_settings
         return {"FINISHED"}
 class MPM_OT_MirrorSharp(bpy.types.Operator):
-    bl_idname = "editmesh.mirror_sharp"
+    bl_idname = "op.mpm_editmesh_mirror_sharp"
     bl_label = "Mirror Sharp"
     bl_options = {'REGISTER', 'UNDO'}
     is_clear: bpy.props.BoolProperty()
@@ -241,7 +241,7 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 class MPM_OT_AdjustCrease(bpy.types.Operator):
-    bl_idname = "editmesh.adjust_crease"
+    bl_idname = "op.mpm_editmesh_adjust_crease"
     bl_label = "Edge Crease"
     bl_options = {'REGISTER', 'UNDO'}
     crease_value: bpy.props.FloatProperty(
@@ -271,10 +271,9 @@ class MPM_OT_AdjustCrease(bpy.types.Operator):
 classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
-    MPM_OT_AddVertexGroup,
-    MPM_OT_SelectVertex,
-    MPM_SelectVertexPropertyGroup,
-    MPM_OT_SelectVertexGroups,
+    MPM_OT_AddVertexGroupPanel,
+    MPM_OT_SelectVertexGroupPanel,
+    MPM_OT_SelectVertexGroup,
     MPM_OT_AdjustCrease
 )
 def register():

@@ -64,6 +64,12 @@ def PieMenuDraw_ModeChange(layout, context):
     op = r.operator("object.mode_set", text=iface_("Texture Paint", act_mode_i18n_context), icon="TPAINT_HLT", depress=object_mode == "PAINT_TEXTURE")
     if active_type_is_mesh: op.mode = "TEXTURE_PAINT"
 
+    # Vertex Paint
+    r = col.row()
+    r.active = object_mode != "PAINT_VERTEX" and active_type_is_mesh
+    op = r.operator("object.mode_set", text=iface_("Vertex Paint", act_mode_i18n_context), icon="VPAINT_HLT", depress=object_mode == "PAINT_VERTEX")
+    if active_type_is_mesh: op.mode = "VERTEX_PAINT"
+
 class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
     bl_idname = "op.mpm_change_mode_with_armature"
     bl_label = "Changed Mode With Armature"
