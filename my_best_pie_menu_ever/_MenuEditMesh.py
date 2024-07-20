@@ -3,7 +3,7 @@ import bmesh
 from bpy.types import Panel, Menu, Operator
 from . import _Util
 from . import _AddonPreferences
-from . import _PieMenu
+from . import g
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -61,8 +61,15 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
     _Util.layout_operator(cc, "uv.unwrap")
 
-    # 頂点グループ
-    box = r.box()
+    # Vertex
+    c2 = r.column();
+    box = c2.box()
+    box.label(text = "Vertex")
+    cc = box.column(align=True)
+    _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
+
+    # VertexGroup
+    box = c2.box()
     box.label(text = "Vertex Group")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_SelectVertexGroupPanel.bl_idname)
@@ -81,7 +88,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
     # クリーズ
-    _Util.layout_operator(c, MPM_OT_AdjustCrease.bl_idname)
+    _Util.layout_operator(c, MPM_OT_EdgeCreasePanel.bl_idname)
 
     # Apply
     box = c3.box()
@@ -162,7 +169,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         r = self.layout.row(align=True)
         cc = r.column(align=True)
         for name in self.vgroup_names:
-            cc.operator(MPM_OT_SelectVertex.bl_idname, text=name).vgroup_name = name
+            cc.operator(MPM_OT_SelectVertexGroup.bl_idname, text=name).vgroup_name = name
             cnt += 1
             if cnt % limit_rows == 0: cc = r.column(align=True)
     def cancel(self, context):
@@ -240,8 +247,37 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
-class MPM_OT_AdjustCrease(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_adjust_crease"
+class MPM_OT_VertCreasePanel(bpy.types.Operator):
+    bl_idname = "op.mpm_editmesh_vert_crease_panel"
+    bl_label = "Vert Crease"
+    bl_options = {'REGISTER', 'UNDO'}
+    crease_value: bpy.props.FloatProperty(
+        name="Crease",
+        description="Adjust the crease value of selected edges",
+        min=0.0,
+        max=1.0,
+        default=0.0,
+        step=0.1,
+        precision=2
+    )
+    @classmethod
+    def poll(self, context):
+        obj = context.edit_object
+        bm = bmesh.from_edit_mesh(obj.data)
+        return obj and obj.type == "MESH" and any(e.select for e in bm.verts)
+    def execute(self, context):
+        mesh = context.object.data        
+        bm = bmesh.from_edit_mesh(mesh)
+        crease_layer = bm.verts.layers.float.get("crease_vert", None)
+        for v in [v for v in bm.verts if v.select]:
+            v[crease_layer] = self.crease_value
+        bmesh.update_edit_mesh(context.object.data)
+        return {"FINISHED"}
+    def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
+        return context.window_manager.invoke_props_dialog(self)
+class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
+    bl_idname = "op.mpm_editmesh_edge_crease_panel"
     bl_label = "Edge Crease"
     bl_options = {'REGISTER', 'UNDO'}
     crease_value: bpy.props.FloatProperty(
@@ -261,11 +297,16 @@ class MPM_OT_AdjustCrease(bpy.types.Operator):
     def execute(self, context):
         mesh = context.object.data        
         bm = bmesh.from_edit_mesh(mesh)
-        crease_layer = bm.edges.layers.float.get(mesh.attributes["crease_edge"].name)
+        crease_layer = bm.edges.layers.float.get("crease_edge", None)
         for edge in [v for v in bm.edges if v.select]:
             edge[crease_layer] = self.crease_value
+        # crease_layer = bm.verts.layers.float.get("crease_vert", None)
+        # for v in [v for v in bm.verts if v.select]:
+        #     v[crease_layer] = self.crease_value
+        bmesh.update_edit_mesh(context.object.data)
         return {"FINISHED"}
     def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 classes = (
@@ -274,7 +315,8 @@ classes = (
     MPM_OT_AddVertexGroupPanel,
     MPM_OT_SelectVertexGroupPanel,
     MPM_OT_SelectVertexGroup,
-    MPM_OT_AdjustCrease
+    MPM_OT_VertCreasePanel,
+    MPM_OT_EdgeCreasePanel
 )
 def register():
     _Util.register_classes(classes)
