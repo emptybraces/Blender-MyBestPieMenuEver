@@ -22,7 +22,7 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - Move 3DCursor on ViewPlane.
 - Reset all bone transform of selected object.
 - World position/rotation/scale can be copy/paste to selected objects.
-- Viewport camera's current position/rotation/distance can be saved/restored.
+- Viewport camera's current position/rotation/distance can be saved/restored stacablity.
 - (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
 - (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
@@ -30,6 +30,8 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - Copy the mirrored Vertex Group. Also possible from selected bones.
 
 ### [EDIT mode]
+- Quick access to Edge/Vertex crease.
+- Quick access to Vertex groups.
 - Shortcuts various functions.
 
 ### [PAINT_TEXTURE mode]
@@ -53,9 +55,9 @@ Placement in bottom sections are common functions, and upper sections are arrang
 
 ### [POSE mode]
 
-- Quickly switch to showing bone layer group.
-- Wiggle2: Shortcut ResetPhysics.
-- AutoRigPro: Snap FKIKs of four limbs in one click.
+- (Quickly switch to showing bone layer group.)
+- (If installed) Wiggle2: Shortcut ResetPhysics.
+- (If installed) AutoRigPro: Snap FKIKs of four limbs in one click.
 
 #
 Selection history
