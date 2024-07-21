@@ -1,8 +1,5 @@
 import bpy
-from bpy.types import Panel, Menu, Operator
 from . import _Util
-from . import _AddonPreferences
-from . import _MenuPose
 from . import _MenuWeightPaint
 
 # --------------------------------------------------------------------------------

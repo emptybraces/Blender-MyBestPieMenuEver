@@ -1,6 +1,5 @@
 import bpy
 import mathutils
-from bpy.types import Panel, Menu, Operator
 from bl_ui.properties_paint_common import UnifiedPaintPanel, brush_basic_texpaint_settings
 from . import _Util
 from . import _AddonPreferences
@@ -22,56 +21,59 @@ def MenuPrimary(pie, context):
     row = box_root.row(align=True) 
     box = row.box()
     box.label(text = "Brush")
-    row2 = box.row(align=True)
-    col2 = row2.column(align=True)
+    r2 = box.row(align=True)
+    c2 = r2.column(align=True)
     cnt = 0
     limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
     brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_brush_exclude().lower().split(',')]
     for i in bpy.data.brushes:
         if i.use_paint_image and i.name.lower() not in brush_exclude_list:
             is_use = context.tool_settings.image_paint.brush.name == i.name
-            _Util.MPM_OT_SetPointer.operator(col2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
+            _Util.MPM_OT_SetPointer.operator(c2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
             cnt += 1;
-            if cnt % limit_rows == 0: col2 = row2.column(align=True)
+            if cnt % limit_rows == 0: c2 = r2.column(align=True)
 
     #Color picker
     box = row.box()
     box.label(text = "Color")
     c = box.column(align=True)
-    row2 = c.row(align=True)
-    row2.scale_x = 0.3
-    UnifiedPaintPanel.prop_unified_color(row2, context, context.tool_settings.image_paint.brush, "color", text="")
-    UnifiedPaintPanel.prop_unified_color(row2, context, context.tool_settings.image_paint.brush, "secondary_color", text="")
-    _Util.layout_operator(c, OT_TexPaint_SwapColor.bl_idname)
-    _Util.layout_operator(c, OT_TexPaint_SetWhite.bl_idname)
-    _Util.layout_operator(c, OT_TexPaint_SetBlack.bl_idname)
+    r2 = c.row(align=True)
+    r3 = r2.row(align=True)
+    r4 = r2.row(align=True)
+    r3.scale_x = 0.3
+    UnifiedPaintPanel.prop_unified_color(r3, context, context.tool_settings.image_paint.brush, "color", text="")
+    UnifiedPaintPanel.prop_unified_color(r3, context, context.tool_settings.image_paint.brush, "secondary_color", text="")
+    _Util.layout_operator(r4, MPM_OT_TexPaint_SwapColor.bl_idname, icon="ARROW_LEFTRIGHT")
+    _Util.layout_operator(c, MPM_OT_TexPaint_SetWhite.bl_idname)
+    _Util.layout_operator(c, MPM_OT_TexPaint_SetBlack.bl_idname)
+    c.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="Test", panel="MPM_PT_BrushColorPalettePanel",)
 
     # Strokes
     cnt = 0
     box = row.box()
     box.label(text = "Stroke")
-    row2 = box.row(align=True)
-    col2 = row2.column(align=True)
+    r2 = box.row(align=True)
+    c2 = r2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'stroke_method'):
         is_use = context.tool_settings.image_paint.brush.stroke_method == i
-        _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
+        _Util.MPM_OT_SetterBase.operator(c2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "stroke_method", i, depress=is_use)
         cnt += 1;
-        if cnt % limit_rows == 0: col2 = row2.column(align=True)
+        if cnt % limit_rows == 0: c2 = r2.column(align=True)
     # Blends
     blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_include().lower().split(',')]
     cnt = 0
     box = row.box()
     box.label(text = "Blend")
-    row2 = box.row(align=True)
-    col2 = row2.column(align=True)
+    r2 = box.row(align=True)
+    c2 = r2.column(align=True)
     for i in _Util.enum_values(context.tool_settings.image_paint.brush, 'blend'):
         if i.lower() in blend_include_list:
             is_use = context.tool_settings.image_paint.brush.blend == i
-            # col2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i  
-            _Util.MPM_OT_SetterBase.operator(col2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "blend", i, depress=is_use)
+            # c2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i  
+            _Util.MPM_OT_SetterBase.operator(c2, _Util.MPM_OT_SetString.bl_idname, i, context.tool_settings.image_paint.brush, "blend", i, depress=is_use)
             # context.tool_settings.image_paint.brush.blend = self.methodName  
             cnt += 1;
-            if cnt % limit_rows == 0: col2 = row2.column(align=True)
+            if cnt % limit_rows == 0: c2 = r2.column(align=True)
 
     # brush proeprty
     c = box_root.column(align=True)
@@ -111,11 +113,11 @@ def DrawBehaviourOfControlKey(layout):
     row.label(text = "Holding Ctrl Key is")
     ctrl_behaviour = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     if ctrl_behaviour: # Erase Alpha mode
-        _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=False)
+        _Util.layout_operator(row, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=False)
         _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
     else:
         _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "SubColor", False, depress=True)
-        _Util.layout_operator(row, OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
+        _Util.layout_operator(row, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
 
 def DrawBrushAngle(context, layout):
     row = layout.row(align=True)
@@ -138,9 +140,9 @@ def MenuSecondary(pie, context):
     box.label(text = 'Texture Paint Seconday')
 
 # --------------------------------------------------------------------------------
-class OT_TexPaint_SwapColor(bpy.types.Operator):
-    bl_idname = "mpme.texpaint_swap_color"
-    bl_label = "Swap Color"
+class MPM_OT_TexPaint_SwapColor(bpy.types.Operator):
+    bl_idname = "op.mpm_texpaint_swap_color"
+    bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         brush = context.tool_settings.image_paint.brush
@@ -148,22 +150,22 @@ class OT_TexPaint_SwapColor(bpy.types.Operator):
         brush.color = brush.secondary_color.copy()
         brush.secondary_color = color
         return {'FINISHED'}
-class OT_TexPaint_SetBlack(bpy.types.Operator):
-    bl_idname = "mpme.texpaint_set_black"
+class MPM_OT_TexPaint_SetBlack(bpy.types.Operator):
+    bl_idname = "op.mpm_texpaint_set_black"
     bl_label = "Set Black"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         context.tool_settings.image_paint.brush.color = mathutils.Color((0.0,0.0,0.0))
         return {'FINISHED'}
-class OT_TexPaint_SetWhite(bpy.types.Operator):
-    bl_idname = "mpme.texpaint_set_white"
+class MPM_OT_TexPaint_SetWhite(bpy.types.Operator):
+    bl_idname = "op.mpm_texpaint_set_white"
     bl_label = "Set White"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         context.tool_settings.image_paint.brush.color = mathutils.Color((1.0,1.0,1.0))
         return {'FINISHED'}
-class OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
-    bl_idname = "mpme.texpaint_toggle_ctrl_behaviour"
+class MPM_OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
+    bl_idname = "op.mpm_texpaint_toggle_ctrl_behaviour"
     bl_label = "Toggle Ctrl Behaviour"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
@@ -178,8 +180,8 @@ class OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
         return {'FINISHED'}
 g_lastBlend = ""
 g_lastBrushName = ""
-class OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
-    bl_idname = "mpme.texpaint_switch_ctrl_behaviour"
+class MPM_OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
+    bl_idname = "op.mpm_texpaint_switch_ctrl_behaviour"
     bl_label = "Switch Ctrl Behaviour"
     @classmethod
     def poll(cls, context):
@@ -202,8 +204,8 @@ class OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
         self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
-class OT_TexPaint_ChangeSoften(bpy.types.Operator):
-    bl_idname = "mpme.texpaint_change_soften"
+class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
+    bl_idname = "op.mpm_texpaint_change_soften"
     bl_label = "Change Soften"
     def modal(self, context, event):
         context.area.tag_redraw()
@@ -229,14 +231,26 @@ class OT_TexPaint_ChangeSoften(bpy.types.Operator):
             _Util.show_msgbox("Set a valid brush name in the preferences.", icon='ERROR')
             return {'CANCELLED'}
 # --------------------------------------------------------------------------------
+class MPM_PT_BrushColorPalettePanel(bpy.types.Panel):
+    bl_label=""
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "HEADER"
+    def draw(self, context):
+        layout = self.layout
+        settings = context.tool_settings.image_paint
+        layout.template_ID(settings, "palette", new="palette.new")
+        if settings.palette:
+           layout.template_palette(settings, "palette", color=True)
+# --------------------------------------------------------------------------------
 
 classes = (
-    OT_TexPaint_SwapColor,
-    OT_TexPaint_SetBlack,
-    OT_TexPaint_SetWhite,
-    OT_TexPaint_ToggleCtrlBehaviour,
-    OT_TexPaint_SwitchCtrlBehaviour,
-    OT_TexPaint_ChangeSoften,
+    MPM_OT_TexPaint_SwapColor,
+    MPM_OT_TexPaint_SetBlack,
+    MPM_OT_TexPaint_SetWhite,
+    MPM_OT_TexPaint_ToggleCtrlBehaviour,
+    MPM_OT_TexPaint_SwitchCtrlBehaviour,
+    MPM_OT_TexPaint_ChangeSoften,
+    MPM_PT_BrushColorPalettePanel,
 )
 
 addon_keymaps = []
@@ -249,7 +263,7 @@ def register():
     global key_keydown_ctrl
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    key_keydown_ctrl = km.keymap_items.new(OT_TexPaint_SwitchCtrlBehaviour.bl_idname, 'LEFT_CTRL','PRESS')
+    key_keydown_ctrl = km.keymap_items.new(MPM_OT_TexPaint_SwitchCtrlBehaviour.bl_idname, 'LEFT_CTRL','PRESS')
     key_keydown_ctrl.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_keydown_ctrl))
     
@@ -265,7 +279,7 @@ def register():
     addon_keymaps.append((km, key_ctrl_lmb_invert))
 
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    kmi = km.keymap_items.new(OT_TexPaint_ChangeSoften.bl_idname, 'LEFT_SHIFT', 'PRESS')
+    kmi = km.keymap_items.new(MPM_OT_TexPaint_ChangeSoften.bl_idname, 'LEFT_SHIFT', 'PRESS')
     addon_keymaps.append((km, kmi))
 
     km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')

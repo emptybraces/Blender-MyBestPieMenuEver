@@ -1,5 +1,4 @@
 import bpy
-from bpy.types import Panel, Menu, Operator
 from . import _Util
 # --------------------------------------------------------------------------------
 # カーブスカルプトモードメニュー

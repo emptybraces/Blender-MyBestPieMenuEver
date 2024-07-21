@@ -70,6 +70,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
         if context.space_data.type == "VIEW_3D":
             g.is_force_cancelled_piemenu = False
             self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
+            context.scene.mpm_prop.init()
             context.window_manager.modal_handler_add(self)
             bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
             return {"RUNNING_MODAL"}
@@ -118,11 +119,37 @@ def Placeholder(pie, context, text):
 #    elif current_mode == 'GPENCIL_WEIGHT_PAINT':Placeholder(pie, context, 'Secondary')
 
 # --------------------------------------------------------------------------------
+# プロパティ
+# --------------------------------------------------------------------------------
+class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
+    pos: bpy.props.FloatVectorProperty()
+    rot: bpy.props.FloatVectorProperty(size=4)
+    distance: bpy.props.FloatProperty()
+class MPM_Prop(bpy.types.PropertyGroup):
+    def init(self):
+        self.ColorPalettePopoverEnum = "ColorPalette"
+        if bpy.context.tool_settings.image_paint.palette is not None:
+            self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
+    # ビューポートカメラ位置保存スタック
+    ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
+    # テクスチャペイントのカラーパレット
+    def on_update_color_palette_popover_enum(self, context):
+        items = [("ColorPalette", "ColorPalette", "")]
+        for i in bpy.data.palettes:
+           items.append((i.name, i.name, ""))
+        return items
+    ColorPalettePopoverEnum: bpy.props.EnumProperty(
+        name="ColorPalette Enum",
+        description="Select an option",
+        items=on_update_color_palette_popover_enum
+    )
 # --------------------------------------------------------------------------------
 
 classes = (
     VIEW3D_MT_my_pie_menu,
     MPM_OT_OpenPieMenu,
+    MPM_Prop_ViewportCameraTransform,
+    MPM_Prop,
 )
 modules = [
     _MenuMode,
@@ -138,9 +165,11 @@ modules = [
 ]
 def register():
     _Util.register_classes(classes)
+    bpy.types.Scene.mpm_prop = bpy.props.PointerProperty(type=MPM_Prop)
     for m in modules:
         m.register()
 def unregister():
     _Util.unregister_classes(classes)
+    del bpy.types.Scene.mpm_prop
     for m in modules:
         m.unregister()

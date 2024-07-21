@@ -285,10 +285,6 @@ class MPM_OT_Utility_Move3DCursorOnViewPlane(bpy.types.Operator):
             self.report({"WARNING"}, "View3D not found, cannot run operator")
             return {"CANCELLED"}
 # --------------------------------------------------------------------------------
-class MPM_PROP_Utility_ViewportCameraTransform(bpy.types.PropertyGroup):
-    pos: bpy.props.FloatVectorProperty()
-    rot: bpy.props.FloatVectorProperty(size=4)
-    distance: bpy.props.FloatProperty()
 class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
     bl_idname = "op.mpm_viewport_camera_transform_save"
     bl_label = "Save"
@@ -297,7 +293,7 @@ class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
         global saved_location, saved_rotation, saved_distance
         area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
         space = next(space for space in area.spaces if space.type == 'VIEW_3D')
-        prop = context.scene.mpm_prop_ViewportCameraTransform.add()
+        prop = context.scene.mpm_prop.ViewportCameraTransforms.add()
         prop.pos = space.region_3d.view_location.copy()
         prop.rot = space.region_3d.view_rotation.copy()
         prop.distance = space.region_3d.view_distance
@@ -311,7 +307,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
     init_values = {}
     @classmethod
     def poll(cls, context):
-        return 0 < len(context.scene.mpm_prop_ViewportCameraTransform)
+        return 0 < len(context.scene.mpm_prop.ViewportCameraTransforms)
     def invoke(self, context, event):
         # 現在値を保存
         area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
@@ -324,9 +320,9 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
     def draw(self, context):
         self.layout.label(text="Click to apply.")
         c = self.layout.column(align=True)
-        for i, data in enumerate(context.scene.mpm_prop_ViewportCameraTransform):
-            data = context.scene.mpm_prop_ViewportCameraTransform[i]
-            name = f"#{i} - POS=({int(data.pos[0])},{int(data.pos[1]):d},{int(data.pos[2]):d})"
+        for i, data in enumerate(context.scene.mpm_prop.ViewportCameraTransforms):
+            data = context.scene.mpm_prop.ViewportCameraTransforms[i]
+            name = f"#{i} - POS({int(data.pos[0])},{int(data.pos[1])},{int(data.pos[2])}), D({int(data.distance)})"
             r = c.row(align=True)
             r.operator(MPM_OT_Utility_ViewportCameraTransformRestore.bl_idname, text=name).idx = i
             r.operator(MPM_OT_Utility_ViewportCameraTransformRestoreRemove.bl_idname, text="", icon="X").idx = i
@@ -347,7 +343,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestore(bpy.types.Operator):
     def execute(self, context):
         area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
         space = next(space for space in area.spaces if space.type == 'VIEW_3D')
-        data = context.scene.mpm_prop_ViewportCameraTransform[self.idx]
+        data = context.scene.mpm_prop.ViewportCameraTransforms[self.idx]
         space.region_3d.view_location = data.pos
         space.region_3d.view_rotation = data.rot
         space.region_3d.view_distance = data.distance
@@ -358,7 +354,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestoreRemove(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     idx: bpy.props.IntProperty()
     def execute(self, context):
-        context.scene.mpm_prop_ViewportCameraTransform.remove(self.idx)
+        context.scene.mpm_prop.ViewportCameraTransforms.remove(self.idx)
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
@@ -372,7 +368,6 @@ classes = (
     MPM_OT_Utility_ViewportShadingSetSolid,
     MPM_OT_Utility_ViewportShadingSetMaterial,
     MPM_OT_Utility_ViewportCameraTransformSave,
-    MPM_PROP_Utility_ViewportCameraTransform,
     MPM_OT_Utility_ViewportCameraTransformRestorePanel,
     MPM_OT_Utility_ViewportCameraTransformRestore,
     MPM_OT_Utility_ViewportCameraTransformRestoreRemove,
@@ -382,7 +377,5 @@ classes = (
 )
 def register():
     _Util.register_classes(classes)
-    bpy.types.Scene.mpm_prop_ViewportCameraTransform = bpy.props.CollectionProperty(type=MPM_PROP_Utility_ViewportCameraTransform)
 def unregister():
-    del bpy.types.Scene.mpm_prop_ViewportCameraTransform
     _Util.unregister_classes(classes)
