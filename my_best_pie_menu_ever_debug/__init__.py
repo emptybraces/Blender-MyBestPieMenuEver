@@ -1,7 +1,7 @@
 bl_info = {
     "name": "MyBestPieMenuEVER_debug",
     "author": "emptybraces",
-    "version": (1, 0),
+    "version": (1, 0, 0),
     "blender": (4, 1, 0),
     "location": "3D View",
     "description": "",
@@ -11,21 +11,30 @@ bl_info = {
 }
 import bpy
 import sys
+import importlib
 
 class OT_ReinstallAddon(bpy.types.Operator):
     bl_idname = "mpmei.reinstall_addon"
     bl_label = "Reinstall Addon"
+    def get_addon_mpm(self):
+        addon_name = "my_best_pie_menu_ever"
+        for i in bpy.context.preferences.addons.keys():
+            # print(i)
+            if "debug" not in i and "my_best_pie_menu_ever" in i:
+                addon_name = i
+                break;
+        return addon_name
+
     def execute(self, context):
         exist_module = False
         # 検索
-        addon_name = "my_best_pie_menu_ever"
-        for i in bpy.context.preferences.addons.keys():
-            if "debug" not in i and "my_best_pie_menu_ever" in i:
-                addon_name = i
-                break
+        addon_name = self.get_addon_mpm()
+        # print(addon_name)
         if is_addon_enabled(addon_name):
             #if 'my_pie_menu_ever._AddonPreferences' in sys.modules:
-            from my_best_pie_menu_ever import _AddonPreferences
+            #from addon_name import _AddonPreferences
+            _AddonPreferences = importlib.import_module(f"{addon_name}._AddonPreferences")
+            # print(module)
             if _AddonPreferences:
                 ref = _AddonPreferences.Accessor.get_ref()
                 if ref:
@@ -33,18 +42,12 @@ class OT_ReinstallAddon(bpy.types.Operator):
                     self.dict = ref.dict()
             bpy.ops.preferences.addon_remove(module=addon_name)
             bpy.ops.preferences.addon_refresh()
-
-        if bpy.app.version < (4,2,0):
-            bpy.ops.preferences.addon_install(filepath="D:/googledrive/blender/plugin/MyBestPieMenuEver/my_best_pie_menu_ever.zip")
-        else:
-            bpy.ops.preferences.addon_install(filepath="D:/googledrive/blender/plugin/MyBestPieMenuEver/my_best_pie_menu_ever-1.3.3.zip")
+        # インストール
+        bpy.ops.preferences.addon_install(filepath="D:/googledrive/blender/plugin/MyBestPieMenuEver/my_best_pie_menu_ever.zip")
         bpy.ops.preferences.addon_refresh()
+
         # 再度検索
-        addon_name = "my_best_pie_menu_ever"
-        for i in bpy.context.preferences.addons.keys():
-            if "debug" not in i and "my_best_pie_menu_ever" in i:
-                addon_name = i
-                break
+        addon_name = self.get_addon_mpm()
         bpy.ops.preferences.addon_enable(module=addon_name)
         bpy.ops.preferences.addon_refresh()
         if exist_module:
@@ -53,6 +56,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
             #print(bpy.context.preferences.addons.keys())
             #print(bpy.context.preferences.addons[addon_name].preferences)
             #print("---------------")
+            _AddonPreferences = importlib.import_module(f"{addon_name}._AddonPreferences")
             _AddonPreferences.Accessor.get_ref().dict_apply(self.dict)
             self.dict = None
         def draw(self, context):

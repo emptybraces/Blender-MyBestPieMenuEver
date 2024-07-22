@@ -17,6 +17,7 @@ foreach ($line in $lines) {
 
         # 圧縮対象のフォルダー
         $sourceFolder = "my_best_pie_menu_ever\*"
+        # $sourceFolder = "my_best_pie_menu_ever"
 
         # 圧縮を実行
         Compress-Archive -Force -Path $sourceFolder -DestinationPath $zipFileName
