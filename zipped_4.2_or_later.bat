@@ -1,1 +1,0 @@
-powershell compress-archive -Force my_best_pie_menu_ever/* my_best_pie_menu_ever-1.3.6.zip

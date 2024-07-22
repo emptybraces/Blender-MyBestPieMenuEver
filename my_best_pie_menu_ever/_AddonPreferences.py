@@ -8,16 +8,15 @@ from . import _PieMenu
 addon_keymaps = []
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
-    secondLanguage: StringProperty(name="Second Language", default="ja_JP")
-    openFilePathList: StringProperty(name="Open File or Explorer Path List")
-    isDebug: BoolProperty(name="Debug Mode")
-    imagePaintBrushExclude: StringProperty(name="Brush Exclude", default="", description="Specify by comma separated.")
-    imagePaintBlendInclude: StringProperty(name="Blend Include", default="mix,screen,overlay,erase_alpha", description="Specify by comma separated.")
-    imagePaintShiftBrushName: StringProperty(name="ShiftBrushName", default="Soften")
-    image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty()
-    imagePaintLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5)
-    sculptLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5)
-    sculptBrushFilterByName: StringProperty(name="Filter by brush name", description="Specify by comma separated.")
+    secondLanguage: StringProperty(name="Second Language", default="ja_JP", description="Set the second language for the language switch button")
+    openFilePathList: StringProperty(name="Open File or Explorer Path List", description="Specify the absolute path you want to execute. You can also show multiple separated by comma.")
+    imagePaintBrushExclude: StringProperty(name="Brush Exclude", default="", description="Enter the name of the brush you want to EXCLUDE, or select it from the drop-down list")
+    imagePaintBlendInclude: StringProperty(name="Blend Include", default="mix,screen,overlay,erase_alpha", description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
+    imagePaintShiftBrushName: StringProperty(name="ShiftBrushName", default="Soften", description="Enter the name of the brush you want to switch to while holding down the Shift key")
+    image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(name="Ctrl+LMB Behaviour")
+    imagePaintLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5, description="Specify the line count for displaying brushes")
+    sculptLimitRowCount: IntProperty(name="Limit Row Count", default=13, min=5, description="Specify the line count for displaying brushes")
+    sculptBrushFilterByName: StringProperty(name="Filter by brush name", description="Enter the name of the brush you want to display or select from the drop-down list")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
@@ -57,10 +56,10 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             row.prop(self, prop2)
         global blends
         layout = self.layout
+        layout.label(text="*Please Mouseover to read description.")
         box = layout.box().column(heading='Utility')
         box.prop(self, "secondLanguage")
         box.prop(self, "openFilePathList")
-        box.prop(self, "isDebug")
 
         box = layout.box()
         box.label(text='Image Paint')
@@ -68,7 +67,11 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         sub_row(self, box, "imagePaintBlendInclude", "imagePaintBlendDropDown")
         sub_row(self, box, "imagePaintShiftBrushName", "imagePaintShiftBrushNameDropDown")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
-        box.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="ImagePaint: Ctrl+LMB - " + ("Invert" if not b else "EraseAlpha"))
+        row = box.row(align=True)
+        row.label(text="Ctrl+LMB Behaviour:")
+        row.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text = "")
+        row.label(text="Invert" if not b else "EraseAlpha")
+
         box.prop(self, "imagePaintLimitRowCount")
         
         box = layout.box()
@@ -88,7 +91,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         return {
             "secondLanguage": self.secondLanguage,
             "openFilePathList": self.openFilePathList,
-            "isDebug": getattr(self, "isDebug", False),
+            # "isDebug": getattr(self, "isDebug", False),
             "imagePaintBrushExclude": self.imagePaintBrushExclude,
             "imagePaintBlendInclude": self.imagePaintBlendInclude,
             "imagePaintShiftBrushName": self.imagePaintShiftBrushName,
@@ -124,8 +127,8 @@ class Accessor():
     def get_sculpt_brush_filter_by_name(): return Accessor.get_ref().sculptBrushFilterByName
     @staticmethod
     def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
-    @staticmethod
-    def get_is_debug(): return Accessor.get_ref().isDebug
+    # @staticmethod
+    # def get_is_debug(): return Accessor.get_ref().isDebug
 
 def registerKeyMap():
     kc = bpy.context.window_manager.keyconfigs.addon
