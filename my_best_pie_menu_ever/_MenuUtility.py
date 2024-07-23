@@ -4,6 +4,7 @@ from . import _AddonPreferences
 from . import _MenuPose
 from . import g
 import mathutils
+import bmesh
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
@@ -46,7 +47,8 @@ def PieMenuDraw_Utility(layout, context):
     r.label(text="3d_cursor", icon="CURSOR")
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
-    _Util.layout_operator(r, MPM_OT_Utility_Move3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
+    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin.bl_idname, text="", icon="EMPTY_AXIS")
+    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
 
     # オーバーレイ
     r = box.row(align=True)
@@ -233,12 +235,53 @@ class MPM_OT_Utility_ARPExport(bpy.types.Operator):
                 bpy.ops.id.arp_export_fbx_panel('INVOKE_DEFAULT')
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
-class MPM_OT_Utility_Move3DCursorOnViewPlane(bpy.types.Operator):
-    bl_idname = "op.mpm_move_3dcursor_on_view_plane"
+class MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin(bpy.types.Operator):
+    bl_idname = "op.mpm_snap_cursor_to_between_selected_and_origin"
+    bl_label = "Snap 3DCursor from middle of selections to origin"
+    bl_description = "Slide the midpont of the selections to the origin"
+    bl_options = {'REGISTER', 'UNDO'}
+    perpendicular: bpy.props.FloatProperty(name="Perpendicular")
+    offset: bpy.props.FloatVectorProperty(name="Offset")
+    @classmethod
+    def poll(cls, context):
+        return 0 < len(context.selected_objects)
+    def draw(self, context):
+        layout = self.layout
+        _Util.layout_prop(layout, self, "perpendicular", isActive=self.perpendicular_vec != None)
+        layout.label(text="Offset:")
+        layout.prop(self, "offset", index=0, text="X")
+        layout.prop(self, "offset", index=1, text="Y")
+        layout.prop(self, "offset", index=2, text="Z")
+    def execute(self, context):
+        obj = context.active_object
+        selected_objects = context.selected_objects
+        center = sum((obj.matrix_world.translation for obj in selected_objects), mathutils.Vector()) / len(selected_objects)
+        self.perpendicular_vec = None
+        if obj.mode == "EDIT":
+            bm = bmesh.from_edit_mesh(obj.data)
+            selected_verts = [v.co for v in bm.verts if v.select]
+            if 0 < len(selected_verts):
+                center = sum(selected_verts, mathutils.Vector()) / len(selected_verts)
+                center = obj.matrix_world @ center # オブジェクトのワールドマトリクスを考慮
+            if 2 == len(selected_verts):
+                self.perpendicular_vec = (selected_verts[1] - selected_verts[0]).cross(mathutils.Vector((0, 0, 1)))
+                self.perpendicular_vec.normalize()
+        else:
+            selected_objects = context.selected_objects
+            center = sum((obj.matrix_world.translation for obj in selected_objects), mathutils.Vector()) / len(selected_objects)
+        # 3Dカーソルの位置を設定
+        p = center.copy()
+        if self.perpendicular_vec != None:
+            p += self.perpendicular_vec * self.perpendicular
+        p += mathutils.Vector(self.offset)
+        context.scene.cursor.location = p
+        return {"FINISHED"}
+# --------------------------------------------------------------------------------
+class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
+    bl_idname = "op.mpm_snap_cursor_on_view_plane"
     bl_label = ""
     bl_description = "Move 3DCursor on View Plane"
     bl_options = {'REGISTER', 'UNDO'}
-
     def modal(self, context, event):
         context.area.tag_redraw()
         if event.type == "MOUSEMOVE":
@@ -290,7 +333,6 @@ class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
     bl_label = "Save"
     bl_description = "Save the current viewport camera position and rotation"
     def execute(self, context):
-        global saved_location, saved_rotation, saved_distance
         area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
         space = next(space for space in area.spaces if space.type == 'VIEW_3D')
         prop = context.scene.mpm_prop.ViewportCameraTransforms.add()
@@ -373,7 +415,8 @@ classes = (
     MPM_OT_Utility_ViewportCameraTransformRestoreRemove,
     MPM_OT_Utility_OpenFile,
     MPM_OT_Utility_ARPExport,
-    MPM_OT_Utility_Move3DCursorOnViewPlane,
+    MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin,
+    MPM_OT_Utility_Snap3DCursorOnViewPlane,
 )
 def register():
     _Util.register_classes(classes)

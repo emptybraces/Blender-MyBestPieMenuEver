@@ -46,7 +46,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(r4, MPM_OT_TexPaint_SwapColor.bl_idname, icon="ARROW_LEFTRIGHT")
     _Util.layout_operator(c, MPM_OT_TexPaint_SetWhite.bl_idname)
     _Util.layout_operator(c, MPM_OT_TexPaint_SetBlack.bl_idname)
-    c.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="Test", panel="MPM_PT_BrushColorPalettePanel",)
+    c.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
 
     # Strokes
     cnt = 0
@@ -83,7 +83,7 @@ def MenuPrimary(pie, context):
     r = c.row()
     _Util.layout_prop(r, unified_paint_settings, "size")
     r = r.row(align=True)
-    r.scale_x = 0.5
+    r.scale_x = 0.6
     _Util.MPM_OT_SetInt.operator(r, "50%", unified_paint_settings, "size", int(unified_paint_settings.size * 0.5))
     _Util.MPM_OT_SetInt.operator(r, "80%", unified_paint_settings, "size", int(unified_paint_settings.size * 0.8))
     _Util.MPM_OT_SetInt.operator(r, "150%", unified_paint_settings, "size", int(unified_paint_settings.size * 1.5))
@@ -91,7 +91,7 @@ def MenuPrimary(pie, context):
     r = c.row()
     _Util.layout_prop(r, brush, "strength")
     r = r.row(align=True)
-    r.scale_x = 0.5
+    r.scale_x = 0.6
     _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
