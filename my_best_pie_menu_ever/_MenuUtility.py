@@ -242,7 +242,7 @@ class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
                     obj.select_set(True)
                 active_arm.select_set(True)
                 context.view_layer.objects.active = active_arm
-                bpy.ops.arp_export_scene.fbx('INVOKE_DEFAULT')
+                bpy.ops.arp.arp_export_fbx_panel("INVOKE_DEFAULT")
         return {"FINISHED"}
 class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
     bl_idname = "op.mpm_arp_export_single"
@@ -262,7 +262,7 @@ class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
                 sel.select_set(True)
                 active_arm.select_set(True)
                 context.view_layer.objects.active = active_arm
-                bpy.ops.arp_export_scene.fbx('INVOKE_DEFAULT')
+                bpy.ops.arp.arp_export_fbx_panel("INVOKE_DEFAULT")
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
