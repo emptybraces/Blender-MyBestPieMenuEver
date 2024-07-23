@@ -19,7 +19,7 @@ def PieMenuDraw_Utility(layout, context):
     row.operator("wm.console_toggle", icon="CONSOLE", text="")
     row.operator("import_scene.fbx", icon="IMPORT", text="")
     row.operator("export_scene.fbx", icon="EXPORT", text="")
-    row.operator(MPM_OT_Utility_ARPExport.bl_idname, icon="EXPORT", text="")
+    row.operator(MPM_OT_Utility_ARPExportPanel.bl_idname, icon="EXPORT", text="")
 
     row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
     row = row_parent.row(align = True)
@@ -207,16 +207,26 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
         import subprocess
         subprocess.Popen(['start', self.path], shell=True)
         return {"FINISHED"}
-        
 # --------------------------------------------------------------------------------
-class MPM_OT_Utility_ARPExport(bpy.types.Operator):
-    bl_idname = "op.arp_export"
+class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
+    bl_idname = "op.mpm_arp_export_panel"
     bl_label = "Export with ARP"
     @classmethod
     def poll(cls, context):
         active = context.active_object
-        return context.mode == "OBJECT" and active != None and _Util.get_armature(active) != None
-        
+        return 0 < len(context.selected_objects) and context.mode == "OBJECT" and active != None and _Util.get_armature(active) != None
+    def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
+        return context.window_manager.invoke_props_dialog(self)
+    def draw(self, context):
+        self.layout.label(text="ARP Export")
+        _Util.layout_operator(self.layout, MPM_OT_Utility_ARPExportSingle.bl_idname)
+        _Util.layout_operator(self.layout, MPM_OT_Utility_ARPExportAll.bl_idname)
+    def execute(self, context):
+        return {'FINISHED'}
+class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
+    bl_idname = "op.mpm_arp_export_all"
+    bl_label = "Export with all meshes tied current armature"
     def execute(self, context):
         active_arm = _Util.get_armature(context.active_object)
         if active_arm is None:
@@ -232,7 +242,27 @@ class MPM_OT_Utility_ARPExport(bpy.types.Operator):
                     obj.select_set(True)
                 active_arm.select_set(True)
                 context.view_layer.objects.active = active_arm
-                bpy.ops.id.arp_export_fbx_panel('INVOKE_DEFAULT')
+                bpy.ops.arp_export_scene.fbx('INVOKE_DEFAULT')
+        return {"FINISHED"}
+class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
+    bl_idname = "op.mpm_arp_export_single"
+    bl_label = "Export with selected mesh"
+    def execute(self, context):
+        active_arm = _Util.get_armature(context.active_object)
+        if active_arm is None:
+            _Util.show_msgbox("Invalid selection!", icon="ERROR")
+        else:
+            sel = None
+            for obj in context.selected_objects:
+                if obj.type == "MESH" and active_arm == _Util.get_armature(obj):
+                    sel = obj
+                    break
+            if sel != None:
+                bpy.ops.object.select_all(action='DESELECT')
+                sel.select_set(True)
+                active_arm.select_set(True)
+                context.view_layer.objects.active = active_arm
+                bpy.ops.arp_export_scene.fbx('INVOKE_DEFAULT')
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
@@ -417,7 +447,9 @@ classes = (
     MPM_OT_Utility_ViewportCameraTransformRestore,
     MPM_OT_Utility_ViewportCameraTransformRestoreRemove,
     MPM_OT_Utility_OpenFile,
-    MPM_OT_Utility_ARPExport,
+    MPM_OT_Utility_ARPExportPanel,
+    MPM_OT_Utility_ARPExportSingle,
+    MPM_OT_Utility_ARPExportAll,
     MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
 )
