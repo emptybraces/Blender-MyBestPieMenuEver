@@ -47,7 +47,7 @@ def PieMenuDraw_Utility(layout, context):
     r.label(text="3d_cursor", icon="CURSOR")
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
-    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin.bl_idname, text="", icon="EMPTY_AXIS")
+    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
 
     # オーバーレイ
@@ -235,12 +235,12 @@ class MPM_OT_Utility_ARPExport(bpy.types.Operator):
                 bpy.ops.id.arp_export_fbx_panel('INVOKE_DEFAULT')
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
-class MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin(bpy.types.Operator):
-    bl_idname = "op.mpm_snap_cursor_to_between_selected_and_origin"
-    bl_label = "Snap 3DCursor from middle of selections to origin"
-    bl_description = "Slide the midpont of the selections to the origin"
+class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
+    bl_idname = "op.mpm_snap_cursor_to_selected_ex"
+    bl_label = "Snap 3DCursor to selected EX"
+    bl_description = "Snap 3DCursor to selected EX"
     bl_options = {'REGISTER', 'UNDO'}
-    perpendicular: bpy.props.FloatProperty(name="Perpendicular")
+    perpendicular: bpy.props.FloatProperty(name="Perpendicular", description="Slide in the direction of the perpendicular vector between the two selected items")
     offset: bpy.props.FloatVectorProperty(name="Offset")
     @classmethod
     def poll(cls, context):
@@ -267,6 +267,9 @@ class MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin(bpy.types.Operator):
                 self.perpendicular_vec = (selected_verts[1] - selected_verts[0]).cross(mathutils.Vector((0, 0, 1)))
                 self.perpendicular_vec.normalize()
         else:
+            if 2 == len(selected_objects):
+                self.perpendicular_vec = (selected_objects[1].matrix_world.translation - selected_objects[0].matrix_world.translation).cross(mathutils.Vector((0, 0, 1)))
+                self.perpendicular_vec.normalize()
             selected_objects = context.selected_objects
             center = sum((obj.matrix_world.translation for obj in selected_objects), mathutils.Vector()) / len(selected_objects)
         # 3Dカーソルの位置を設定
@@ -415,7 +418,7 @@ classes = (
     MPM_OT_Utility_ViewportCameraTransformRestoreRemove,
     MPM_OT_Utility_OpenFile,
     MPM_OT_Utility_ARPExport,
-    MPM_OT_Utility_Snap3DCursorToSelectedBetweenOrigin,
+    MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
 )
 def register():
