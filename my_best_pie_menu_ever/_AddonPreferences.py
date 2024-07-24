@@ -202,17 +202,15 @@ def register_keymap(is_force):
         kmi = km.keymap_items.get("op.mpm_open_pie_menu")
         if not kmi:
             kmi = km.keymap_items.new("op.mpm_open_pie_menu", "W", "PRESS")
-            print("登録したよ")
+            # print("登録したよ")
         else:
             kmi.type = "W"
             kmi.value = "PRESS"
             kmi.shift = False
             kmi.ctrl = False
-        # addon_keymaps.append((km, kmi))
-        # bpy.ops.wm.save_userpref()
     else:
-        # addon_keymaps.append(kmkmi)
-        print("登録しないよ")
+        # print("登録しないよ")
+        pass
 
 
 def unregister_keymap():
