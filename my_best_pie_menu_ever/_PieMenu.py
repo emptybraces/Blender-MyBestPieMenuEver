@@ -13,7 +13,7 @@
     imp.reload(_MenuPose)
     imp.reload(_PanelSelectionHistory)
 else:
-    from . import _Util    
+    from . import _Util
     from . import _AddonPreferences
     from . import _MenuMode
     from . import _MenuUtility
@@ -35,11 +35,14 @@ from mathutils import Vector
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
+
+
 class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}.{g.ver[2]}"
+
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
@@ -49,10 +52,13 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
         row = pie.row()
         _MenuMode.PieMenuDraw_ModeChange(row, context)
         _MenuUtility.PieMenuDraw_Utility(row, context)
-        PieMenuDraw_Primary(pie, context);
+        PieMenuDraw_Primary(pie, context)
+
+
 class MPM_OT_OpenPieMenu(bpy.types.Operator):
     bl_idname = "op.mpm_open_pie_menu"
-    bl_label = ""
+    bl_label = "My Best Pie Menu Ever"
+
     def modal(self, context, event):
         # print(event.type)
         if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu:
@@ -60,12 +66,14 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
         elif event.type in {"RIGHTMOUSE", "ESC"}:
             return {"CANCELLED"}
         else:
-            d = math.dist(self._initial_mouse, Vector((event.mouse_x, event.mouse_y)))
+            d = math.dist(self._initial_mouse, Vector(
+                (event.mouse_x, event.mouse_y)))
             if 700 < d:
                 context.window.screen = context.window.screen
                 return {"FINISHED"}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
         return {'RUNNING_MODAL'}
+
     def invoke(self, context, event):
         if context.space_data.type == "VIEW_3D":
             g.is_force_cancelled_piemenu = False
@@ -80,27 +88,46 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
+
+
 def PieMenuDraw_Primary(pie, context):
     current_mode = context.mode
-    if current_mode == 'OBJECT':                _MenuObject.MenuPrimary(pie, context)
-    elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuPrimary(pie, context)
-    elif current_mode == 'POSE':                _MenuPose.MenuPrimary(pie, context)
-    elif current_mode == 'SCULPT':              _MenuSculpt.MenuPrimary(pie, context)
-    elif current_mode == 'SCULPT_CURVES':       _MenuSculptCurve.MenuPrimary(pie, context)
-    elif current_mode == 'PAINT_TEXTURE':       _MenuTexturePaint.MenuPrimary(pie, context)
-    elif current_mode == 'PAINT_VERTEX':        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'PAINT_WEIGHT':        _MenuWeightPaint.MenuPrimary(pie, context)
-    elif current_mode == 'PARTICLE_EDIT':       Placeholder(pie, context, 'Primary')
-    elif current_mode == 'EDIT_ARMATURE':       Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_DRAW':        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_EDIT':        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_SCULPT':      Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_WEIGHT_PAINT':Placeholder(pie, context, 'Primary')
+    if current_mode == 'OBJECT':
+        _MenuObject.MenuPrimary(
+            pie, context)
+    elif current_mode == 'EDIT_MESH':
+        _MenuEditMesh.MenuPrimary(pie, context)
+    elif current_mode == 'POSE':
+        _MenuPose.MenuPrimary(pie, context)
+    elif current_mode == 'SCULPT':
+        _MenuSculpt.MenuPrimary(pie, context)
+    elif current_mode == 'SCULPT_CURVES':
+        _MenuSculptCurve.MenuPrimary(pie, context)
+    elif current_mode == 'PAINT_TEXTURE':
+        _MenuTexturePaint.MenuPrimary(pie, context)
+    elif current_mode == 'PAINT_VERTEX':
+        Placeholder(pie, context, 'Primary')
+    elif current_mode == 'PAINT_WEIGHT':
+        _MenuWeightPaint.MenuPrimary(pie, context)
+    elif current_mode == 'PARTICLE_EDIT':
+        Placeholder(pie, context, 'Primary')
+    elif current_mode == 'EDIT_ARMATURE':
+        Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_DRAW':
+        Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_EDIT':
+        Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_SCULPT':
+        Placeholder(pie, context, 'Primary')
+    elif current_mode == 'GPENCIL_WEIGHT_PAINT':
+        Placeholder(pie, context, 'Primary')
+
+
 def Placeholder(pie, context, text):
     box = pie.split().box()
-    box.label(text = text)
+    box.label(text=text)
 
-#def PieMenuDraw_Secondary(pie, context):
+# def PieMenuDraw_Secondary(pie, context):
 #    current_mode = context.mode
 #    if current_mode == 'OBJECT':                _MenuObject.MenuSecondary(pie, context)
 #    elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuSecondary(pie, context)
@@ -121,29 +148,38 @@ def Placeholder(pie, context, text):
 # --------------------------------------------------------------------------------
 # プロパティ
 # --------------------------------------------------------------------------------
+
+
 class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
     pos: bpy.props.FloatVectorProperty()
     rot: bpy.props.FloatVectorProperty(size=4)
     distance: bpy.props.FloatProperty()
+
+
 class MPM_Prop(bpy.types.PropertyGroup):
     def init(self):
         self.ColorPalettePopoverEnum = "ColorPalette"
         if bpy.context.tool_settings.image_paint.palette is not None:
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
     # ビューポートカメラ位置保存スタック
-    ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
+    ViewportCameraTransforms: bpy.props.CollectionProperty(
+        type=MPM_Prop_ViewportCameraTransform)
     # テクスチャペイントのカラーパレット
+
     def on_update_color_palette_popover_enum(self, context):
         items = [("ColorPalette", "ColorPalette", "")]
         for i in bpy.data.palettes:
-           items.append((i.name, i.name, ""))
+            items.append((i.name, i.name, ""))
         return items
     ColorPalettePopoverEnum: bpy.props.EnumProperty(
         name="ColorPalette Enum",
         description="Select an option",
         items=on_update_color_palette_popover_enum
     )
+
+
 # --------------------------------------------------------------------------------
+
 
 classes = (
     VIEW3D_MT_my_pie_menu,
@@ -163,11 +199,15 @@ modules = [
     _MenuSculptCurve,
     _PanelSelectionHistory,
 ]
+
+
 def register():
     _Util.register_classes(classes)
     bpy.types.Scene.mpm_prop = bpy.props.PointerProperty(type=MPM_Prop)
     for m in modules:
         m.register()
+
+
 def unregister():
     _Util.unregister_classes(classes)
     del bpy.types.Scene.mpm_prop

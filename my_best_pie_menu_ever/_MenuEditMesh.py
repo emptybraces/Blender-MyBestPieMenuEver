@@ -1,8 +1,6 @@
 import bpy
 import bmesh
-from bpy.types import Panel, Menu, Operator
 from . import _Util
-from . import _AddonPreferences
 from . import g
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
@@ -109,7 +107,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, "mesh.delete_loose")
 
 # --------------------------------------------------------------------------------
-class MPM_OT_AddVertexGroupPanel(Operator):
+class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_add_vertex_group_panel"
     bl_label = "Add Vertex Group"
     bl_options = {'REGISTER', 'UNDO'}

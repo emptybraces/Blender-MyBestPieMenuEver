@@ -13,7 +13,7 @@ bl_info = {
     "version": (1, 3, 7),
     "blender": (4, 2, 0),
     "location": "3D View",
-    "description": "My Best Pie Menu EVER!",
+    "description": "My Best Pie Menu EVER",
     "warning": "",
     "doc_url": "",
     "category": "3D View",
