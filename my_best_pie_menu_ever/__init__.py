@@ -1,5 +1,5 @@
 # ---------------------------
-# 1.3.9 - 頂点複製ミラーを追加。
+# 1.3.9 - 頂点複製ミラーを追加。未使用頂点グループの一括削除処理を追加。頂点グループ選択パネルに頂点数を表示。
 # 1.3.8 - uesrキーマップスコープに'3D View'がないとき、エラーが発生するバグを修正。
 # 1.3.7 - カラーパレットアクセス。3Dカーソルの選択頂点垂直ベクトル移動。
 # 1.3.6 - 1.3.5のバグ修正。
@@ -9,6 +9,8 @@
 # 1.3.2 - blender_manifest更新
 # 1.3.1 - BlenderExtension
 # ---------------------------
+import bpy
+from . import g
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
@@ -20,7 +22,6 @@ bl_info = {
     "doc_url": "",
     "category": "3D View",
 }
-from . import g
 g.ver = bl_info["version"]
 if "bpy" in locals():
     import imp
@@ -31,7 +32,6 @@ else:
     from . import _Util
     from . import _AddonPreferences
     from . import _PieMenu
-import bpy
 
 classes = (
     _AddonPreferences,
@@ -39,13 +39,16 @@ classes = (
     _Util,
 )
 
+
 def register():
     for cls in classes:
         cls.register()
-    
+
+
 def unregister():
     for cls in classes:
         cls.unregister()
+
 
 if __name__ == "__main__":
     register()

@@ -154,7 +154,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_select_vertex_group_panel"
     bl_label = "Select Vertex Groups"
     bl_options = {'REGISTER', 'UNDO'}
-    vgroup_names = []
+    map_vgname_to_label = {}
     init_verts = []
 
     @classmethod
@@ -163,15 +163,27 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         return obj and obj.type == "MESH" and 0 < len(context.object.vertex_groups)
 
     def invoke(self, context, event):
-        self.vgroup_names.clear()
+        obj = context.object
+        bm = bmesh.from_edit_mesh(obj.data)
+        deform_layer = bm.verts.layers.deform.active
+        self.map_vgname_to_label.clear()
         # アクティブオブジェクトの頂点グループをリストに追加
-        for vgroup in context.object.vertex_groups:
-            self.vgroup_names.append(vgroup.name)
+        for vgroup in obj.vertex_groups:
+            self.map_vgname_to_label[vgroup.name] = 0
+            _Util.show_report(self, vgroup.name)
         # 現在選択中の頂点を保存
         self.init_verts.clear()
-        for v in bmesh.from_edit_mesh(context.object.data).verts:
+        for v in bm.verts:
             if v.select:
                 self.init_verts.append(v.index)
+            #
+            for vg in obj.vertex_groups:
+                vg_idx = obj.vertex_groups[vg.name].index
+                if vg_idx in v[deform_layer]:
+                    self.map_vgname_to_label[vg.name] += 1
+
+        for k, v in self.map_vgname_to_label.items():
+            self.map_vgname_to_label[k] = (f"{k} (vcnt={v})")
         g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
 
@@ -181,9 +193,8 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         limit_rows = 25
         r = self.layout.row(align=True)
         cc = r.column(align=True)
-        for name in self.vgroup_names:
-            cc.operator(MPM_OT_SelectVertexGroup.bl_idname,
-                        text=name).vgroup_name = name
+        for k, v in self.map_vgname_to_label.items():
+            _Util.layout_operator(cc, MPM_OT_SelectVertexGroup.bl_idname, text=v, isActive="vcnt=0" not in v).vgroup_name = k
             cnt += 1
             if cnt % limit_rows == 0:
                 cc = r.column(align=True)
