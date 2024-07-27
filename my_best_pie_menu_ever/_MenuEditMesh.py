@@ -5,14 +5,16 @@ from . import g
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
+
+
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Edit Mesh Primary')
+    box.label(text='Edit Mesh Primary')
 
     # ヘッダー
     r = box.row()
     box2 = r.box()
-    box2.label(text = "Proportional")
+    box2.label(text="Proportional")
     # プロポーショナル
     r2 = box2.row(align=True)
     tool_settings = context.scene.tool_settings
@@ -23,7 +25,7 @@ def MenuPrimary(pie, context):
 
     # スナップ
     box2 = r.box()
-    box2.label(text = "Snap")
+    box2.label(text="Snap")
     r2 = box2.row(align=True)
     _Util.layout_prop(r2, tool_settings, "use_snap", text="")
     snap_items = bpy.types.ToolSettings.bl_rna.properties["snap_elements"].enum_items
@@ -35,21 +37,21 @@ def MenuPrimary(pie, context):
 
     r = box.row(align=True)
     c = r.column(align=True)
-    
+
     # 選択ボックス
     box = c.box()
-    box.label(text = "Selection")
+    box.label(text="Selection", icon="ZOOM_SELECTED")
     cc = box.column(align=True)
 
-    _Util.layout_operator(cc, "mesh.select_mirror").extend=True
+    _Util.layout_operator(cc, "mesh.select_mirror").extend = True
     _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
     op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
-    op.type="GREATER"
+    op.type = "GREATER"
 
     # UVボックス
     box = c.box()
-    box.label(text = "UV")
+    box.label(text="UV", icon="UV")
     cc = box.column(align=True)
     r2 = cc.row(align=True)
     _Util.layout_operator(r2, "mesh.mark_seam").clear = False
@@ -60,23 +62,23 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(cc, "uv.unwrap")
 
     # Vertex
-    c2 = r.column();
+    c2 = r.column()
     box = c2.box()
-    box.label(text = "Vertex")
+    box.label(text="Vertex", icon="VERTEXSEL")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
 
     # VertexGroup
     box = c2.box()
-    box.label(text = "Vertex Group")
+    box.label(text="Vertex Group", icon="GROUP_VERTEX")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_SelectVertexGroupPanel.bl_idname)
     _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
 
     # Edge
-    c3 = r.column();
+    c3 = r.column()
     box = c3.box()
-    box.label(text = "Edge")
+    box.label(text="Edge", icon="EDGESEL")
     c = box.column(align=True)
     r2 = c.row(align=True)
     # シャープ
@@ -90,42 +92,49 @@ def MenuPrimary(pie, context):
 
     # Apply
     box = c3.box()
-    box.label(text = "Apply")
+    box.label(text="Apply", icon="PLAY")
     c = box.column(align=True)
     r2 = c.row(align=False)
-    r2.label(text="Symmetrize");
+    r2.label(text="Symmetrize", icon="MOD_MIRROR")
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
     op.direction = 'POSITIVE_X'
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
     op.direction = 'NEGATIVE_X'
-    # 法線 
-    _Util.layout_operator(c, "mesh.normals_make_consistent").inside=False
+    # 頂点ミラー複製
+    _Util.layout_operator(c, MPM_OT_DuplicateMirror.bl_idname, icon="SEQ_STRIP_DUPLICATE")
+    # 法線
+    _Util.layout_operator(c, "mesh.normals_make_consistent", icon="NORMALS_FACE").inside = False
     # マージ
     r2 = c.row(align=True)
     r2.operator_menu_enum("mesh.merge", "type")
-    _Util.layout_operator(r2, "mesh.remove_doubles")
-    _Util.layout_operator(c, "mesh.delete_loose")
+    _Util.layout_operator(r2, "mesh.remove_doubles", icon="X")
+    _Util.layout_operator(c, "mesh.delete_loose", icon="X")
 
 # --------------------------------------------------------------------------------
+
+
 class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_add_vertex_group_panel"
     bl_label = "Add Vertex Group"
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_name: bpy.props.StringProperty(name="Name", default="Group", description="Vertex group name")
     weight: bpy.props.FloatProperty(name="Weight", default=1.0, min=0.0, max=1.0)
+
     @classmethod
     def poll(self, context):
         # 選択されたオブジェクトがメッシュであり、少なくとも1つの頂点が選択されているかどうかをチェック
         obj = context.object
         return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
+
     def execute(self, context):
         obj = context.object
         if obj:
             bpy.ops.object.mode_set(mode='OBJECT')
             obj.vertex_groups.new(name=self.vgroup_name)
             group = obj.vertex_groups[-1]
-            obj.vertex_groups.active_index = group.index;
-            for v in obj.data.vertices: #bmesh.from_edit_mesh(obj.data).verts:
+            obj.vertex_groups.active_index = group.index
+            # bmesh.from_edit_mesh(obj.data).verts:
+            for v in obj.data.vertices:
                 if v.select:
                     group.add([v.index], self.weight, 'REPLACE')
             self.report({'INFO'}, f"Added vertex group '{self.name}' with weight {self.weight} to selected vertices")
@@ -135,19 +144,24 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
             self.report({'ERROR'}, "No active object")
             return {'CANCELLED'}
         return {"FINISHED"}
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
+
+
 class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_select_vertex_group_panel"
     bl_label = "Select Vertex Groups"
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_names = []
     init_verts = []
+
     @classmethod
     def poll(self, context):
         obj = context.object
         return obj and obj.type == "MESH" and 0 < len(context.object.vertex_groups)
+
     def invoke(self, context, event):
         self.vgroup_names.clear()
         # アクティブオブジェクトの頂点グループをリストに追加
@@ -160,6 +174,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
                 self.init_verts.append(v.index)
         g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
+
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
         cnt = 0
@@ -167,9 +182,12 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         r = self.layout.row(align=True)
         cc = r.column(align=True)
         for name in self.vgroup_names:
-            cc.operator(MPM_OT_SelectVertexGroup.bl_idname, text=name).vgroup_name = name
+            cc.operator(MPM_OT_SelectVertexGroup.bl_idname,
+                        text=name).vgroup_name = name
             cnt += 1
-            if cnt % limit_rows == 0: cc = r.column(align=True)
+            if cnt % limit_rows == 0:
+                cc = r.column(align=True)
+
     def cancel(self, context):
         # 復元
         bm = bmesh.from_edit_mesh(context.object.data)
@@ -179,13 +197,17 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
             bm.verts[index].select = True
         bmesh.update_edit_mesh(context.object.data)
         context.object.update_from_editmode()
+
     def execute(self, context):
         return {"FINISHED"}
+
+
 class MPM_OT_SelectVertexGroup(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_select_vertex_group"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_name: bpy.props.StringProperty()
+
     def execute(self, context):
         obj = context.object
         if self.vgroup_name not in obj.vertex_groups:
@@ -215,11 +237,14 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
         obj.update_from_editmode()
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
+
+
 class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_mirror_seam"
     bl_label = "Mirror Seam"
     bl_options = {'REGISTER', 'UNDO'}
     is_clear: bpy.props.BoolProperty()
+
     def execute(self, context):
         mirror_settings = context.object.data.use_mirror_topology
         bpy.ops.mesh.select_mirror(extend=True)
@@ -229,11 +254,14 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
         bpy.ops.mesh.mark_seam(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
         return {"FINISHED"}
+
+
 class MPM_OT_MirrorSharp(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_mirror_sharp"
     bl_label = "Mirror Sharp"
     bl_options = {'REGISTER', 'UNDO'}
     is_clear: bpy.props.BoolProperty()
+
     def execute(self, context):
         mirror_settings = context.object.data.use_mirror_topology
         bpy.ops.mesh.select_mirror(extend=True)
@@ -245,6 +273,8 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
+
+
 class MPM_OT_VertCreasePanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_vert_crease_panel"
     bl_label = "Vert Crease"
@@ -258,13 +288,15 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
         step=0.1,
         precision=2
     )
+
     @classmethod
     def poll(self, context):
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
         return obj and obj.type == "MESH" and any(e.select for e in bm.verts)
+
     def execute(self, context):
-        mesh = context.object.data        
+        mesh = context.object.data
         bm = bmesh.from_edit_mesh(mesh)
         crease_layer = bm.verts.layers.float.get("crease_vert", None)
         if crease_layer is None:
@@ -273,9 +305,12 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
             v[crease_layer] = self.crease_value
         bmesh.update_edit_mesh(context.object.data)
         return {"FINISHED"}
+
     def invoke(self, context, event):
         g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
+
+
 class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_edge_crease_panel"
     bl_label = "Edge Crease"
@@ -289,13 +324,15 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
         step=0.1,
         precision=2
     )
+
     @classmethod
     def poll(self, context):
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
         return obj and obj.type == "MESH" and any(e.select for e in bm.edges)
+
     def execute(self, context):
-        mesh = context.object.data        
+        mesh = context.object.data
         bm = bmesh.from_edit_mesh(mesh)
         crease_layer = bm.edges.layers.float.get("crease_edge", None)
         if crease_layer is None:
@@ -304,9 +341,76 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
             edge[crease_layer] = self.crease_value
         bmesh.update_edit_mesh(context.object.data)
         return {"FINISHED"}
+
     def invoke(self, context, event):
         g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
+# --------------------------------------------------------------------------------
+
+
+class MPM_OT_DuplicateMirror(bpy.types.Operator):
+    bl_idname = "op.mpm_duplicate_mirror"
+    bl_label = "Duplicate with mirror"
+    bl_options = {'REGISTER', 'UNDO'}
+    is_x: bpy.props.BoolProperty(default=True)
+    is_y: bpy.props.BoolProperty(default=False)
+    is_z: bpy.props.BoolProperty(default=False)
+
+    @classmethod
+    def poll(self, context):
+        bm = bmesh.from_edit_mesh(context.edit_object.data)
+        return any(e.select for e in bm.verts)
+
+    def execute(self, context):
+        obj = bpy.context.object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        selected_verts = [v for v in bm.verts if v.select]
+        vert_map = {}
+        new_edge_face = []
+
+        # 複製
+        for vert in selected_verts:
+            new_vert = bm.verts.new(vert.co)
+            vert_map[vert] = new_vert
+        for edge in bm.edges:
+            if edge.verts[0] in vert_map and edge.verts[1] in vert_map:
+                edge = bm.edges.new(
+                    (vert_map[edge.verts[0]], vert_map[edge.verts[1]]))
+                new_edge_face.append(edge)
+        for face in bm.faces:
+            if all(vert in vert_map for vert in face.verts):
+                new_verts = [vert_map[vert] for vert in face.verts]
+                face = bm.faces.new(new_verts)
+                new_edge_face.append(face)
+
+        bmesh.update_edit_mesh(obj.data)
+
+        # 選択解除
+        bm.select_flush(False)
+        for vert in selected_verts:
+            vert.select = False
+        for vert in bm.edges:
+            vert.select = False
+        for vert in bm.faces:
+            vert.select = False
+
+        # 選択
+        for vert in vert_map.values():
+            vert.select = True
+            if self.is_x:
+                vert.co.x = -vert.co.x
+            if self.is_ｙ:
+                vert.co.ｙ = -vert.co.ｙ
+            if self.is_z:
+                vert.co.z = -vert.co.z
+        for edge_face in new_edge_face:
+            edge_face.select = True
+
+        bm.normal_update()
+        return {"FINISHED"}
+
+
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_MirrorSeam,
@@ -315,9 +419,14 @@ classes = (
     MPM_OT_SelectVertexGroupPanel,
     MPM_OT_SelectVertexGroup,
     MPM_OT_VertCreasePanel,
-    MPM_OT_EdgeCreasePanel
+    MPM_OT_EdgeCreasePanel,
+    MPM_OT_DuplicateMirror,
 )
+
+
 def register():
     _Util.register_classes(classes)
+
+
 def unregister():
     _Util.unregister_classes(classes)

@@ -18,7 +18,7 @@ def PieMenuDraw_ModeChange(layout, context):
     #_PanelSelectionHistory.PanelHistory(box, context)
 
     box = layout.box()
-    box.label(text="Mode");
+    box.label(text="Mode")
     col = box.column(align = True)
 
     # Object

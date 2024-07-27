@@ -108,6 +108,11 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         box = layout.box()
         box.label(text="KeyConfig")
 
+        # 登録するときはaddonで、変更するときはuserだと上手くいく
+        # では最初からuserで登録すればいいのではと思うのだが、userで登録するとキーリストの一番最後に登録される。
+        # 'W'キーは既存のコマンドがあるので、最後に登録されると既存のコマンドが優先されてしまう。
+        # 既存のコマンドより優先させるのは良くなさそうだが。
+        # →newするときにheadオプションを使えば先頭に持ってこれるっぽい。https://docs.blender.org/api/current/bpy.types.KeyMapItems.html#bpy.types.KeyMapItems.new
         kc = bpy.context.window_manager.keyconfigs.user
         for km in kc.keymaps:
             for kmi in km.keymap_items:
@@ -136,23 +141,23 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             setattr(self, key, value)
 
 
-class MPM_OT_RevertKeymap(bpy.types.Operator):
-    bl_idname = "op.mpm_revert_keymap"
-    bl_label = "Revert All Keymap"
-    bl_options = {'REGISTER', 'UNDO'}
-    # 戻し方が分からん・・・
-    def execute(self, context):
-        # register_keymap(True)
-        kc = bpy.context.window_manager.keyconfigs.addon
-        for km in kc.keymaps:
-            for kmi in km.keymap_items:
-                print(kmi.name)
-                if "My Best Pie Menu Ever" is kmi.name:
-                    kmi.type = "W"
-                    kmi.value = "PRESS"
-                    kmi.shift = False
-                    kmi.ctrl = False
-        return {"FINISHED"}
+# class MPM_OT_RevertKeymap(bpy.types.Operator):
+#     bl_idname = "op.mpm_revert_keymap"
+#     bl_label = "Revert All Keymap"
+#     bl_options = {'REGISTER', 'UNDO'}
+#     # 戻し方が分からん・・・
+#     def execute(self, context):
+#         # register_keymap(True)
+#         kc = bpy.context.window_manager.keyconfigs.addon
+#         for km in kc.keymaps:
+#             for kmi in km.keymap_items:
+#                 print(kmi.name)
+#                 if "My Best Pie Menu Ever" == kmi.name:
+#                     kmi.type = "W"
+#                     kmi.value = "PRESS"
+#                     kmi.shift = False
+#                     kmi.ctrl = False
+#         return {"FINISHED"}
 
 
 class Accessor():
@@ -189,39 +194,48 @@ class Accessor():
 def find_keymap(keymapName, itemName):
     kc = bpy.context.window_manager.keyconfigs.addon
     km = kc.keymaps.get(keymapName)
-    kmi = km.keymap_items.get(itemName) if km is not None else None
+    kmi = km.keymap_items.get(itemName) if km != None else None
     return (km, kmi)
 
+cat_3dview = "3D View"
+addon_opid = "op.mpm_open_pie_menu"
 
 def register_keymap(is_force):
     kmkmi = find_keymap(
-        "3D View", "op.mpm_open_pie_menu") if not is_force else (None, None)
+        cat_3dview, addon_opid) if not is_force else (None, None)
     if kmkmi[1] == None:
         kc = bpy.context.window_manager.keyconfigs.addon
-        km = kc.keymaps.get("3D View")
-        kmi = km.keymap_items.get("op.mpm_open_pie_menu")
+        if kc == None:
+            return
+        km = kc.keymaps.get(cat_3dview)
+        # userkc = bpy.context.window_manager.keyconfigs.user.keymaps.get(
+        #     cat_3dview)
+        # for i in userkc.keymap_items:
+        #     print(i.name, i.type)
+        if not km:
+            print(f"new keymap: {cat_3dview}")
+            km = kc.keymaps.new(name=cat_3dview, space_type="VIEW_3D")
+        kmi = km.keymap_items.get(addon_opid)
         if not kmi:
-            kmi = km.keymap_items.new("op.mpm_open_pie_menu", "W", "PRESS")
-            # print("登録したよ")
+            print(f"new keymap_items: {addon_opid}")
+            kmi = km.keymap_items.new(addon_opid, "W", "PRESS")
         else:
             kmi.type = "W"
             kmi.value = "PRESS"
             kmi.shift = False
             kmi.ctrl = False
     else:
-        # print("登録しないよ")
         pass
 
 
 def unregister_keymap():
-    kmkmi = find_keymap("3D View", "op.mpm_open_pie_menu")
+    kmkmi = find_keymap(cat_3dview, addon_opid)
     if kmkmi[1] is not None:
         kmkmi[0].keymap_items.remove(kmkmi[1])
 
 
 classes = (
     MT_AddonPreferences,
-    MPM_OT_RevertKeymap,
 )
 
 
