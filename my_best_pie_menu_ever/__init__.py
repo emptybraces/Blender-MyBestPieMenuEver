@@ -9,8 +9,6 @@
 # 1.3.2 - blender_manifest更新
 # 1.3.1 - BlenderExtension
 # ---------------------------
-import bpy
-from . import g
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
@@ -22,16 +20,18 @@ bl_info = {
     "doc_url": "",
     "category": "3D View",
 }
-g.ver = bl_info["version"]
-if "bpy" in locals():
+if "g" in locals():
     import imp
+    imp.reload(g)
     imp.reload(_Util)
     imp.reload(_AddonPreferences)
     imp.reload(_PieMenu)
 else:
+    from . import g
     from . import _Util
     from . import _AddonPreferences
     from . import _PieMenu
+g.ver = bl_info["version"]
 
 classes = (
     _AddonPreferences,
