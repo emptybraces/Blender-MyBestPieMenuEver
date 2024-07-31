@@ -27,8 +27,6 @@ else:
     from . import _PanelSelectionHistory
     from . import g
 import bpy
-from bpy.types import Panel, Menu, Operator
-from rna_prop_ui import PropertyPanel
 import math
 from mathutils import Vector
 
@@ -66,8 +64,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
         elif event.type in {"RIGHTMOUSE", "ESC"}:
             return {"CANCELLED"}
         else:
-            d = math.dist(self._initial_mouse, Vector(
-                (event.mouse_x, event.mouse_y)))
+            d = math.dist(self._initial_mouse, Vector((event.mouse_x, event.mouse_y)))
             if 700 < d:
                 context.window.screen = context.window.screen
                 return {"FINISHED"}
@@ -162,8 +159,7 @@ class MPM_Prop(bpy.types.PropertyGroup):
         if bpy.context.tool_settings.image_paint.palette is not None:
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
     # ビューポートカメラ位置保存スタック
-    ViewportCameraTransforms: bpy.props.CollectionProperty(
-        type=MPM_Prop_ViewportCameraTransform)
+    ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
     # テクスチャペイントのカラーパレット
 
     def on_update_color_palette_popover_enum(self, context):

@@ -114,7 +114,9 @@ class MPM_OT_CallPanel(bpy.types.Operator):
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
 def select_active(obj):
-    bpy.context.view_layer.objects.active = obj
+    if obj:
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
 def select_add(obj):
     obj.select_set(True)
 def print_enum_values(obj, prop_name):

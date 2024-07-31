@@ -92,7 +92,7 @@ def MenuPrimary(pie, context):
 
     # Apply
     box = c3.box()
-    box.label(text="Apply", icon="PLAY")
+    box.label(text="Apply", icon="MODIFIER")
     c = box.column(align=True)
     r2 = c.row(align=False)
     r2.label(text="Symmetrize", icon="MOD_MIRROR")

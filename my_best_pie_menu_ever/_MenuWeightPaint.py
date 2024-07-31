@@ -19,12 +19,12 @@ def MenuPrimary(pie, context):
 
     # util
     box = row.box()
-    box.label(text = "Utility")
+    box.label(text = "Utility", icon="MODIFIER")
     MirrorVertexGroup(box)
 
     # brushes
     box = row.box()
-    box.label(text = "Brush Property")
+    box.label(text = "Brush Property", icon="BRUSH_DATA")
     c = box.column(align=True)
     r = c.row()
     unified_paint_settings = context.tool_settings.unified_paint_settings
@@ -37,7 +37,7 @@ def MenuPrimary(pie, context):
     _Util.MPM_OT_SetSingle.operator(r, "0.5", unified_paint_settings, "weight", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", unified_paint_settings, "weight", 1.0)
     r = c.row()
-    _Util.layout_prop(r, context.tool_settings.weight_paint.brush, "strength")
+    _Util.layout_prop(r, brush, "strength")
     r = r.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
@@ -50,6 +50,22 @@ def MenuPrimary(pie, context):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
+    # ぼかしブラシの強さ
+    smooth_brush = None
+    for brush in bpy.data.brushes:
+        if brush.use_paint_weight and brush.name.lower() == "blur":
+            smooth_brush = brush
+            break
+    if smooth_brush:
+        r = c.row(align=True)
+        r.label(icon="BRUSH_BLUR")
+        _Util.layout_prop(r, smooth_brush, "strength", "Blur Brush: Strength")
+        r = r.row(align=True)
+        r.scale_x = 0.8
+        _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", max(0, brush.strength * 0.5))
+        _Util.MPM_OT_SetSingle.operator(r, "75%", brush, "strength", max(0, brush.strength * 0.75))
+        _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", min(1, brush.strength * 1.5))
+        _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
 
 # --------------------------------------------------------------------------------
 def MenuSecondary(pie, context):

@@ -3,13 +3,15 @@ from . import _Util
 # --------------------------------------------------------------------------------
 # ポーズメニュー
 # --------------------------------------------------------------------------------
+
+
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Pose Primary')
+    box.label(text='Pose Primary')
     row = box.row()
 
     # pose
-    arm = context.object.data;
+    arm = context.object.data
     box = row.box()
     box.row().prop(arm, "pose_position", expand=True)
 
@@ -19,19 +21,18 @@ def MenuPrimary(pie, context):
     enabled_addons = context.preferences.addons.keys()
     if "wiggle_2" in enabled_addons:
         _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics")
-    if "auto_rig_pro-master" in enabled_addons:
-        _Util.layout_operator(box, MPM_OT_ARP_SNAPIKFK.bl_idname) # if imported
+    if any("auto_rig_pro" in i for i in enabled_addons):
+        _Util.layout_operator(box, MPM_OT_ARP_SnapIKFK.bl_idname)  # if imported
 
-
-    if bpy.app.version < (4,0,0):
+    if bpy.app.version < (4, 0, 0):
         box.prop(arm, 'layers')
-
 
 
 class MPM_OT_ClearTransform(bpy.types.Operator):
     bl_idname = "op.mpm_clear_transform"
     bl_label = "Reset Bone Transform"
     bl_options = {'REGISTER', 'UNDO'}
+
     def execute(self, context):
         selected_objects = context.selected_objects
         for obj in selected_objects:
@@ -54,16 +55,27 @@ class MPM_OT_ClearTransform(bpy.types.Operator):
         # bpy.ops.object.mode_set( mode = current_mode)
         return {'FINISHED'}
 # --------------------------------------------------------------------------------
+
+
 def MenuSecondary(pie, context):
     box = pie.split().box()
-    box.label(text = 'Pose Secondary')
+    box.label(text='Pose Secondary')
 
-class MPM_OT_ARP_SNAPIKFK(bpy.types.Operator):
+
+class MPM_OT_ARP_SnapIKFK(bpy.types.Operator):
     bl_idname = "op.mpm_arp_snapikfk"
     bl_label = "AutoRigPro: Snap IK-FK"
     bl_options = {'REGISTER', 'UNDO'}
+
     def execute(self, context):
-        for obj in bpy.context.selected_objects:
+        current_mode = context.active_object.mode
+        arm = _Util.get_armature(context.active_object)
+        _Util.select_active(arm)
+        # アーマチュア選択後じゃないと、ポーズモードに変更できない
+        arms = [i for i in bpy.context.selected_objects if i.type == "ARMATURE"]
+        if 0 < len(arms) and current_mode != "POSE":
+            bpy.ops.object.mode_set(mode="POSE")
+        for obj in arms:
             if obj.type == "ARMATURE":
                 bpy.ops.pose.select_all(action='DESELECT')
                 bpy.context.object.data.bones.active = obj.pose.bones["c_hand_ik.l"].bone
@@ -79,14 +91,21 @@ class MPM_OT_ARP_SNAPIKFK(bpy.types.Operator):
                 bpy.ops.pose.arp_switch_snap()
                 bpy.ops.pose.select_all(action='DESELECT')
                 break
+        if current_mode != "POSE":
+            bpy.ops.object.mode_set(mode=current_mode)
         return {'FINISHED'}
+
 
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_ClearTransform,
-    MPM_OT_ARP_SNAPIKFK,
+    MPM_OT_ARP_SnapIKFK,
 )
+
+
 def register():
     _Util.register_classes(classes)
+
+
 def unregister():
     _Util.unregister_classes(classes)

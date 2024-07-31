@@ -54,8 +54,9 @@ def MenuPrimary(pie, context):
             smooth_brush = brush
             break
     if smooth_brush:
-        r = c.row(align=False)
-        _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength")
+        r = c.row(align=True)
+        r.label(icon="BRUSH_BLUR")
+        _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength", icon="BRUSH_BLUR")
         r = r.row(align=True)
         r.scale_x = 0.8
         _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", max(0, brush.strength * 0.5))

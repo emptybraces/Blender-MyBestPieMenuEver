@@ -1,6 +1,7 @@
 import bpy
 from . import _Util
 from . import _MenuWeightPaint
+from ._MenuPose import MPM_OT_ARP_SnapIKFK
 
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
@@ -11,16 +12,21 @@ def MenuPrimary(pie, context):
     pie = pie.split()
     box = pie.box()
     box.label(text="Object Primary")
-    c = box.column(align=True)
-    # if imported
-    if "wiggle_2" in context.preferences.addons.keys():
-        box = c.box()
-        box.label(text="3rd Party Tool")
-        _Util.layout_operator(box, "wiggle.reset", "Wiggle2: ResetPhysics")
+    r = box.row()
+    c = r.column(align=True)
 
     _MenuWeightPaint.MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
+    # if imported
+    c = r.column(align=True)
+    enabled_addons = context.preferences.addons.keys()
+    if "wiggle_2" in enabled_addons:
+        box = c.box()
+        box.label(text="3rd Party Tool")
+        _Util.layout_operator(box, "wiggle.reset", "Wiggle2: ResetPhysics")
+    if any("auto_rig_pro" in i for i in enabled_addons):
+        _Util.layout_operator(box, MPM_OT_ARP_SnapIKFK.bl_idname)
 
 # --------------------------------------------------------------------------------
 
