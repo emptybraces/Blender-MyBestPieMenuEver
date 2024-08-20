@@ -10,7 +10,6 @@ bl_info = {
     "category": "3D View",
 }
 import bpy
-import sys
 import importlib
 
 class OT_ReinstallAddon(bpy.types.Operator):

@@ -187,12 +187,36 @@ def show_msgbox(message, title = "", icon = "INFO"):
         for line in lines:
             self.layout.label(text=line)
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-def show_report(self, msg):
-    self.report({"INFO"}, str(msg))
-def show_report_error(self, msg):
-    self.report({"ERROR"}, str(msg))
+def show_report(self, *args):
+    self.report({"INFO"}, ", ".join(map(str, args)))
+def show_report_error(self, *args):
+    self.report({"ERROR"}, ", ".join(map(str, args)))
 def lerp(start, end, t):
     return start + t * (end - start)
+def lerp_multi_distance(points, t):
+    num_points = len(points)
+    if num_points < 2:
+        raise ValueError("At least two points are required for interpolation.")
+    # 各セグメントの距離を計算
+    distances = []
+    total_distance = 0.0
+    for i in range(num_points - 1):
+        p1 = points[i]
+        p2 = points[i + 1]
+        distance = (p2 - p1).length
+        distances.append(distance)
+        total_distance += distance
+    # 距離に基づいて補間位置を決定
+    accumulated_distance = 0.0
+    for i, distance in enumerate(distances):
+        if t * total_distance <= accumulated_distance + distance:
+            segment_t = (t * total_distance - accumulated_distance) / distance
+            p1 = points[i]
+            p2 = points[i + 1]
+            interpolated_position = (1 - segment_t) * p1 + segment_t * p2
+            return interpolated_position
+        accumulated_distance += distance
+    return points[-1]
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_SetBool,

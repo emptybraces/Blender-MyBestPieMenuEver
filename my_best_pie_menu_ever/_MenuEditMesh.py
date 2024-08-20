@@ -434,26 +434,28 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     order_invert: bpy.props.BoolProperty(name="Invert", description="")
     bone_chain: bpy.props.BoolProperty(name="Bone Chain", description="")
-    bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", min=0.0, max=1.0)
+    bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", default=1.0, min=0.0, max=2.0)
 
     def execute(self, context):
         obj = context.object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
-        # 選択中の辺から、
-        edges = list([e for e in bm.edges if e.select])
+        if not any(e.select for e in bm.edges):
+            _Util.show_report_error(self, "Please select at least one edge.")
+            return {"CANCELLED"}
+
         # 開始位置頂点を検索
         end_verts = list()
-        for edge in edges:
-            v1, v2 = edge.verts
-            v1_linked_edges = [e for e in v1.link_edges if e.select]
-            v2_linked_edges = [e for e in v2.link_edges if e.select]
-            if len(v1_linked_edges) == 1:
-                end_verts.append(v1)
-            if len(v2_linked_edges) == 1:
-                end_verts.append(v2)
-        # 順番通りに辺を取得
+        for edge in bm.edges:
+            # 選択中の辺から、
+            if edge.select:
+                v1, v2 = edge.verts
+                if sum(1 for e in v1.link_edges if e.select) == 1:
+                    end_verts.append(v1)
+                elif sum(1 for e in v2.link_edges if e.select) == 1:
+                    end_verts.append(v2)
 
+        # 順番通りに辺を取得
         def iterate_edge_chain(last_vert, last_edge, list_pos):
             for i in range(0, 10000):
                 next_edges = [e for e in last_vert.link_edges if e.select and last_edge != e]
@@ -479,13 +481,12 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
         i = 0
         sorted_pos_lists = []
         while i < len(end_verts):
-            pos_list = []
-            pos_list.append(end_verts[i].co.copy())
+            pos_list = [end_verts[i].co.copy()]
             iterate_edge_chain(end_verts[i], None, pos_list)
             sorted_pos_lists.append(pos_list)
             i = i + 1
         # ソート
-        for i in range(0, len(sorted_pos_lists)):
+        for i in range(len(sorted_pos_lists)):
             pos_s = sorted_pos_lists[i][0]
             pos_e = sorted_pos_lists[i][-1]
             if self.order_dir == "X" and not self.order_invert and pos_e.x < pos_s.x:
@@ -505,19 +506,23 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.armature_add()
         armature = bpy.context.object
-        armature.name = "bones_from_edges_armature"
+        armature.name = "bones_from_edges"
         # ボーン追加
         bpy.ops.object.mode_set(mode="EDIT")
         edit_bones = armature.data.edit_bones
         # メッシュの辺を選択してボーンを作成
         for pos_list in sorted_pos_lists:
             prev_bone = None
-            for i in range(1, len(pos_list)):
+            len_list = int(len(pos_list) * self.bone_ratio)
+            for i in range(1, len_list):
                 bone = edit_bones.new("Bone")
-                p1 = pos_list[i-1]
-                p2 = pos_list[i]
-                bone.head = obj.matrix_world @ p1
-                bone.tail = obj.matrix_world @ p2
+                if 1 == self.bone_ratio:
+                    bone.head = obj.matrix_world @ pos_list[i-1]
+                    bone.tail = obj.matrix_world @ pos_list[i]
+                else:
+                    bone.head = obj.matrix_world @ _Util.lerp_multi_distance(pos_list, (i-1) / len_list)
+                    bone.tail = obj.matrix_world @ _Util.lerp_multi_distance(pos_list, (i) / len_list)
+
                 bone.parent = prev_bone if self.bone_chain else None
                 prev_bone = bone
                 # _Util.show_report(self, f"{bone.name}, {p1}, {p2}, {bone.head}, {bone.tail}")
