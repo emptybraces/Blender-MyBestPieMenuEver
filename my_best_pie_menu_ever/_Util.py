@@ -188,7 +188,9 @@ def show_msgbox(message, title = "", icon = "INFO"):
             self.layout.label(text=line)
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 def show_report(self, msg):
-    self.report({'INFO'}, str(msg))
+    self.report({"INFO"}, str(msg))
+def show_report_error(self, msg):
+    self.report({"ERROR"}, str(msg))
 def lerp(start, end, t):
     return start + t * (end - start)
 # --------------------------------------------------------------------------------

@@ -61,21 +61,21 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
     _Util.layout_operator(cc, "uv.unwrap")
 
-    # Vertex
+    # Vertexメニュー
     c2 = r.column()
     box = c2.box()
     box.label(text="Vertex", icon="VERTEXSEL")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
 
-    # VertexGroup
+    # VertexGroupメニュー
     box = c2.box()
     box.label(text="Vertex Group", icon="GROUP_VERTEX")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_SelectVertexGroupPanel.bl_idname)
     _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
 
-    # Edge
+    # Edgeメニュー
     c3 = r.column()
     box = c3.box()
     box.label(text="Edge", icon="EDGESEL")
@@ -89,8 +89,10 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
     # クリーズ
     _Util.layout_operator(c, MPM_OT_EdgeCreasePanel.bl_idname)
+    # ボーンアーマチュア作成
+    _Util.layout_operator(c, MPM_OT_GenterateBoneFromEdge.bl_idname, icon="BONE_DATA")
 
-    # Apply
+    # Applyメニュー
     box = c3.box()
     box.label(text="Apply", icon="MODIFIER")
     c = box.column(align=True)
@@ -421,6 +423,106 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
         bm.normal_update()
         return {"FINISHED"}
 
+# --------------------------------------------------------------------------------
+
+
+class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
+    bl_idname = "op.mpm_generate_bone_from_edge"
+    bl_label = "Generate Bone from Selected Edge"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
+    order_invert: bpy.props.BoolProperty(name="Invert", description="")
+    bone_chain: bpy.props.BoolProperty(name="Bone Chain", description="")
+    bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", min=0.0, max=1.0)
+
+    def execute(self, context):
+        obj = context.object
+        mesh = obj.data
+        bm = bmesh.from_edit_mesh(mesh)
+        # 選択中の辺から、
+        edges = list([e for e in bm.edges if e.select])
+        # 開始位置頂点を検索
+        end_verts = list()
+        for edge in edges:
+            v1, v2 = edge.verts
+            v1_linked_edges = [e for e in v1.link_edges if e.select]
+            v2_linked_edges = [e for e in v2.link_edges if e.select]
+            if len(v1_linked_edges) == 1:
+                end_verts.append(v1)
+            if len(v2_linked_edges) == 1:
+                end_verts.append(v2)
+        # 順番通りに辺を取得
+
+        def iterate_edge_chain(last_vert, last_edge, list_pos):
+            for i in range(0, 10000):
+                next_edges = [e for e in last_vert.link_edges if e.select and last_edge != e]
+                if 0 == len(next_edges):
+                    end_verts.remove(last_vert)  # 反対から始まらないように終着点を削除
+                    break
+                elif 2 <= len(next_edges):
+                    # サイズ調整を考えると面倒なので、スキップ
+                    _Util.show_report_error(self, f"don't support to crossed edge")
+                    return True
+                    # for i in next_edges:
+                    #     iterate_edge_chain(last_vert, i)
+                    # break
+                else:
+                    last_edge = next_edges[0]
+                    v1, v2 = next_edges[0].verts
+                    last_vert = v1 if v2 == last_vert else v2
+                    list_pos.append(last_vert.co.copy())
+            else:
+                _Util.show_report_error(self, f"edge iterate by maximum count: {i}")
+            return False
+
+        i = 0
+        sorted_pos_lists = []
+        while i < len(end_verts):
+            pos_list = []
+            pos_list.append(end_verts[i].co.copy())
+            iterate_edge_chain(end_verts[i], None, pos_list)
+            sorted_pos_lists.append(pos_list)
+            i = i + 1
+        # ソート
+        for i in range(0, len(sorted_pos_lists)):
+            pos_s = sorted_pos_lists[i][0]
+            pos_e = sorted_pos_lists[i][-1]
+            if self.order_dir == "X" and not self.order_invert and pos_e.x < pos_s.x:
+                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+            elif self.order_dir == "X" and self.order_invert and pos_s.x < pos_e.x:
+                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+            elif self.order_dir == "Y" and not self.order_invert and pos_e.y < pos_s.y:
+                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+            elif self.order_dir == "Y" and self.order_invert and pos_s.y < pos_e.y:
+                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+            elif self.order_dir == "Z" and not self.order_invert and pos_e.z < pos_s.z:
+                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+            elif self.order_dir == "Z" and self.order_invert and pos_s.z < pos_e.z:
+                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+
+        # アーマチュアを追加
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.armature_add()
+        armature = bpy.context.object
+        armature.name = "bones_from_edges_armature"
+        # ボーン追加
+        bpy.ops.object.mode_set(mode="EDIT")
+        edit_bones = armature.data.edit_bones
+        # メッシュの辺を選択してボーンを作成
+        for pos_list in sorted_pos_lists:
+            prev_bone = None
+            for i in range(1, len(pos_list)):
+                bone = edit_bones.new("Bone")
+                p1 = pos_list[i-1]
+                p2 = pos_list[i]
+                bone.head = obj.matrix_world @ p1
+                bone.tail = obj.matrix_world @ p2
+                bone.parent = prev_bone if self.bone_chain else None
+                prev_bone = bone
+                # _Util.show_report(self, f"{bone.name}, {p1}, {p2}, {bone.head}, {bone.tail}")
+        return {"FINISHED"}
+
 
 # --------------------------------------------------------------------------------
 classes = (
@@ -432,6 +534,7 @@ classes = (
     MPM_OT_VertCreasePanel,
     MPM_OT_EdgeCreasePanel,
     MPM_OT_DuplicateMirror,
+    MPM_OT_GenterateBoneFromEdge,
 )
 
 
