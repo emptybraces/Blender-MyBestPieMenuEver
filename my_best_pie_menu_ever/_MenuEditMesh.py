@@ -434,7 +434,9 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     order_invert: bpy.props.BoolProperty(name="Invert", description="")
     bone_chain: bpy.props.BoolProperty(name="Bone Chain", description="")
-    bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", default=1.0, min=0.0, max=2.0)
+    bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", default=1.0, min=0.01, max=2.0)
+    slide_to_normal: bpy.props.FloatProperty(name="Slide To Normal", description="", default=0.0, min=-1.0, max=1.0)
+    angle_threshold: bpy.props.IntProperty(name="Angle threshold for dividing an edge", description="", default=0, min=0, max=90)
 
     def execute(self, context):
         obj = context.object
@@ -444,23 +446,59 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
             _Util.show_report_error(self, "Please select at least one edge.")
             return {"CANCELLED"}
 
-        # 開始位置頂点を検索
-        end_verts = list()
-        for edge in bm.edges:
-            # 選択中の辺から、
-            if edge.select:
-                v1, v2 = edge.verts
-                if sum(1 for e in v1.link_edges if e.select) == 1:
-                    end_verts.append(v1)
-                elif sum(1 for e in v2.link_edges if e.select) == 1:
-                    end_verts.append(v2)
+        def find_isolated_vert_edge_groups(bm):
+            # 孤立された頂点・辺グループを取得
+            edge_groups = []
+            verts_groups = []
+            visited_edges = set()
+            visited_verts = set()
+            for edge in [e for e in bm.edges if e.select]:
+                if edge in visited_edges:
+                    continue
+                # 新しいグループを作成し、現在の辺を追加
+                current_group = set()
+                edges_to_check = [edge]
+                while edges_to_check:
+                    current_edge = edges_to_check.pop()
+                    if current_edge in visited_edges:
+                        continue
+                    visited_edges.add(current_edge)
+                    current_group.add(current_edge)
+                    visited_verts.update(current_edge.verts)
+                    # 現在の辺に連結している選択済みの辺をすべて取得
+                    for v in current_edge.verts:
+                        for e in v.link_edges:
+                            if e.select and e not in visited_edges:
+                                edges_to_check.append(e)
+                    # linked_edges = [e for e in current_edge.verts[0].link_edges if e.select and e not in visited_edges]
+                    # linked_edges += [e for e in current_edge.verts[1].link_edges if e.select and e not in visited_edges]
+                    # edges_to_check.extend(linked_edges)
+                if current_group:
+                    edge_groups.append(current_group)
+                    verts_groups.append(visited_verts)
+            return (verts_groups, edge_groups)
 
-        # 順番通りに辺を取得
-        def iterate_edge_chain(last_vert, last_edge, list_pos):
+        def get_connected_all_verts(start_vert):
+            # 任意の頂点から辺で接続する頂点をすべて取得
+            connected_verts = list()
+            verts_to_check = [start_vert]
+            while verts_to_check:
+                vert = verts_to_check.pop()
+                if vert in connected_verts:
+                    continue
+                connected_verts.append(vert)
+                # この頂点に接続しているすべての選択された辺の他の頂点を取得
+                linked_verts = [e.other_vert(vert) for e in vert.link_edges if e.select]
+                # まだチェックしていない頂点を追加
+                verts_to_check.extend([v for v in linked_verts if v not in connected_verts])
+            return connected_verts
+
+        def iterate_edge_chain(last_vert, last_edge, co_list, n_list):
+            # 順番通りに辺を取得
             for i in range(0, 10000):
                 next_edges = [e for e in last_vert.link_edges if e.select and last_edge != e]
                 if 0 == len(next_edges):
-                    end_verts.remove(last_vert)  # 反対から始まらないように終着点を削除
+                    start_verts.remove(last_vert)  # 反対から始まらないように終着点を削除
                     break
                 elif 2 <= len(next_edges):
                     # サイズ調整を考えると面倒なので、スキップ
@@ -473,56 +511,102 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
                     last_edge = next_edges[0]
                     v1, v2 = next_edges[0].verts
                     last_vert = v1 if v2 == last_vert else v2
-                    list_pos.append(last_vert.co.copy())
+                    co_list.append(last_vert.co.copy())
+                    n_list.append(last_vert.normal.copy())
             else:
                 _Util.show_report_error(self, f"edge iterate by maximum count: {i}")
             return False
-
+        # -------------------------------
+        # 開始位置頂点を検索
+        vert_groups, edge_groups = find_isolated_vert_edge_groups(bm)
+        start_verts = []
+        for i, edges in enumerate(edge_groups):
+            # 1.辺グループのうち、接続辺が１つしかない頂点を起点とする。
+            is_found = False
+            verts = vert_groups[i]
+            for v in verts:
+                if sum(1 for e in v.link_edges if e.select) == 1:
+                    start_verts.append(v)
+                    is_found = True
+                    break
+            if is_found:
+                continue
+            # 2.辺グループがループしている。その場合、指定鋭角以下の頂点を起点にする。
+            
+            # *.それ以外
+            start_verts.append(next(iter(verts)))
         i = 0
-        sorted_pos_lists = []
-        while i < len(end_verts):
-            pos_list = [end_verts[i].co.copy()]
-            iterate_edge_chain(end_verts[i], None, pos_list)
-            sorted_pos_lists.append(pos_list)
-            i = i + 1
+        sorted_lists = []
+        print("start_verts=", start_verts)
+        if not start_verts:
+            _Util.show_report_error(self, "Can't found valid edge selection!")
+            return {"CANCELLED"}
+            
+                        
+        for v in start_verts:
+            verts = get_connected_all_verts(v)
+            co_list = [e.co.copy() for e in verts]
+            n_list = [e.normal.copy() for e in verts]
+            sorted_lists.append((co_list, n_list))
+        # while i < len(start_verts):
+            # co_list = [start_verts[i].co.copy()]
+            # n_list = [start_verts[i].normal.copy()]
+            # iterate_edge_chain(start_verts[i], None, co_list, n_list)
+            # sorted_lists.append((co_list, n_list))
+            # i = i + 1
+            # print(co_list)
         # ソート
-        for i in range(len(sorted_pos_lists)):
-            pos_s = sorted_pos_lists[i][0]
-            pos_e = sorted_pos_lists[i][-1]
+        for i in range(len(sorted_lists)):
+            pos_s = sorted_lists[i][0][0]
+            pos_e = sorted_lists[i][0][-1]
+            is_invert = False
             if self.order_dir == "X" and not self.order_invert and pos_e.x < pos_s.x:
-                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+                is_invert = True
             elif self.order_dir == "X" and self.order_invert and pos_s.x < pos_e.x:
-                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+                is_invert = True
             elif self.order_dir == "Y" and not self.order_invert and pos_e.y < pos_s.y:
-                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+                is_invert = True
             elif self.order_dir == "Y" and self.order_invert and pos_s.y < pos_e.y:
-                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+                is_invert = True
             elif self.order_dir == "Z" and not self.order_invert and pos_e.z < pos_s.z:
-                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+                is_invert = True
             elif self.order_dir == "Z" and self.order_invert and pos_s.z < pos_e.z:
-                sorted_pos_lists[i] = sorted_pos_lists[i][::-1]
+                is_invert = True
+            if is_invert:
+                sorted_lists[i] = (sorted_lists[i][0][::-1], sorted_lists[i][1][::-1])
 
         # アーマチュアを追加
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.armature_add()
-        armature = bpy.context.object
+        armature = context.object
         armature.name = "bones_from_edges"
+
         # ボーン追加
         bpy.ops.object.mode_set(mode="EDIT")
         edit_bones = armature.data.edit_bones
+        for bone in edit_bones:
+            edit_bones.remove(bone)
         # メッシュの辺を選択してボーンを作成
-        for pos_list in sorted_pos_lists:
+        for lists in sorted_lists:
             prev_bone = None
-            len_list = int(len(pos_list) * self.bone_ratio)
-            for i in range(1, len_list):
+            co_list = lists[0]
+            n_list = lists[1]
+            fixed_count = max(2, int(len(co_list) * self.bone_ratio))
+            print("fixed_count=", len(co_list), " >> ", fixed_count, " | co_list=", len(co_list))
+            for i in range(fixed_count-1):
                 bone = edit_bones.new("Bone")
                 if 1 == self.bone_ratio:
-                    bone.head = obj.matrix_world @ pos_list[i-1]
-                    bone.tail = obj.matrix_world @ pos_list[i]
+                    bone.head = obj.matrix_world @ co_list[i]
+                    bone.tail = obj.matrix_world @ co_list[i+1]
+                    bone.head += n_list[i] * self.slide_to_normal
+                    bone.tail += n_list[i+1] * self.slide_to_normal
                 else:
-                    bone.head = obj.matrix_world @ _Util.lerp_multi_distance(pos_list, (i-1) / len_list)
-                    bone.tail = obj.matrix_world @ _Util.lerp_multi_distance(pos_list, (i) / len_list)
-
+                    bone.head = obj.matrix_world @ _Util.lerp_multi_distance(co_list, (i) / (fixed_count-1))
+                    bone.tail = obj.matrix_world @ _Util.lerp_multi_distance(co_list, (i+1) / (fixed_count-1))
+                    bone.head += _Util.lerp_multi_distance(n_list, (i) / (fixed_count-1)) * self.slide_to_normal
+                    bone.tail += _Util.lerp_multi_distance(n_list, (i+1) / (fixed_count-1)) * self.slide_to_normal
+                # print(i, (i) / fixed_count, (i+1) / fixed_count)
+                # print("n=", info_list[i]["n"], info_list[i+1]["n"], self.slide_to_normal)
                 bone.parent = prev_bone if self.bone_chain else None
                 prev_bone = bone
                 # _Util.show_report(self, f"{bone.name}, {p1}, {p2}, {bone.head}, {bone.tail}")
