@@ -6,12 +6,13 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
 ## Features
 
-Placement in bottom sections are common functions, and upper sections are arranged by mode.
+Placement in bottom sections are utility functions, and upper sections are arranged by mode.
 
-### [Common]
+### [Utility]
 
 - Quickly switch each modes.
   You can switch with one click from selecting MeshObject to BoneEdit/WeightPaint mode without having to select the linked armature.
+- Quickly switch selection tool.
 - Quickly editable view/tools/object settings.
 - Quickly open Preference/Console.
 - Quickly open Import/Export Fbx settings.
@@ -27,12 +28,15 @@ Placement in bottom sections are common functions, and upper sections are arrang
 - (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
 ### [OBJECT mode]
+- Batch deletion of unused vertex groups.
 - Copy the mirrored Vertex Group. Also possible from selected bones.
 
 ### [EDIT mode]
 - Quick access to Edge/Vertex crease.
 - Quick access to Vertex groups.
-- Shortcuts various functions.
+- Mirror duplication.
+- Generate bones along selected edges.
+- And shortcuts various functions.
 
 ### [PAINT_TEXTURE mode]
 
@@ -44,14 +48,17 @@ Placement in bottom sections are common functions, and upper sections are arrang
   
 ### [PAINT_WEIGHT mode]
 
+- Quickly switching blur brush strength.
 - Shortcut PaintMask switch.
 - Copy the mirrored Vertex Group. Also possible from selected bones.
 
 ### [SCULPT mode]
 
+- Quickly switching smooth brush strength.
 - Quickly switchable to any Brushs, Strokes.
 - Quickly tweak the Smooth brush strength.
 - Filterable brushes to displayed.
+- Make mask with selected vertices.
 
 ### [POSE mode]
 
