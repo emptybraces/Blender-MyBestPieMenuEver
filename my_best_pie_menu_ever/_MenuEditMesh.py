@@ -380,9 +380,9 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
     bl_idname = "op.mpm_duplicate_mirror"
     bl_label = "Duplicate with mirror"
     bl_options = {'REGISTER', 'UNDO'}
-    is_x: bpy.props.BoolProperty(default=True)
-    is_y: bpy.props.BoolProperty(default=False)
-    is_z: bpy.props.BoolProperty(default=False)
+    mirror_x: bpy.props.BoolProperty(name="Mirror X", default=True)
+    mirror_y: bpy.props.BoolProperty(name="Mirror Y", default=False)
+    mirror_z: bpy.props.BoolProperty(name="Mirror Z", default=False)
 
     @classmethod
     def poll(self, context):
@@ -426,11 +426,11 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
         # 選択
         for vert in vert_map.values():
             vert.select = True
-            if self.is_x:
+            if self.mirror_x:
                 vert.co.x = -vert.co.x
-            if self.is_ｙ:
-                vert.co.ｙ = -vert.co.ｙ
-            if self.is_z:
+            if self.mirror_y:
+                vert.co.y = -vert.co.y
+            if self.mirror_z:
                 vert.co.z = -vert.co.z
         for edge_face in new_edge_face:
             edge_face.select = True

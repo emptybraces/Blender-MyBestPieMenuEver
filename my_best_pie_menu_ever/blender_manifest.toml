@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "1.4.0"
+version = "1.4.1"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -20,7 +20,7 @@ blender_version_min = "4.2.0"
 # blender_version_max = "5.1.0"
 
 license = [
-  "SPDX:MIT",
+  "SPDX:GPL-3.0-or-later",
 ]
 
 [permissions]
