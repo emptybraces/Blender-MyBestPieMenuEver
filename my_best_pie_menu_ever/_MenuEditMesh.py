@@ -3,6 +3,8 @@ import bmesh
 from . import _Util
 from . import g
 from math import degrees
+from ._MenuObject import LayoutSwitchSelectionOperator
+
 import itertools
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
@@ -12,23 +14,23 @@ import itertools
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text='Edit Mesh Primary')
+    r = box.row(align=True)
+    LayoutSwitchSelectionOperator(context, r)
 
     # ヘッダー
-    r = box.row()
-    box2 = r.box()
-    box2.label(text="Proportional")
+    r.label(text="Proportional")
     # プロポーショナル
-    r2 = box2.row(align=True)
+    r2 = r.row(align=True)
     tool_settings = context.scene.tool_settings
     _Util.layout_prop(r2, tool_settings, "use_proportional_edit", text="")
     r2.prop_with_popover(tool_settings, "proportional_edit_falloff", text="", icon_only=True, panel="VIEW3D_PT_proportional_edit",)
     _Util.layout_prop(r2, tool_settings, "use_proportional_connected")
-    r2.label(text="                                          ")
+    # r2.label(text="                                          ")
 
     # スナップ
-    box2 = r.box()
-    box2.label(text="Snap")
-    r2 = box2.row(align=True)
+    # box2 = r.box()
+    r.label(text="Snap")
+    r2 = r.row(align=True)
     _Util.layout_prop(r2, tool_settings, "use_snap", text="")
     snap_items = bpy.types.ToolSettings.bl_rna.properties["snap_elements"].enum_items
     for elem in tool_settings.snap_elements:
@@ -174,7 +176,6 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         # アクティブオブジェクトの頂点グループをリストに追加
         for vgroup in obj.vertex_groups:
             self.map_vgname_to_label[vgroup.name] = 0
-            _Util.show_report(self, vgroup.name)
         # 現在選択中の頂点を保存
         self.init_verts.clear()
         for v in bm.verts:
@@ -193,6 +194,9 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
 
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
+        # clear ボタン
+        _Util.layout_operator(self.layout, MPM_OT_SelectVertexGroup.bl_idname, text=MPM_OT_SelectVertexGroup.ID_CLEAR_SELS).vgroup_name = MPM_OT_SelectVertexGroup.ID_CLEAR_SELS
+        # vgrupsボタン
         cnt = 0
         limit_rows = 25
         r = self.layout.row(align=True)
@@ -221,10 +225,19 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_select_vertex_group"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
+    ID_CLEAR_SELS = "CLEAR SELECTION"
     vgroup_name: bpy.props.StringProperty()
 
     def execute(self, context):
         obj = context.object
+        if self.vgroup_name == MPM_OT_SelectVertexGroup.ID_CLEAR_SELS:
+            bm = bmesh.from_edit_mesh(obj.data)
+            bm.select_flush(False)
+            for v in bm.verts:
+                v.select = False
+            bmesh.update_edit_mesh(obj.data)
+            obj.update_from_editmode()
+            return {"FINISHED"}
         if self.vgroup_name not in obj.vertex_groups:
             self.report({"WARNING"}, f"Can't found VGroup: {self.vgroup_name}")
             return {"CANCELLED"}
@@ -438,7 +451,8 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
     bone_chain: bpy.props.BoolProperty(name="Bone Chain", description="")
     bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", default=1.0, min=0.01, max=2.0)
     slide_to_normal: bpy.props.FloatProperty(name="Slide To Normal", description="", default=0.0, min=-1.0, max=1.0)
-    angle_threshold: bpy.props.IntProperty(name="Angle threshold for dividing an edge", description="", default=0, min=0, max=90)
+    angle_for_isolate: bpy.props.IntProperty(
+        name="Separates edge groups by vertices with edge pairs that are lower than the specified angle", description="", default=0, min=0, max=120)
 
     def execute(self, context):
         obj = context.object
@@ -457,28 +471,21 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
                 # 辺で接続されている頂点
                 connected_edge_count = sum(1 for e in v.link_edges if e.select)
                 # 端っこまたは、複数分岐
-                if connected_edge_count == 1 or 3 <= connected_edge_count:
+                if connected_edge_count != 2:
                     branch_verts.add(v)
                     continue
+                # 辺が２つは確定
                 else:
                     connected_vecs = [(e.other_vert(v).co - v.co).normalized() for e in v.link_edges if e.select]
-                    for i, j in itertools.combinations(connected_vecs, 2):
-                        _Util.show_report(self, "combinations", i, j)
-                        angle = degrees(i.angle(j))
-                        _Util.show_report(self, "angle=", angle)
-                        # 指定鋭角だった場合
-                        if angle <= limit_angle:
-                            branch_verts.add(v)
-                            break
-                    # ここでみつあｋらなかったやつがループ？
-                    # ここでみつあｋらなかったやつがループ？
-                    # ここでみつあｋらなかったやつがループ？
-                    # ここでみつあｋらなかったやつがループ？
-                    # ここでみつあｋらなかったやつがループ？
-                    # ここでみつあｋらなかったやつがループ？
-                    
+                    # for i, j in itertools.combinations(connected_vecs, 2):
+                    # _Util.show_report(self, "combinations", i, j)
+                    angle = degrees(connected_vecs[0].angle(connected_vecs[1]))
+                    # _Util.show_report(self, "angle=", angle)
+                    # 指定鋭角だった場合
+                    if angle <= limit_angle:
+                        branch_verts.add(v)
 
-            _Util.show_report(self, "branch_verts=", len(branch_verts), branch_verts)
+            # _Util.show_report(self, "branch_verts=", len(branch_verts), branch_verts)
             # 分岐対象頂点から始める辺グループを作成
             visited_edges = set()
             vert_groups = []
@@ -492,14 +499,14 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
                     edge_group = []
                     cur_edge = e
                     for _infinite in range(100000):
-                        visited_edges.add(cur_edge)
                         next_v = cur_edge.other_vert(cur_v)
                         # _Util.show_report(self, f"{cur_v} > {next_v}")
                         vert_group.append(next_v)
                         edge_group.append(cur_edge)
+                        visited_edges.add(cur_edge)
                         if next_v in branch_verts:
-                            edge_groups.append(edge_group)
                             vert_groups.append(vert_group)
+                            edge_groups.append(edge_group)
                             break
                         # 次の接続辺へ
                         le = [e for e in next_v.link_edges if e.select and e not in visited_edges]
@@ -510,13 +517,46 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
                         cur_v = next_v
                     else:
                         raise Exception("Error: Prevent inifinite loop!")
-            
+
+            # 辺ループなど分岐対象頂点が存在しない孤立された辺グループ
+            # 選択された辺のうち、まだ走査してない辺
+            for e in [e for e in bm.edges if e.select and e not in visited_edges]:
+                if e in visited_edges:
+                    continue
+                cur_v = e.verts[0]
+                vert_group = [cur_v]
+                edge_group = []
+                cur_edge = e
+                for _infinite in range(100000):
+                    next_v = cur_edge.other_vert(cur_v)
+                    edge_group.append(cur_edge)
+                    visited_edges.add(cur_edge)
+                    # _Util.show_report(self, f"{cur_v.index} > {next_v.index}")
+                    # 1周したら
+                    if next_v in vert_group:
+                        # _Util.show_report(self, f"vert_gropp = {[v.index for v in vert_group]}")
+                        vert_group.append(next_v)  # ループボーンを閉じるために必要。また、ここで入れないと上のifが常に合格してしまう。
+                        vert_groups.append(vert_group)
+                        edge_groups.append(edge_group)
+                        break
+                    vert_group.append(next_v)  # ifの後に入れる
+                    # 次の接続辺へ
+                    le = [e for e in next_v.link_edges if e.select and e not in visited_edges]
+                    # 必ず一つの辺が見つかるはず
+                    if 1 != len(le):
+                        raise Exception(f"Expecting to find one edge. found count is {len(le)}")
+                    cur_edge = le[0]
+                    cur_v = next_v
+                else:
+                    raise Exception("Error: Prevent inifinite loop!")
+
             return (vert_groups, edge_groups)
 
-        vert_groups, edge_groups = find_isolated_vert_edge_groups(bm, self.angle_threshold)
-        _Util.show_report(self, "---------------")
-        _Util.show_report(self, "vert_groups=", len(vert_groups), [len(v) for v in vert_groups])
-        _Util.show_report(self, "edge_groups=", len(edge_groups), [len(v) for v in edge_groups])
+        # グループ
+        vert_groups, edge_groups = find_isolated_vert_edge_groups(bm, self.angle_for_isolate)
+        # _Util.show_report(self, "---------------")
+        # _Util.show_report(self, "vert_groups=", len(vert_groups), [len(v) for v in vert_groups])
+        # _Util.show_report(self, "edge_groups=", len(edge_groups), [len(v) for v in edge_groups])
         if len(vert_groups) != len(edge_groups):
             raise Exception(f"Expecting match to length of each group. {len(vert_groups)}, {len(edge_groups)}")
 
@@ -558,7 +598,7 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
             co_list = [e[0] for e in tuples]
             n_list = [e[1] for e in tuples]
             fixed_count = max(2, int(len(tuples) * self.bone_ratio))
-            _Util.show_report(self, f"original count = {len(tuples)}, fixed_count={fixed_count}")
+            _Util.show_report(self, f"bone count = {fixed_count-1}")
             for i in range(fixed_count-1):
                 bone = edit_bones.new("Bone")
                 if 1 == self.bone_ratio:

@@ -12,6 +12,10 @@ def MenuPrimary(pie, context):
     pie = pie.split()
     box = pie.box()
     box.label(text="Object Primary")
+
+    # select tool
+    LayoutSwitchSelectionOperator(context, box)
+
     r = box.row()
     c = r.column(align=True)
 
@@ -29,6 +33,74 @@ def MenuPrimary(pie, context):
         _Util.layout_operator(box, MPM_OT_ARP_SnapIKFK.bl_idname)
 
 # --------------------------------------------------------------------------------
+
+
+def LayoutSwitchSelectionOperator(context, layout):
+    r = layout.row(align=True)
+    r.label(text="SelectionTool")
+    r = r.row(align=True)
+    # r.scale_x = 0.5
+    id = bpy.context.workspace.tools.from_space_view3d_mode(context.mode).idname
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolTweak.bl_idname, depress=not MPM_OT_SwitchSelectionToolTweak.poll(context=context))
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolBox.bl_idname, depress=not MPM_OT_SwitchSelectionToolBox.poll(context=context))
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolCircle.bl_idname, depress=not MPM_OT_SwitchSelectionToolCircle.poll(context=context))
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolLasso.bl_idname, depress=not MPM_OT_SwitchSelectionToolLasso.poll(context=context))
+
+
+class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):
+    bl_idname = "op.mpm_switch_selection_tool_tweak"
+    bl_label = "TWEAK"
+    bl_description = "Tweak selection tool"
+
+    @classmethod
+    def poll(cls, context):
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select"
+
+    def execute(self, context):
+        bpy.ops.wm.tool_set_by_id(name="builtin.select")
+        return {"FINISHED"}
+
+
+class MPM_OT_SwitchSelectionToolBox(bpy.types.Operator):
+    bl_idname = "op.mpm_switch_selection_tool_box"
+    bl_label = "BOX"
+    bl_description = "Box selection tool"
+
+    @classmethod
+    def poll(cls, context):
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_box"
+
+    def execute(self, context):
+        bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
+        return {"FINISHED"}
+
+
+class MPM_OT_SwitchSelectionToolCircle(bpy.types.Operator):
+    bl_idname = "op.mpm_switch_selection_tool_circle"
+    bl_label = "CIRCLE"
+    bl_description = "Circle selection tool"
+
+    @classmethod
+    def poll(cls, context):
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_circle"
+
+    def execute(self, context):
+        bpy.ops.wm.tool_set_by_id(name="builtin.select_circle")
+        return {"FINISHED"}
+
+
+class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
+    bl_idname = "op.mpm_switch_selection_tool_lasso"
+    bl_label = "LASSO"
+    bl_description = "Lasso selection tool"
+
+    @classmethod
+    def poll(cls, context):
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_lasso"
+
+    def execute(self, context):
+        bpy.ops.wm.tool_set_by_id(name="builtin.select_lasso")
+        return {"FINISHED"}
 
 
 class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
@@ -72,6 +144,10 @@ class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 classes = [
+    MPM_OT_SwitchSelectionToolTweak,
+    MPM_OT_SwitchSelectionToolBox,
+    MPM_OT_SwitchSelectionToolCircle,
+    MPM_OT_SwitchSelectionToolLasso,
     MPM_OT_RemoveUnusedVertexGroup,
 ]
 

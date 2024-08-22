@@ -189,6 +189,8 @@ def show_msgbox(message, title = "", icon = "INFO"):
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 def show_report(self, *args):
     self.report({"INFO"}, " ".join(map(str, args)))
+def show_report_warn(self, *args):
+    self.report({"WARNING"}, " ".join(map(str, args)))
 def show_report_error(self, *args):
     self.report({"ERROR"}, " ".join(map(str, args)))
 def lerp(start, end, t):
