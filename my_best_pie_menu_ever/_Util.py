@@ -188,9 +188,9 @@ def show_msgbox(message, title = "", icon = "INFO"):
             self.layout.label(text=line)
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 def show_report(self, *args):
-    self.report({"INFO"}, ", ".join(map(str, args)))
+    self.report({"INFO"}, " ".join(map(str, args)))
 def show_report_error(self, *args):
-    self.report({"ERROR"}, ", ".join(map(str, args)))
+    self.report({"ERROR"}, " ".join(map(str, args)))
 def lerp(start, end, t):
     return start + t * (end - start)
 def lerp_multi_distance(points, t):
