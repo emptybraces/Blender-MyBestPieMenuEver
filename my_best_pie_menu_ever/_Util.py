@@ -36,27 +36,27 @@ class MPM_OT_SetPointer(bpy.types.Operator):
     bl_idname = "op.mpm_set_pointer"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
-    propName: bpy.props.StringProperty()
-    propObj: bpy.props.StringProperty()
-    propValue: bpy.props.StringProperty()
+    attrName: bpy.props.StringProperty()
+    attrNameTarget: bpy.props.StringProperty()
+    attrNameValue: bpy.props.StringProperty()
     def execute(self, context):
-        target = getattr(context, self.propObj, None)
-        value = getattr(context, self.propValue, None)
-        # print(context, self.propObj, self.propValue, target, value)
-        setattr(target, self.propName, value)
+        target = getattr(context, self.attrNameTarget, None)
+        value = getattr(context, self.attrNameValue, None)
+        print(context, self.attrNameTarget, self.attrNameValue, target, value)
+        setattr(target, self.attrName, value)
         return {'FINISHED'}
     @staticmethod
-    def operator(layout, text, targetObj, propName, value, isActive=True, depress=False, ctxt=''):
-        keyObj = text
-        keyValue = keyObj + "_value"
+    def operator(layout, text, targetObj, propName, value, isActive=True, depress=False):
+        key_target = replace_leading_underscores(text, '-')
+        key_value = key_target + "_value"
         # context_pointer_setはopeartorの前で設定しないと有効にならない
-        layout.context_pointer_set(name=keyObj, data=targetObj)
-        layout.context_pointer_set(name=keyValue, data=value)
+        layout.context_pointer_set(name=key_target, data=targetObj)
+        layout.context_pointer_set(name=key_value, data=value)
         op = layout.operator(MPM_OT_SetPointer.bl_idname, text=text, depress=depress)
-        op.propName = propName
-        op.propObj = keyObj
-        op.propValue = keyValue
-        # print(layout, op.propObj, op.propValue, targetObj, value)
+        op.attrName = propName
+        op.attrNameTarget = key_target
+        op.attrNameValue = key_value
+        # print(layout, op.propObj, op.attrNameValue, targetObj, value)
         layout.enabled = isActive and targetObj != None
 class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
     bl_idname = "op.mpm_set_bool"
@@ -219,6 +219,11 @@ def lerp_multi_distance(points, t):
             return interpolated_position
         accumulated_distance += distance
     return points[-1]
+def replace_leading_underscores(string, replacement_char):
+    count = 0
+    while count < len(string) and string[count] == '_':
+        count += 1
+    return replacement_char * count + string[count:]
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_SetBool,

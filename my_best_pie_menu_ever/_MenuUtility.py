@@ -57,20 +57,21 @@ def PieMenuDraw_Utility(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
 
     # オーバーレイ
+    overlay = context.space_data.overlay
     r = box.row(align=True)
     c = r.column(align=True)
     c.active = getattr(context.space_data, "overlay", None) != None
     r = c.row(align=True)
-    _Util.layout_prop(r, context.space_data.overlay, "show_overlays", icon="OVERLAY")
+    _Util.layout_prop(r, overlay, "show_overlays")
     r = r.row(align=True)
     r.scale_x = 0.7
     _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="S")
     _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="M")
 
     #
-    _Util.layout_prop(c, context.space_data.overlay, "show_bones", isActive=context.space_data.overlay.show_overlays, icon="BONE_DATA")
-    _Util.layout_prop(c, context.space_data.overlay, "show_wireframes", isActive=context.space_data.overlay.show_overlays, icon="SHADING_WIRE")
-    _Util.layout_prop(c, context.space_data.overlay, "show_annotation", isActive=context.space_data.overlay.show_overlays)
+    _Util.layout_prop(c, overlay, "show_bones", isActive=overlay.show_overlays)
+    _Util.layout_prop(c, overlay, "show_wireframes", isActive=overlay.show_overlays)
+    _Util.layout_prop(c, overlay, "show_annotation", isActive=overlay.show_overlays)
     # 透過
     view = context.space_data
     shading = view.shading if view.type == 'VIEW_3D' else context.scene.display.shading

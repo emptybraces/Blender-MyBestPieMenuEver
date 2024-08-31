@@ -42,6 +42,13 @@ def MenuPrimary(pie, context):
     r = box.row(align=True)
     c = r.column(align=True)
 
+    # overlay
+    overlay = context.space_data.overlay
+    box = c.box()
+    box.label(text="Overlay", icon="OVERLAY")
+    cc = box.column(align=True)
+    _Util.layout_prop(cc, overlay, "show_weight", isActive=overlay.show_overlays)
+
     # 選択ボックス
     box = c.box()
     box.label(text="Selection", icon="ZOOM_SELECTED")
@@ -104,8 +111,10 @@ def MenuPrimary(pie, context):
     r2.label(text="Symmetrize", icon="MOD_MIRROR")
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
     op.direction = 'POSITIVE_X'
+    op.factor = 1
     op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
     op.direction = 'NEGATIVE_X'
+    op.factor = 1
     # 頂点ミラー複製
     _Util.layout_operator(c, MPM_OT_DuplicateMirror.bl_idname, icon="SEQ_STRIP_DUPLICATE")
     # 法線

@@ -36,6 +36,7 @@ def MenuPrimary(pie, context):
     else:
         for i in bpy.data.brushes:
             if i.use_paint_sculpt:
+                print("11111", tool, i)
                 op = _Util.MPM_OT_SetPointer.operator(col2, i.name, tool, "brush", i, depress=current_brush == i)
                 cnt += 1
                 if cnt % limit_rows == 0:
@@ -81,7 +82,9 @@ def MenuPrimary(pie, context):
     r.label(text=MPM_OT_MakeMaskWithSelectedVert.bl_label)
     _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "To Selected").is_invert = False
     _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "To Unselected").is_invert = True
-    # _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname)
+    op = _Util.layout_operator(r, "paint.mask_flood_fill", "Clear")
+    op.mode = "VALUE"
+    op.value = 0
 # --------------------------------------------------------------------------------
 
 
