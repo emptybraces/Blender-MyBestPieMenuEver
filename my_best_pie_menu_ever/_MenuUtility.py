@@ -1,3 +1,5 @@
+import os
+import subprocess
 import bpy
 from . import _Util
 from . import _AddonPreferences
@@ -24,6 +26,8 @@ def PieMenuDraw_Utility(layout, context):
     row.operator(MPM_OT_Utility_ARPExportPanel.bl_idname, icon="EXPORT", text="")
 
     row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
+    
+    row.operator(MPM_OT_Utility_OpenDirectory.bl_idname, text="", icon="FOLDER_REDIRECT")
     row = row_parent.row(align=True)
     file_path_list = _AddonPreferences.Accessor.get_open_file_path_list().strip()
     if file_path_list:
@@ -518,6 +522,31 @@ class MPM_OT_Utility_ViewportCameraTransformRestoreRemove(bpy.types.Operator):
     def execute(self, context):
         context.scene.mpm_prop.ViewportCameraTransforms.remove(self.idx)
         return {"FINISHED"}
+    import bpy
+
+
+class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
+    bl_idname = "op.mpm_open_directory"
+    bl_label = "Open the directory location of the currently opened blend file"
+
+    def execute(self, context):
+        filepath = bpy.data.filepath
+        if filepath:
+            directory = os.path.dirname(filepath)
+            # OSに応じてディレクトリを開く
+            if os.name == "nt":  # Windows
+                os.startfile(directory)
+            elif os.name == "posix":  # macOS, Linux
+                subprocess.Popen(["xdg-open", directory])
+            else:
+                self.report({"ERROR"}, "Unsupported OS")
+                return {"CANCELLED"}
+            self.report({"INFO"}, f"Opened directory: {directory}")
+        else:
+            self.report({"ERROR"}, "Blend file is not saved yet")
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
 # --------------------------------------------------------------------------------
 
 
@@ -540,6 +569,7 @@ classes = (
     MPM_OT_Utility_ARPExportAll,
     MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
+    MPM_OT_Utility_OpenDirectory,
 )
 
 

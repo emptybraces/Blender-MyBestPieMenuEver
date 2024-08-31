@@ -378,7 +378,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
 
 class MPM_OT_DuplicateMirror(bpy.types.Operator):
     bl_idname = "op.mpm_duplicate_mirror"
-    bl_label = "Duplicate with mirror"
+    bl_label = "Mirror Duplication"
     bl_options = {'REGISTER', 'UNDO'}
     mirror_x: bpy.props.BoolProperty(name="Mirror X", default=True)
     mirror_y: bpy.props.BoolProperty(name="Mirror Y", default=False)
@@ -448,7 +448,7 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
 
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     order_invert: bpy.props.BoolProperty(name="Invert", description="")
-    bone_chain: bpy.props.BoolProperty(name="Bone Chain", description="")
+    bone_chain: bpy.props.BoolProperty(name="Bone Chain", description="",  default=True)
     bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", default=1.0, min=0.01, max=2.0)
     slide_to_normal: bpy.props.FloatProperty(name="Slide To Normal", description="", default=0.0, min=-1.0, max=1.0)
     angle_for_isolate: bpy.props.IntProperty(
