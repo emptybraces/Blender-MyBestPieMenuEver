@@ -10,8 +10,7 @@ Placement in bottom sections are utility functions, and upper sections are arran
 
 ### [Utility]
 
-- Quickly switch each modes.
-  You can switch with one click from selecting MeshObject to BoneEdit/WeightPaint mode without having to select the linked armature.
+- Quickly switch between modes. With one click, you can enter Weight Paint mode while selecting the linked armature.
 - Quickly switch selection tool.
 - Quickly editable view/tools/object settings.
 - Quickly open Preference/Console.
