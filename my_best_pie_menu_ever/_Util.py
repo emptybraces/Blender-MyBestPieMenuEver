@@ -42,7 +42,7 @@ class MPM_OT_SetPointer(bpy.types.Operator):
     def execute(self, context):
         target = getattr(context, self.attrNameTarget, None)
         value = getattr(context, self.attrNameValue, None)
-        print(context, self.attrNameTarget, self.attrNameValue, target, value)
+        # print(context, self.attrNameTarget, self.attrNameValue, target, value)
         setattr(target, self.attrName, value)
         return {'FINISHED'}
     @staticmethod

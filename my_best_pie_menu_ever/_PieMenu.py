@@ -160,8 +160,11 @@ class MPM_Prop(bpy.types.PropertyGroup):
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
     # ビューポートカメラ位置保存スタック
     ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
-    # テクスチャペイントのカラーパレット
+    
+    # スカルプトモードのワイヤーフレーム
+    IsAutoEnableWireframeOnSculptMode: bpy.props.BoolProperty()
 
+    # テクスチャペイントのカラーパレット
     def on_update_color_palette_popover_enum(self, context):
         items = [("ColorPalette", "ColorPalette", "")]
         for i in bpy.data.palettes:
@@ -205,7 +208,7 @@ def register():
 
 
 def unregister():
-    _Util.unregister_classes(classes)
-    del bpy.types.Scene.mpm_prop
     for m in modules:
         m.unregister()
+    _Util.unregister_classes(classes)
+    del bpy.types.Scene.mpm_prop

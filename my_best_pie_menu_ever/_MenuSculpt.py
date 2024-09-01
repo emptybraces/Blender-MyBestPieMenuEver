@@ -13,6 +13,7 @@ def MenuPrimary(pie, context):
     box.label(text='Sculpt Primary')
 
     c = box.column()
+    _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
 
     row = c.row(align=True)  # Brush, Stroke
 
@@ -36,7 +37,6 @@ def MenuPrimary(pie, context):
     else:
         for i in bpy.data.brushes:
             if i.use_paint_sculpt:
-                print("11111", tool, i)
                 op = _Util.MPM_OT_SetPointer.operator(col2, i.name, tool, "brush", i, depress=current_brush == i)
                 cnt += 1
                 if cnt % limit_rows == 0:
@@ -123,11 +123,40 @@ class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
         bmesh.update_edit_mesh(data)
         bpy.ops.object.mode_set(mode="SCULPT")
         return {"FINISHED"}
+
+
+def mode_change_handler(scene):
+    if bpy.context.active_object:
+        if bpy.context.mode == "SCULPT":
+            bpy.context.active_object.show_wire = bpy.context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
+        else:
+            bpy.context.active_object.show_wire = False
+class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
+    bl_idname = "op.mpm_auto_wireframe_enable"
+    bl_label = "Auto Show Wireframe"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+
+    def execute(self, context):
+        context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode = not context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
+        context.active_object.show_wire = context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
+        indices = []
+        for i,e in enumerate(bpy.app.handlers.depsgraph_update_pre):
+            if e.__name__ == mode_change_handler.__name__:
+                # print("atta", i)
+                indices.append(i)
+        for i in reversed(indices):
+            # print("del", i)
+            del bpy.app.handlers.depsgraph_update_pre[i]
+        if context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
+            bpy.app.handlers.depsgraph_update_pre.append(mode_change_handler)
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
 
 classes = (
     MPM_OT_MakeMaskWithSelectedVert,
+    MPM_OT_AutoWireframeEnable,
 )
 
 
