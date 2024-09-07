@@ -144,20 +144,20 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         if obj:
-            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode="OBJECT")
             obj.vertex_groups.new(name=self.vgroup_name)
             group = obj.vertex_groups[-1]
             obj.vertex_groups.active_index = group.index
             # bmesh.from_edit_mesh(obj.data).verts:
             for v in obj.data.vertices:
                 if v.select:
-                    group.add([v.index], self.weight, 'REPLACE')
-            self.report({'INFO'}, f"Added vertex group '{self.name}' with weight {self.weight} to selected vertices")
-            bpy.ops.object.mode_set(mode='EDIT')
+                    group.add([v.index], self.weight, "REPLACE")
+            self.report({"INFO"}, f"Added vertex group '{self.name}' with weight {self.weight} to selected vertices")
+            bpy.ops.object.mode_set(mode="EDIT")
             return {"FINISHED"}
         else:
-            self.report({'ERROR'}, "No active object")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "No active object")
+            return {"CANCELLED"}
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -204,7 +204,8 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
         # clear ボタン
-        _Util.layout_operator(self.layout, MPM_OT_SelectVertexGroup.bl_idname, text=MPM_OT_SelectVertexGroup.ID_CLEAR_SELS).vgroup_name = MPM_OT_SelectVertexGroup.ID_CLEAR_SELS
+        _Util.layout_operator(self.layout, MPM_OT_SelectVertexGroup.bl_idname,
+                              text=MPM_OT_SelectVertexGroup.ID_CLEAR_SELS).vgroup_name = MPM_OT_SelectVertexGroup.ID_CLEAR_SELS
         # vgrupsボタン
         cnt = 0
         limit_rows = 25
@@ -399,7 +400,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
         return any(e.select for e in bm.verts)
 
     def execute(self, context):
-        obj = bpy.context.object
+        obj = context.object
         bm = bmesh.from_edit_mesh(obj.data)
 
         selected_verts = [v for v in bm.verts if v.select]
@@ -407,44 +408,118 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
         new_edge_face = []
 
         # 複製
-        for vert in selected_verts:
-            new_vert = bm.verts.new(vert.co)
-            vert_map[vert] = new_vert
+        # print(dir(bm.loops.layers))
+        # print(dir(bm.loops.layers.color))
+        # print(bm.loops.layers.color.active)
+        # print(bm.loops.layers.color.items())
+        # print(bm.loops.layers.color.keys())
+        # print(bm.loops.layers.float.keys())
+        # print(bm.loops.layers.float_color.keys())
+        # print(bm.loops.layers.float_vector.keys())
+        # print(bm.loops.layers.int.keys())
+        # print(bm.loops.layers.string.keys())
+        # print(bm.loops.layers.uv.keys())
+        # print(bm.verts.layers.deform.keys())
+        vg = obj.vertex_groups
+        deform_layer = bm.verts.layers.deform.active
+        # 選択中の頂点
+        for v in selected_verts:
+            new_vert = bm.verts.new(v.co)
+            vert_map[v] = new_vert
+            for layer in bm.verts.layers.float:
+                new_vert[layer] = v[layer]
         for edge in bm.edges:
+            # 選択中の辺
             if edge.verts[0] in vert_map and edge.verts[1] in vert_map:
-                edge = bm.edges.new(
+                new_edge = bm.edges.new(
                     (vert_map[edge.verts[0]], vert_map[edge.verts[1]]))
-                new_edge_face.append(edge)
+                new_edge_face.append(new_edge)
+                new_edge.seam = edge.seam
+                new_edge.smooth = edge.smooth
+                for layer in bm.edges.layers.float:
+                    new_edge[layer] = edge[layer]
+
         for face in bm.faces:
+            # 選択中の面
             if all(vert in vert_map for vert in face.verts):
                 new_verts = [vert_map[vert] for vert in face.verts]
-                face = bm.faces.new(new_verts)
-                new_edge_face.append(face)
-
-        bmesh.update_edit_mesh(obj.data)
+                new_face = bm.faces.new(new_verts)
+                new_edge_face.append(new_face)
+                for old_loop, new_loop in zip(face.loops, new_face.loops):
+                    for layer in bm.loops.layers.uv:
+                        new_loop[layer].uv = old_loop[layer].uv
+                    for layer in bm.loops.layers.color:
+                        new_loop[layer] = old_loop[layer]
+                    for layer in bm.loops.layers.float:
+                        new_loop[layer] = old_loop[layer]
+                    for layer in bm.loops.layers.float_color:
+                        new_loop[layer] = old_loop[layer]
+                    for layer in bm.loops.layers.float_vector:
+                        new_loop[layer] = old_loop[layer]
+                    for layer in bm.loops.layers.int:
+                        new_loop[layer] = old_loop[layer]
+                    for layer in bm.loops.layers.string:
+                        new_loop[layer] = old_loop[layer]
 
         # 選択解除
         bm.select_flush(False)
-        for vert in selected_verts:
-            vert.select = False
-        for vert in bm.edges:
-            vert.select = False
-        for vert in bm.faces:
-            vert.select = False
+        for v in selected_verts:
+            v.select = False
+        for v in bm.edges:
+            v.select = False
+        for v in bm.faces:
+            v.select = False
 
         # 選択
-        for vert in vert_map.values():
-            vert.select = True
+        for v in vert_map.values():
+            v.select = True
             if self.mirror_x:
-                vert.co.x = -vert.co.x
+                v.co.x = -v.co.x
             if self.mirror_y:
-                vert.co.y = -vert.co.y
+                v.co.y = -v.co.y
             if self.mirror_z:
-                vert.co.z = -vert.co.z
+                v.co.z = -v.co.z
         for edge_face in new_edge_face:
             edge_face.select = True
 
         bm.normal_update()
+        bmesh.update_edit_mesh(obj.data)
+
+        # indexが-1だから登録できない
+        target_vgs = set()
+        for oldv, newv in vert_map.items():
+            for g in vg:
+                if g.index in oldv[deform_layer]:
+                    target_vgs.add(g)
+                    # weight = g.weight(oldv.index)
+                    # _Util.show_report(self, newv.index, newv, weight)
+                    # g.add([new_vert.index], weight, "REPLACE")
+        # 頂点グループコピー、なぜかmirrorするとコピー元の登録が消える。
+        bpy.ops.object.mode_set(mode="OBJECT")
+        # bpy.ops.object.vertex_group_mirror(all_groups = True, use_topology=False)
+        current_vg_name = obj.vertex_groups.active.name
+        # まずミラー作って、
+        vg_copy_from_to = []
+        for vg in target_vgs:
+            bpy.ops.object.vertex_group_set_active(group=vg.name)
+            bpy.ops.object.vertex_group_copy()
+            bpy.ops.object.vertex_group_mirror(use_topology=False)
+            vg_copy_from_to.append((obj.vertex_groups.active, vg))
+
+        # マージする。
+        for v in [v for v in obj.data.vertices if v.select]:
+            for g in v.groups:
+                for gg in vg_copy_from_to:
+                    if g.group == gg[0].index:
+                        if 0 < g.weight:
+                            gg[1].add([v.index], g.weight, "REPLACE")
+        # ミラーを削除
+        for g in vg_copy_from_to:
+            bpy.ops.object.vertex_group_set_active(group=g[0].name)
+            bpy.ops.object.vertex_group_remove()
+
+        bpy.ops.object.vertex_group_set_active(group=current_vg_name)
+        bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
