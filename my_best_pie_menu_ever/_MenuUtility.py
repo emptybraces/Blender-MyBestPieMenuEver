@@ -26,7 +26,7 @@ def PieMenuDraw_Utility(layout, context):
     row.operator(MPM_OT_Utility_ARPExportPanel.bl_idname, icon="EXPORT", text="")
 
     row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
-    
+
     row.operator(MPM_OT_Utility_OpenDirectory.bl_idname, text="", icon="FOLDER_REDIRECT")
     row = row_parent.row(align=True)
     file_path_list = _AddonPreferences.Accessor.get_open_file_path_list().strip()
@@ -115,6 +115,9 @@ def PieMenuDraw_Utility(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_CopyPosition.bl_idname)
     _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
     _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
+
+    # UV
+    c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
 
     # Animation
     box = c2.box()
@@ -547,6 +550,7 @@ class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
             self.report({"ERROR"}, "Blend file is not saved yet")
             return {"CANCELLED"}
         return {"FINISHED"}
+
 
 # --------------------------------------------------------------------------------
 

@@ -158,9 +158,10 @@ class MPM_Prop(bpy.types.PropertyGroup):
         self.ColorPalettePopoverEnum = "ColorPalette"
         if bpy.context.tool_settings.image_paint.palette is not None:
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
+
     # ビューポートカメラ位置保存スタック
     ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
-    
+
     # スカルプトモードのワイヤーフレーム
     IsAutoEnableWireframeOnSculptMode: bpy.props.BoolProperty()
 
@@ -176,9 +177,32 @@ class MPM_Prop(bpy.types.PropertyGroup):
         items=on_update_color_palette_popover_enum
     )
 
+    # UVMap洗濯用
+    def on_items_UVMapEnum(self, context):
+        uv_layers = bpy.context.active_object.data.uv_layers
+        items = []
+        if uv_layers:
+            for i in uv_layers:
+                items.append((i.name, i.name, ""))
+        return items
+
+    def on_set_UVMapEnum(self, value):
+        uv_layers = bpy.context.active_object.data.uv_layers
+        uv_layers.active = uv_layers[value]
+        uv_layers.active.active_render = True
+
+    def on_get_UVMapEnum(self):
+        return bpy.context.active_object.data.uv_layers.active_index
+    UVMapPopoverEnum: bpy.props.EnumProperty(
+        name="UVMap",
+        description="Select UVMap want to be active",
+        items=on_items_UVMapEnum,
+        get=on_get_UVMapEnum,
+        set=on_set_UVMapEnum
+    )
+
 
 # --------------------------------------------------------------------------------
-
 
 classes = (
     VIEW3D_MT_my_pie_menu,
