@@ -1,4 +1,5 @@
 ﻿import bpy
+import bmesh
 from . import _Util
 from bpy.app.translations import (
     pgettext_iface as iface_,
@@ -36,14 +37,15 @@ def PieMenuDraw_ModeChange(layout, context):
     op = r.operator("object.mode_set", text=iface_("Edit", act_mode_i18n_context), icon="EDITMODE_HLT", depress=object_mode == depress_comp)
     if active_type_is_mesh or active_type_is_armature: op.mode = "EDIT"
     if active_type_is_mesh: 
-        arm = _Util.get_armature(active)
         _Util.layout_operator(r, MPM_OT_ChangeModeWithArmature.bl_idname, "", icon="BONE_DATA").mode = "EDIT"
 
     # Sculpt
     r = col.row()
     r.active = object_mode != "SCULPT" and active_type_is_mesh
     op = r.operator("object.mode_set", text=iface_("Sculpt", act_mode_i18n_context), icon="SCULPTMODE_HLT", depress=object_mode == "SCULPT")
-    if active_type_is_mesh: op.mode = "SCULPT"
+    if active_type_is_mesh: 
+        op.mode = "SCULPT"
+        _Util.layout_operator(r, MPM_OT_ChangeSculptModeWithMask.bl_idname, "", icon="MOD_MASK")
 
     # Pose
     r = col.row()
@@ -72,7 +74,7 @@ def PieMenuDraw_ModeChange(layout, context):
 
 class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
     bl_idname = "op.mpm_change_mode_with_armature"
-    bl_label = "Changed Mode With Armature"
+    bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty()
     @classmethod
@@ -86,6 +88,19 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
         elif self.mode == "EDIT":
             _Util.select_active(_Util.get_armature(active))
         bpy.ops.object.mode_set(mode=self.mode)
+        return {"FINISHED"}
+class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
+    bl_idname = "op.mpm_change_sculpt_mode_with_mask"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
+    def execute(self, context):
+        active = context.active_object
+        bpy.ops.object.mode_set(mode="SCULPT")
+        bpy.ops.op.mpm_make_mask_with_selected_vert(is_invert=True)
         return {"FINISHED"}
 
 class MPM_OT_PoseMode(bpy.types.Operator):
@@ -111,6 +126,7 @@ class MPM_OT_PoseMode(bpy.types.Operator):
 
 classes = (
     MPM_OT_ChangeModeWithArmature,
+    MPM_OT_ChangeSculptModeWithMask,
     MPM_OT_PoseMode,
 )
 def register():

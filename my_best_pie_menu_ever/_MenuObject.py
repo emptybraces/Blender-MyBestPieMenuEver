@@ -54,7 +54,10 @@ class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select"
+        if context.space_data.type == "IMAGE_EDITOR":
+            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select"
+        else:
+            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select")
@@ -68,7 +71,10 @@ class MPM_OT_SwitchSelectionToolBox(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_box"
+        if context.space_data.type == "IMAGE_EDITOR":
+            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select_box"
+        else:
+            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_box"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
@@ -82,7 +88,10 @@ class MPM_OT_SwitchSelectionToolCircle(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_circle"
+        if context.space_data.type == "IMAGE_EDITOR":
+            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select_circle"
+        else:
+            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_circle"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_circle")
@@ -96,7 +105,10 @@ class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_lasso"
+        if context.space_data.type == "IMAGE_EDITOR":
+            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select_lasso"
+        else:
+            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_lasso"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_lasso")

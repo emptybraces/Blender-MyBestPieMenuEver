@@ -37,8 +37,8 @@ from mathutils import Vector
 
 class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'WINDOW'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
     bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}.{g.ver[2]}"
 
     def draw(self, context):
@@ -58,7 +58,6 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
     bl_label = "My Best Pie Menu Ever"
 
     def modal(self, context, event):
-        # print(event.type)
         if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu:
             return {"FINISHED"}
         elif event.type in {"RIGHTMOUSE", "ESC"}:
@@ -72,15 +71,12 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        if context.space_data.type == "VIEW_3D":
-            g.is_force_cancelled_piemenu = False
-            self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
-            context.scene.mpm_prop.init()
-            context.window_manager.modal_handler_add(self)
-            bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
-            return {"RUNNING_MODAL"}
-        else:
-            return {"CANCELLED"}
+        g.is_force_cancelled_piemenu = False
+        self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
+        context.scene.mpm_prop.init()
+        context.window_manager.modal_handler_add(self)
+        bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
+        return {"RUNNING_MODAL"}
 
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
@@ -179,7 +175,9 @@ class MPM_Prop(bpy.types.PropertyGroup):
 
     # UVMap洗濯用
     def on_items_UVMapEnum(self, context):
-        uv_layers = bpy.context.active_object.data.uv_layers
+        if context.active_object is None:
+            return [("", "", "")]
+        uv_layers = context.active_object.data.uv_layers
         items = []
         if uv_layers:
             for i in uv_layers:
@@ -192,7 +190,8 @@ class MPM_Prop(bpy.types.PropertyGroup):
         uv_layers.active.active_render = True
 
     def on_get_UVMapEnum(self):
-        return bpy.context.active_object.data.uv_layers.active_index
+        obj = bpy.context.active_object
+        return 0 if not obj else obj.data.uv_layers.active_index
     UVMapPopoverEnum: bpy.props.EnumProperty(
         name="UVMap",
         description="Select UVMap want to be active",

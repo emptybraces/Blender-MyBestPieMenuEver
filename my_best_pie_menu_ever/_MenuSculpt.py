@@ -47,7 +47,7 @@ def MenuPrimary(pie, context):
     box.label(text="Stroke", icon="STROKE")
     row2 = box.row(align=True)
     col2 = row2.column(align=True)
-    for i in _Util.enum_values(tool.brush, 'stroke_method'):
+    for i in _Util.enum_values(tool.brush, "stroke_method"):
         is_use = tool.brush.stroke_method == i
         _Util.MPM_OT_SetString.operator(col2, i, tool.brush, "stroke_method", i, depress=is_use)
         cnt += 1
@@ -80,8 +80,8 @@ def MenuPrimary(pie, context):
     c = box.column(align=True)
     r = c.row(align=True)
     r.label(text=MPM_OT_MakeMaskWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "To Selected").is_invert = False
-    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "To Unselected").is_invert = True
+    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
+    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "Unselected").is_invert = False
     op = _Util.layout_operator(r, "paint.mask_flood_fill", "Clear")
     op.mode = "VALUE"
     op.value = 0

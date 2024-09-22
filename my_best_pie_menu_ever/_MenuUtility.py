@@ -554,6 +554,25 @@ class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 
+class MPM_OT_Utility_DumpMissingReference(bpy.types.Operator):
+    bl_idname = "op.mpm_dump_Missing_reference"
+    bl_label = "Check Missing Reference"
+
+    def execute(self, context):
+        missing_images = []
+        for image in bpy.data.images:
+            file_path = bpy.path.abspath(image.filepath)
+            if not os.path.exists(file_path):
+                missing_images.append(image)
+        if missing_images:
+            _Util.show_report_warn(self, "The following image reference is missing:")
+            for image in missing_images:
+                _Util.show_report_warn(self, image.name, image.path)
+        else:
+            _Util.show_report(self, "There are no images with missing references.")
+
+# --------------------------------------------------------------------------------
+
 
 classes = (
     MPM_OT_Utility_CopyPosition,
