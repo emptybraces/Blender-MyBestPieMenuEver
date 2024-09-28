@@ -11,7 +11,7 @@ from ._MenuPose import MPM_OT_ARP_SnapIKFK
 def MenuPrimary(pie, context):
     pie = pie.split()
     box = pie.box()
-    box.label(text="Object Primary")
+    box.label(text="Object")
 
     # select tool
     LayoutSwitchSelectionOperator(context, box)
@@ -40,11 +40,10 @@ def LayoutSwitchSelectionOperator(context, layout):
     r.label(text="SelectionTool")
     r = r.row(align=True)
     # r.scale_x = 0.5
-    id = bpy.context.workspace.tools.from_space_view3d_mode(context.mode).idname
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolTweak.bl_idname, depress=not MPM_OT_SwitchSelectionToolTweak.poll(context=context))
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolBox.bl_idname, depress=not MPM_OT_SwitchSelectionToolBox.poll(context=context))
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolCircle.bl_idname, depress=not MPM_OT_SwitchSelectionToolCircle.poll(context=context))
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolLasso.bl_idname, depress=not MPM_OT_SwitchSelectionToolLasso.poll(context=context))
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolTweak.bl_idname)
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolBox.bl_idname)
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolCircle.bl_idname)
+    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolLasso.bl_idname)
 
 
 class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):
@@ -54,10 +53,7 @@ class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.space_data.type == "IMAGE_EDITOR":
-            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select"
-        else:
-            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select"
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select")
@@ -71,10 +67,7 @@ class MPM_OT_SwitchSelectionToolBox(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.space_data.type == "IMAGE_EDITOR":
-            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select_box"
-        else:
-            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_box"
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_box"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
@@ -88,10 +81,7 @@ class MPM_OT_SwitchSelectionToolCircle(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.space_data.type == "IMAGE_EDITOR":
-            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select_circle"
-        else:
-            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_circle"
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_circle"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_circle")
@@ -105,10 +95,7 @@ class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.space_data.type == "IMAGE_EDITOR":
-            return context.workspace.tools.from_space_image_mode(context.space_data.mode).idname != "builtin.select_lasso"
-        else:
-            return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_lasso"
+        return context.workspace.tools.from_space_view3d_mode(context.mode).idname != "builtin.select_lasso"
 
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_lasso")

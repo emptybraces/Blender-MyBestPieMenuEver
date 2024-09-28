@@ -11,6 +11,8 @@
     imp.reload(_MenuSculpt)
     imp.reload(_MenuSculptCurve)
     imp.reload(_MenuPose)
+    imp.reload(_MenuUVEditor)
+    imp.reload(_MenuImageEditor)
     imp.reload(_PanelSelectionHistory)
 else:
     from . import _Util
@@ -24,6 +26,8 @@ else:
     from . import _MenuSculpt
     from . import _MenuSculptCurve
     from . import _MenuPose
+    from . import _MenuUVEditor
+    from . import _MenuImageEditor
     from . import _PanelSelectionHistory
     from . import g
 import bpy
@@ -84,59 +88,46 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
 
 
 def PieMenuDraw_Primary(pie, context):
-    current_mode = context.mode
-    if current_mode == 'OBJECT':
-        _MenuObject.MenuPrimary(
-            pie, context)
-    elif current_mode == 'EDIT_MESH':
-        _MenuEditMesh.MenuPrimary(pie, context)
-    elif current_mode == 'POSE':
-        _MenuPose.MenuPrimary(pie, context)
-    elif current_mode == 'SCULPT':
-        _MenuSculpt.MenuPrimary(pie, context)
-    elif current_mode == 'SCULPT_CURVES':
-        _MenuSculptCurve.MenuPrimary(pie, context)
-    elif current_mode == 'PAINT_TEXTURE':
-        _MenuTexturePaint.MenuPrimary(pie, context)
-    elif current_mode == 'PAINT_VERTEX':
-        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'PAINT_WEIGHT':
-        _MenuWeightPaint.MenuPrimary(pie, context)
-    elif current_mode == 'PARTICLE_EDIT':
-        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'EDIT_ARMATURE':
-        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_DRAW':
-        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_EDIT':
-        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_SCULPT':
-        Placeholder(pie, context, 'Primary')
-    elif current_mode == 'GPENCIL_WEIGHT_PAINT':
-        Placeholder(pie, context, 'Primary')
+    if context.space_data.type == "VIEW_3D": 
+        current_mode = context.mode
+        if current_mode == 'OBJECT':
+            _MenuObject.MenuPrimary(pie, context)
+        elif current_mode == 'EDIT_MESH':
+            _MenuEditMesh.MenuPrimary(pie, context)
+        elif current_mode == 'POSE':
+            _MenuPose.MenuPrimary(pie, context)
+        elif current_mode == 'SCULPT':
+            _MenuSculpt.MenuPrimary(pie, context)
+        elif current_mode == 'SCULPT_CURVES':
+            _MenuSculptCurve.MenuPrimary(pie, context)
+        elif current_mode == 'PAINT_TEXTURE':
+            _MenuTexturePaint.MenuPrimary(pie, context)
+        elif current_mode == 'PAINT_VERTEX':
+            Placeholder(pie, context, 'Primary')
+        elif current_mode == 'PAINT_WEIGHT':
+            _MenuWeightPaint.MenuPrimary(pie, context)
+        elif current_mode == 'PARTICLE_EDIT':
+            Placeholder(pie, context, 'Primary')
+        elif current_mode == 'EDIT_ARMATURE':
+            Placeholder(pie, context, 'Primary')
+        elif current_mode == 'GPENCIL_DRAW':
+            Placeholder(pie, context, 'Primary')
+        elif current_mode == 'GPENCIL_EDIT':
+            Placeholder(pie, context, 'Primary')
+        elif current_mode == 'GPENCIL_SCULPT':
+            Placeholder(pie, context, 'Primary')
+        elif current_mode == 'GPENCIL_WEIGHT_PAINT':
+            Placeholder(pie, context, 'Primary')
+    elif context.space_data.type == "IMAGE_EDITOR":
+        if context.space_data.mode == "UV": 
+            _MenuUVEditor.MenuPrimary(pie, context)
+        else:
+            _MenuImageEditor.MenuPrimary(pie, context)
 
 
 def Placeholder(pie, context, text):
     box = pie.split().box()
     box.label(text=text)
-
-# def PieMenuDraw_Secondary(pie, context):
-#    current_mode = context.mode
-#    if current_mode == 'OBJECT':                _MenuObject.MenuSecondary(pie, context)
-#    elif current_mode == 'EDIT_MESH':           _MenuEditMesh.MenuSecondary(pie, context)
-#    elif current_mode == 'POSE':                _MenuPose.MenuSecondary(pie, context)
-#    elif current_mode == 'SCULPT':              _MenuSculpt.MenuSecondary(pie, context)
-#    elif current_mode == 'SCULPT_CURVES':       _MenuSculptCurve.MenuSecondary(pie, context)
-#    elif current_mode == 'PAINT':               Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'PAINT_TEXTURE':       _MenuTexturePaint.MenuSecondary(pie, context)
-#    elif current_mode == 'PAINT_VERTEX':        Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'PAINT_WEIGHT':        _MenuWeightPaint.MenuSecondary(pie, context)
-#    elif current_mode == 'PARTICLE_EDIT':       Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'EDIT_ARMATURE':       Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'GPENCIL_DRAW':        Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'GPENCIL_EDIT':        Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'GPENCIL_SCULPT':      Placeholder(pie, context, 'Secondary')
-#    elif current_mode == 'GPENCIL_WEIGHT_PAINT':Placeholder(pie, context, 'Secondary')
 
 # --------------------------------------------------------------------------------
 # プロパティ
@@ -219,6 +210,8 @@ modules = [
     _MenuPose,
     _MenuSculpt,
     _MenuSculptCurve,
+    _MenuUVEditor,
+    _MenuImageEditor,
     _PanelSelectionHistory,
 ]
 

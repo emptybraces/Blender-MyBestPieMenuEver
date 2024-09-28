@@ -34,8 +34,15 @@ def PieMenuDraw_Utility(layout, context):
         for path in file_path_list.split(','):
             op = _Util.layout_operator(row, MPM_OT_Utility_OpenFile.bl_idname, text="", icon="FILE_FOLDER")
             op.path = path
-    # -------------------------------
-    row = box.row(align=True)
+
+    if context.space_data.type == "VIEW_3D":
+        DrawView3D(box, context)
+    elif context.space_data.type == "IMAGE_EDITOR":
+        DrawImageEditor(box, context)
+
+
+def DrawView3D(layout, context):
+    row = layout.row(align=True)
     box = row.box()
     # ツールメニュー
     box.label(text="Tool")
@@ -124,7 +131,36 @@ def PieMenuDraw_Utility(layout, context):
     box.label(text="Animation")
     c = box.column(align=True)
 
+
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
+    
+def DrawImageEditor(layout, context):
+    row = layout.row(align=True)
+    # ツールメニュー
+    box = row.box()
+    box.label(text="Tool")
+    c = box.column(align=True)
+    
+    # カラー
+    r = c.row(align=True)
+    # for i in _Util.enum_values(context.space_data, "display_channels"):
+    # ['COLOR_ALPHA', 'COLOR', 'ALPHA', 'Z_BUFFER', 'RED', 'GREEN', 'BLUE']
+    data = context.space_data
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "COLOR_ALPHA", depress=data.display_channels == "COLOR_ALPHA", icon="IMAGE_RGB_ALPHA")
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "COLOR", depress=data.display_channels == "COLOR", icon="IMAGE_RGB")
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "ALPHA", depress=data.display_channels == "ALPHA", icon="IMAGE_ALPHA")
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "RED", depress=data.display_channels == "RED", icon="COLOR_RED")
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "GREEN", depress=data.display_channels == "GREEN", icon="COLOR_BLUE")
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "BLUE", depress=data.display_channels == "BLUE", icon="COLOR_GREEN")
+
+     # オブジェクトメニュー
+    c = row.column()
+    box = c.box()
+    box.label(text="Object")
+     # UV
+    c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+  
+
 
 # --------------------------------------------------------------------------------
 
