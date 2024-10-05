@@ -63,6 +63,8 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
 
     def modal(self, context, event):
         if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu:
+            if getattr(context.area.spaces.active, "image", None):
+                context.area.spaces.active.image.reload()
             return {"FINISHED"}
         elif event.type in {"RIGHTMOUSE", "ESC"}:
             return {"CANCELLED"}
