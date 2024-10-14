@@ -25,6 +25,7 @@ def MenuPrimary(pie, context):
 
     c = box.column(align=True)
     _Util.layout_operator(c, MPM_OT_SeparateTextureChannelPanel.bl_idname)
+    _Util.layout_operator(c, MPM_OT_LostRefImagePanel.bl_idname)
 
 
 def DrawTexutreInfo(layout, context):
@@ -85,11 +86,33 @@ class MPM_OT_ReloadImage(bpy.types.Operator):
         context.area.spaces.active.image.reload()
         return {"FINISHED"}
 
+class MPM_OT_LostRefImagePanel(bpy.types.Operator):
+    bl_idname = "op.mpm_image_lost_ref_image_panel"
+    bl_label = "Show Lost Reference Image"
+
+    def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
+        return context.window_manager.invoke_popup(self)
+
+    def draw(self, context):
+        c = self.layout.column()
+        is_found = False
+        for image in bpy.data.images:
+            if image.packed_file:
+                file_path = bpy.path.abspath(image.filepath)
+                if any(file_path) and not os.path.exists(file_path):
+                    is_found = True
+                    _Util.MPM_OT_SetPointer.operator(c, image.name, context.area.spaces.active, "image", image)
+        if not is_found:
+            self.layout.label(text="No lost images were found.")
+        # self.layout.label(text="Select the channel to output.")
+    def execute(self, context):
+        return {"FINISHED"}
+
 
 class MPM_OT_SeparateTextureChannelPanel(bpy.types.Operator):
     bl_idname = "op.mpm_image_separate_texture_channel_panel"
     bl_label = "Separate Texture Channel"
-    bl_options = {'REGISTER', 'UNDO'}
     channels: bpy.props.BoolVectorProperty(size=4)
     output_type: bpy.props.EnumProperty(items=[("exr", "exr", ""), ("png", "png", "")])
     export_type: bpy.props.EnumProperty(items=[("PACK", "PACK", ""), ("EXPORT", "EXPORT", "")])
@@ -232,6 +255,7 @@ classes = [
     MPM_OT_DeleteImage,
     MPM_OT_ReloadImage,
     MPM_OT_SeparateTextureChannelPanel,
+    MPM_OT_LostRefImagePanel,
 ]
 
 
