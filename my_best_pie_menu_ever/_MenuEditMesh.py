@@ -161,6 +161,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 
