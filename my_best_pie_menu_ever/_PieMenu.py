@@ -46,13 +46,13 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
     bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}.{g.ver[2]}"
 
     def draw(self, context):
-        layout = self.layout
-        pie = layout.menu_pie()
         # 西、東、南、北、北西、北東、南西、南東
-        pie.split()
+        pie = self.layout.menu_pie()
+        # 最後に選択したモード
+        _MenuMode.PieMenuDraw_ChangeModeLast(pie, context)
         pie.split()
         row = pie.row()
-        _MenuMode.PieMenuDraw_ModeChange(row, context)
+        _MenuMode.PieMenuDraw_ChangeMode(row, context)
         _MenuUtility.PieMenuDraw_Utility(row, context)
         PieMenuDraw_Primary(pie, context)
 
@@ -90,7 +90,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
 
 
 def PieMenuDraw_Primary(pie, context):
-    if context.space_data.type == "VIEW_3D": 
+    if context.space_data.type == "VIEW_3D":
         current_mode = context.mode
         if current_mode == 'OBJECT':
             _MenuObject.MenuPrimary(pie, context)
@@ -105,23 +105,23 @@ def PieMenuDraw_Primary(pie, context):
         elif current_mode == 'PAINT_TEXTURE':
             _MenuTexturePaint.MenuPrimary(pie, context)
         elif current_mode == 'PAINT_VERTEX':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
         elif current_mode == 'PAINT_WEIGHT':
             _MenuWeightPaint.MenuPrimary(pie, context)
         elif current_mode == 'PARTICLE_EDIT':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
         elif current_mode == 'EDIT_ARMATURE':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_DRAW':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_EDIT':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_SCULPT':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_WEIGHT_PAINT':
-            Placeholder(pie, context, 'Primary')
+            Placeholder(pie, context, 'No Impl')
     elif context.space_data.type == "IMAGE_EDITOR":
-        if context.space_data.mode == "UV": 
+        if context.space_data.mode == "UV":
             _MenuUVEditor.MenuPrimary(pie, context)
         else:
             _MenuImageEditor.MenuPrimary(pie, context)
@@ -133,6 +133,9 @@ def Placeholder(pie, context, text):
 
 # --------------------------------------------------------------------------------
 # プロパティ
+# context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
+# c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+# c.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
 # --------------------------------------------------------------------------------
 
 
@@ -144,9 +147,14 @@ class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
 
 class MPM_Prop(bpy.types.PropertyGroup):
     def init(self):
+        self.PrevModeNameTemp = bpy.context.mode
         self.ColorPalettePopoverEnum = "ColorPalette"
         if bpy.context.tool_settings.image_paint.palette is not None:
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
+
+    # 直前のモード
+    PrevModeName: bpy.props.StringProperty()
+    PrevModeNameTemp: bpy.props.StringProperty()
 
     # ビューポートカメラ位置保存スタック
     ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
