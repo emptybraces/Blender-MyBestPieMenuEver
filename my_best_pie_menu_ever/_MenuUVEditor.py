@@ -1,5 +1,6 @@
 import bpy
 from . import _Util
+from . import _MenuImageEditor
 
 # --------------------------------------------------------------------------------
 # UVEditorモードメニュー
@@ -16,6 +17,9 @@ def MenuPrimary(pie, context):
 
     r = box.row()
     c = r.column(align=True)
+
+    _MenuImageEditor.DrawTexutreInfo(c, context)
+    _MenuImageEditor.DrawSimilarTexutreNameList(r, context)
 
 
 def LayoutSwitchSelectionOperator(context, layout):

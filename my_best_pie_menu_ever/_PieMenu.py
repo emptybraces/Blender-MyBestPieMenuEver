@@ -176,7 +176,7 @@ class MPM_Prop(bpy.types.PropertyGroup):
 
     # UVMap洗濯用
     def on_items_UVMapEnum(self, context):
-        if context.active_object is None:
+        if context.active_object is None or context.active_object.type != "MESH":
             return [("", "", "")]
         uv_layers = context.active_object.data.uv_layers
         items = []
@@ -192,7 +192,9 @@ class MPM_Prop(bpy.types.PropertyGroup):
 
     def on_get_UVMapEnum(self):
         obj = bpy.context.active_object
-        return 0 if not obj else obj.data.uv_layers.active_index
+        if not obj or obj.type != "MESH":
+            return 0
+        return obj.data.uv_layers.active_index
     UVMapPopoverEnum: bpy.props.EnumProperty(
         name="UVMap",
         description="Select UVMap want to be active",

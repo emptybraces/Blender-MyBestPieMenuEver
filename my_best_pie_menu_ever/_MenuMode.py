@@ -12,19 +12,19 @@ from bpy.app.translations import (
 def PieMenuDraw_ChangeModeLast(layout, context):
     # print(context.scene.mpm_prop.PrevModeName)
     if context.scene.mpm_prop.PrevModeName == "OBJECT":
-        DrawOperatorObjectMode(r, context)
+        DrawOperatorObjectMode(layout, context)
     elif context.scene.mpm_prop.PrevModeName == "EDIT_MESH" or context.scene.mpm_prop.PrevModeName == "EDIT_ARMATURE":
-        DrawOperatorEditMode(r, context)
+        DrawOperatorEditMode(layout, context)
     elif context.scene.mpm_prop.PrevModeName == "SCULPT":
-        DrawOperatorSculptMode(r, context)
+        DrawOperatorSculptMode(layout, context)
     elif context.scene.mpm_prop.PrevModeName == "POSE":
-        DrawOperatorPoseMode(r, context)
+        DrawOperatorPoseMode(layout, context)
     elif context.scene.mpm_prop.PrevModeName == "PAINT_WEIGHT":
-        DrawOperatorWeightPaintMode(r, context)
+        DrawOperatorWeightPaintMode(layout, context)
     elif context.scene.mpm_prop.PrevModeName == "PAINT_TEXTURE":
-        DrawOperatorTexturePaintMode(r, context)
+        DrawOperatorTexturePaintMode(layout, context)
     elif context.scene.mpm_prop.PrevModeName == "PAINT_VERTEX":
-        DrawOperatorVertexPaintMode(r, context)
+        DrawOperatorVertexPaintMode(layout, context)
     else:
         layout.separator() # これで空白を描画して、位置を調整してる
 
@@ -196,7 +196,7 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
             _Util.get_armature(active).select_set(True)
         elif self.mode == "EDIT":
             _Util.select_active(_Util.get_armature(active))
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTmp
+        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode=self.mode)
         return {"FINISHED"}
 
@@ -212,7 +212,7 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
         return obj and obj.type == "MESH" and any(v.select for v in obj.data.vertices)
 
     def execute(self, context):
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTmp
+        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode="SCULPT")
         bpy.ops.op.mpm_make_mask_with_selected_vert(is_invert=True)
         return {"FINISHED"}
@@ -231,7 +231,7 @@ class MPM_OT_ChangeModePose(bpy.types.Operator):
         return active != None and (active.type == "ARMATURE" or (active.type == "MESH" and _Util.get_armature(active) != None))
 
     def execute(self, context):
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTmp
+        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         active = context.active_object
         if active.type == "MESH":
             # bpy.ops.object.select_all(action='DESELECT')

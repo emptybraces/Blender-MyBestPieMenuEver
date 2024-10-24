@@ -18,6 +18,7 @@ def MenuPrimary(pie, context):
     c = r.column(align=True)
 
     DrawTexutreInfo(c, context)
+    DrawSimilarTexutreNameList(r, context)
 
     # Apply
     box = box.box()
@@ -46,8 +47,8 @@ def DrawTexutreInfo(layout, context):
 
         rr = r.row(align=True)
         rr.enabled = image.packed_file == None
-        rr.scale_x = 3.0
-        rr.prop(image, "filepath_raw", text="")
+        rr.scale_x = 2.0
+        rr.prop(image, "filepath", text="")
 
         rr = r.row(align=True)
         rr.operator(MPM_OT_ReloadImage.bl_idname, text="", icon="FILE_REFRESH")
@@ -60,17 +61,54 @@ def DrawTexutreInfo(layout, context):
         layout.label(text="No active image")
 
 
+def DrawSimilarTexutreNameList(layout, context):
+    current_image = context.area.spaces.active.image
+    if not current_image:
+        return
+
+    box = layout.box()
+    box.label(text="Similar named images")
+    c = box.column(align=True)
+    name = current_image.name
+
+    def _op(find_name, cnt):
+        # 検索関数
+        for img in (img for img in bpy.data.images if find_name in img.name):
+            if img == current_image:
+                continue
+            cnt = cnt + 1
+            _Util.MPM_OT_SetPointer.operator(c, img.name, context.area.spaces.active, "image", img)
+            if 6 <= cnt:
+                break
+        return cnt
+    # 後ろから検索
+    cnt = _op(name[:-5] if 5 < len(name) else name, 0)
+    # 前から検索
+    if cnt < 6 and 5 < len(name):
+        cnt = _op(name[:5], cnt)
+    if cnt == 0:
+        c.label(text="Not found.")
+
+
 class MPM_OT_DeleteImage(bpy.types.Operator):
     bl_idname = "op.mpm_image_delete"
     bl_label = "Delete Image"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(self, context):
         return context.area.spaces.active.image is not None
 
+    def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.label(text="Do you want to delete this image? (Undoable)")
+
     def execute(self, context):
         bpy.data.images.remove(context.area.spaces.active.image)
+        context.area.spaces.active.image = None
         return {"FINISHED"}
 
 
@@ -86,6 +124,7 @@ class MPM_OT_ReloadImage(bpy.types.Operator):
         context.area.spaces.active.image.reload()
         return {"FINISHED"}
 
+
 class MPM_OT_LostRefImagePanel(bpy.types.Operator):
     bl_idname = "op.mpm_image_lost_ref_image_panel"
     bl_label = "Show Lost Reference Image"
@@ -98,7 +137,7 @@ class MPM_OT_LostRefImagePanel(bpy.types.Operator):
         c = self.layout.column()
         is_found = False
         for image in bpy.data.images:
-            if image.packed_file:
+            if not image.packed_file:
                 file_path = bpy.path.abspath(image.filepath)
                 if any(file_path) and not os.path.exists(file_path):
                     is_found = True
@@ -106,6 +145,7 @@ class MPM_OT_LostRefImagePanel(bpy.types.Operator):
         if not is_found:
             self.layout.label(text="No lost images were found.")
         # self.layout.label(text="Select the channel to output.")
+
     def execute(self, context):
         return {"FINISHED"}
 
