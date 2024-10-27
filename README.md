@@ -76,36 +76,36 @@ Placement in bottom sections are utility functions, and upper sections are arran
 - Accessing images with lost references.
 
 #
-Selection history
-
-![image](https://github.com/emptybraces/Blender_MyBestPieMenuEver/assets/1441835/a12ea186-048b-43c9-9c6d-a5e5e7eeed0b)
-
-#
 OBJECT Mode
 
-![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/a3ad8b19-a1d1-49a5-8dd4-4e09af982095)
+![image](https://github.com/user-attachments/assets/acea4516-b15b-49a6-b364-5a352640bf74)
 
 #
 Edit Mode
 
-![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/021639c0-174c-435d-870f-80df4f0584e2)
+![image](https://github.com/user-attachments/assets/49e3e287-184d-4387-af58-861c1928df97)
 
 #
 PAINT_TEXTURE Mode
 
-![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/63ac6c46-cc9f-48bd-bab3-1abec8fd5b19)
+![image](https://github.com/user-attachments/assets/c7f1c3c8-d9c8-4340-b53d-ba4f8d293927)
 
 #
 PAINT_WEIGHT Mode
 
-![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/7cedbc35-47ba-492b-95d7-8caf8141602f)
+![image](https://github.com/user-attachments/assets/b1850f89-30fe-4372-b602-9c272d0e4c0a)
 
 #
 SCULPT Mode
 
-![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/27196e15-b0d4-4b65-b971-65a8d8772cb6)
+![image](https://github.com/user-attachments/assets/791002f1-98c8-44bd-9b42-0291655a93a2)
 
 #
 POSE Mode
 
 ![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/31f41f57-0778-40e7-84db-2799eaaa2f00)
+
+#
+UVEditor & ImageEditor
+
+![image](https://github.com/user-attachments/assets/5f8d63e4-62c9-4450-8be4-9944b2dc7cc8)
