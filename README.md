@@ -13,13 +13,14 @@ Placement in bottom sections are utility functions, and upper sections are arran
 - Quickly switch between modes. With one click, you can enter BoneEdit/WeightPaint mode while selecting the linked armature.
 - Quickly switch selection tool.
 - Quickly editable view/tools/object settings.
-- Quickly open Preference/Console.
-- Quickly open Import/Export Fbx settings.
+- Quickly openable Preference/Console.
+- Quickly openable Import/Export Fbx settings.
+- Quickly openable the directory of the currently opened.
 - Create shortcut for open File/Directory with any path.
-- (Selection history available for selected objects in OBJECT, POSE, EDIT_ARMATURE modes, and change brush.)
 - Switchable language to English <-> SecondLanguage.(Setting in preference)
 - Oneshot changes to Pivot and Transform Orientation.
 - Move 3DCursor on ViewPlane.
+- Quickly switch the UVMap of the active object.
 - Reset all bone transform of selected object.
 - World position/rotation/scale can be copy/paste to selected objects.
 - Viewport camera's current position/rotation/distance can be saved/restored stacablity.
@@ -39,7 +40,7 @@ Placement in bottom sections are utility functions, and upper sections are arran
 
 ### [PAINT_TEXTURE mode]
 
-- Quickly switchable to Brushs, Strokes, Blends.
+- Quickly switchable to Brushs, Strokes, Blends, parameters.
 - Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
 - Customizable switch brush by Shift+LMB.(Setting in preference, default is Soften.)
 - Filterable brushes and blend modes to displayed.
@@ -58,12 +59,21 @@ Placement in bottom sections are utility functions, and upper sections are arran
 - Quickly tweak the Smooth brush strength.
 - Filterable brushes to displayed.
 - Make mask with selected vertices.
+- Option for automatically wireframe when changing sculpt mode.
 
 ### [POSE mode]
 
 - (Quickly switch to showing bone layer group.)
 - (If installed) Wiggle2: Shortcut ResetPhysics.
 - (If installed) AutoRigPro: Snap FKIKs of four limbs in one click.
+
+### [UVEditor & ImageEditor]
+
+- Quickly change to the color channels.
+- Quickly remove a image.
+- Quickly openable images with similar names.
+- Output separate textures for each channel.
+- Accessing images with lost references.
 
 #
 Selection history
