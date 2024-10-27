@@ -397,7 +397,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        bm = bmesh.from_edit_mesh(context.edit_object.data)
+        bm = bmesh.from_edit_mesh(context.object.data)
         return any(e.select for e in bm.verts)
 
     def execute(self, context):
@@ -498,28 +498,31 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
         # 頂点グループコピー、なぜかmirrorするとコピー元の登録が消える。
         bpy.ops.object.mode_set(mode="OBJECT")
         # bpy.ops.object.vertex_group_mirror(all_groups = True, use_topology=False)
-        current_vg_name = obj.vertex_groups.active.name
-        # まずミラー作って、
-        vg_copy_from_to = []
-        for vg in target_vgs:
-            bpy.ops.object.vertex_group_set_active(group=vg.name)
-            bpy.ops.object.vertex_group_copy()
-            bpy.ops.object.vertex_group_mirror(use_topology=False)
-            vg_copy_from_to.append((obj.vertex_groups.active, vg))
+        if obj.vertex_groups.active:
+            current_vg_name = obj.vertex_groups.active.name
+            # まずミラー作って、
+            vg_copy_from_to = []
+            for vg in target_vgs:
+                bpy.ops.object.vertex_group_set_active(group=vg.name)
+                bpy.ops.object.vertex_group_copy()
+                bpy.ops.object.vertex_group_mirror(use_topology=False)
+                vg_copy_from_to.append((obj.vertex_groups.active, vg))
 
-        # マージする。
-        for v in [v for v in obj.data.vertices if v.select]:
-            for g in v.groups:
-                for gg in vg_copy_from_to:
-                    if g.group == gg[0].index:
-                        if 0 < g.weight:
-                            gg[1].add([v.index], g.weight, "REPLACE")
-        # ミラーを削除
-        for g in vg_copy_from_to:
-            bpy.ops.object.vertex_group_set_active(group=g[0].name)
-            bpy.ops.object.vertex_group_remove()
-
-        bpy.ops.object.vertex_group_set_active(group=current_vg_name)
+            # マージする。
+            for v in [v for v in obj.data.vertices if v.select]:
+                for g in v.groups:
+                    for gg in vg_copy_from_to:
+                        if g.group == gg[0].index:
+                            if 0 < g.weight:
+                                gg[1].add([v.index], g.weight, "REPLACE")
+            # ミラーを削除
+            for g in vg_copy_from_to:
+                bpy.ops.object.vertex_group_set_active(group=g[0].name)
+                bpy.ops.object.vertex_group_remove()
+            # アクティブを戻す
+            bpy.ops.object.vertex_group_set_active(group=current_vg_name)
+        
+        # Editに戻す
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
 

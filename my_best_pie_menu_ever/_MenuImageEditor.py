@@ -137,7 +137,7 @@ class MPM_OT_LostRefImagePanel(bpy.types.Operator):
         c = self.layout.column()
         is_found = False
         for image in bpy.data.images:
-            if not image.packed_file:
+            if image.source !=  "GENERATED" and not image.packed_file:
                 file_path = bpy.path.abspath(image.filepath)
                 if any(file_path) and not os.path.exists(file_path):
                     is_found = True
