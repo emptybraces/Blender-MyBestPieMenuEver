@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 id = "my_best_pie_menu_ever"
 version = "1.5.0"
 name = "My Best Pie Menu Ever"
-tagline = "Quick access to the functions you need"
+tagline = "Quick access to the brushes, functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
 type = "add-on"
 

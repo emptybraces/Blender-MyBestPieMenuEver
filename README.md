@@ -1,12 +1,11 @@
 # Blender MyBestPieMenuEver
 
-Pressing the W key provides a pie menu for easy access to various functions that you may find frequently used. The lower section contains basic functions, while the upper section contains according to the mode. Working on my project and updating this addon as needed.(Blender version: 4.1.1, 4.2.0)
+Pressing the W key brings up a pie menu that consolidates shortcuts for favorite brushes, their parameters, and frequently used functions. The lower section contains utility functions, while the upper section is organized by mode. Working on my project and updating this addon as needed.
+
+Stable Blender version: v4.2.3
 
 https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
-## Features
-
-Placement in bottom sections are utility functions, and upper sections are arranged by mode.
 
 ### [Utility]
 

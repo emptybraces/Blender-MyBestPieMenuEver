@@ -74,7 +74,7 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
 
     # Applyメニュー
-    box = rr.box()
+    box = c.box()
     box.label(text="Apply", icon="MODIFIER")
     # mask
     c = box.column(align=True)
