@@ -131,35 +131,49 @@ def DrawView3D(layout, context):
     box.label(text="Animation")
     c = box.column(align=True)
 
-
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
-    
+
+
 def DrawImageEditor(layout, context):
     row = layout.row(align=True)
     # ツールメニュー
     box = row.box()
     box.label(text="Tool")
     c = box.column(align=True)
-    
-    # カラー
+
+    # ピボット
     r = c.row(align=True)
+    # r.prop(context.space_data, "pivot_point")
+    data = context.space_data
+    r.label(text="Pivot")
+    _Util.MPM_OT_SetString.operator(r, "", data, "pivot_point", "CURSOR", icon="PIVOT_CURSOR")
+    _Util.MPM_OT_SetString.operator(r, "", data, "pivot_point", "MEDIAN", icon="PIVOT_MEDIAN")
+    _Util.MPM_OT_SetString.operator(r, "", data, "pivot_point", "CENTER", icon="PIVOT_BOUNDBOX")
+    _Util.MPM_OT_SetString.operator(r, "", data, "pivot_point", "INDIVIDUAL_ORIGINS", icon="PIVOT_INDIVIDUAL")
+
+    # ストレッチ
+    c.prop(data.uv_editor, "show_stretch")
+
+    # カラー
+
+    r = c.row(align=True)
+    r.label(text="Tex Channels")
     # for i in _Util.enum_values(context.space_data, "display_channels"):
     # ['COLOR_ALPHA', 'COLOR', 'ALPHA', 'Z_BUFFER', 'RED', 'GREEN', 'BLUE']
-    data = context.space_data
-    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "COLOR_ALPHA", depress=data.display_channels == "COLOR_ALPHA", icon="IMAGE_RGB_ALPHA")
+    _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "COLOR_ALPHA",
+                                    depress=data.display_channels == "COLOR_ALPHA", icon="IMAGE_RGB_ALPHA")
     _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "COLOR", depress=data.display_channels == "COLOR", icon="IMAGE_RGB")
     _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "ALPHA", depress=data.display_channels == "ALPHA", icon="IMAGE_ALPHA")
     _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "RED", depress=data.display_channels == "RED", icon="COLOR_RED")
     _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "GREEN", depress=data.display_channels == "GREEN", icon="COLOR_BLUE")
     _Util.MPM_OT_SetString.operator(r, "", data, "display_channels", "BLUE", depress=data.display_channels == "BLUE", icon="COLOR_GREEN")
 
-     # オブジェクトメニュー
+    # オブジェクトメニュー
     c = row.column()
     box = c.box()
     box.label(text="Object")
-     # UV
+    # UV
     c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
-  
 
 
 # --------------------------------------------------------------------------------

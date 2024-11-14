@@ -169,8 +169,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
 class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
     bl_idname = "op.mpm_editmesh_select_vertex_group_panel"
     bl_label = "Select Vertex Groups"
-    bl_options = {'REGISTER', 'UNDO'}
-    map_vgname_to_label = {}
+    vg_counts = []
     init_verts = []
 
     @classmethod
@@ -182,23 +181,15 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         obj = context.object
         bm = bmesh.from_edit_mesh(obj.data)
         deform_layer = bm.verts.layers.deform.active
-        self.map_vgname_to_label.clear()
-        # アクティブオブジェクトの頂点グループをリストに追加
-        for vgroup in obj.vertex_groups:
-            self.map_vgname_to_label[vgroup.name] = 0
-        # 現在選択中の頂点を保存
+        self.vg_counts = [0] * len(obj.vertex_groups)
         self.init_verts.clear()
         for v in bm.verts:
+            # 現在選択中の頂点を保存
             if v.select:
                 self.init_verts.append(v.index)
-            #
-            for vg in obj.vertex_groups:
-                vg_idx = obj.vertex_groups[vg.name].index
-                if vg_idx in v[deform_layer]:
-                    self.map_vgname_to_label[vg.name] += 1
-
-        for k, v in self.map_vgname_to_label.items():
-            self.map_vgname_to_label[k] = (f"{k} (vcnt={v})")
+            # 頂点グループごとの登録頂点数を取得
+            for i in v[deform_layer].keys():
+                self.vg_counts[i] += 1
         g.is_force_cancelled_piemenu = True
         return context.window_manager.invoke_props_dialog(self)
 
@@ -212,8 +203,10 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
         limit_rows = 25
         r = self.layout.row(align=True)
         cc = r.column(align=True)
-        for k, v in self.map_vgname_to_label.items():
-            _Util.layout_operator(cc, MPM_OT_SelectVertexGroup.bl_idname, text=v, isActive="vcnt=0" not in v).vgroup_name = k
+        obj = context.object
+        for vg in obj.vertex_groups:
+            vcnt = self.vg_counts[vg.index]
+            _Util.layout_operator(cc, MPM_OT_SelectVertexGroup.bl_idname, text=(f"{vg.name} (vcnt={vcnt})"), isActive=0 < vcnt).vgroup_name = vg.name
             cnt += 1
             if cnt % limit_rows == 0:
                 cc = r.column(align=True)
@@ -252,7 +245,6 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
         if self.vgroup_name not in obj.vertex_groups:
             self.report({"WARNING"}, f"Can't found VGroup: {self.vgroup_name}")
             return {"CANCELLED"}
-        vg_idx = obj.vertex_groups[self.vgroup_name].index
         bm = bmesh.from_edit_mesh(obj.data)
         deform_layer = bm.verts.layers.deform.active
         if not deform_layer:
@@ -262,6 +254,7 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
         # 選択されている頂点があるかどう調べる
         bm.select_flush(False)
         is_select = True
+        vg_idx = obj.vertex_groups[self.vgroup_name].index
         for v in bm.verts:
             if vg_idx in v[deform_layer]:
                 if v.select:
@@ -521,7 +514,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
                 bpy.ops.object.vertex_group_remove()
             # アクティブを戻す
             bpy.ops.object.vertex_group_set_active(group=current_vg_name)
-        
+
         # Editに戻す
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}

@@ -98,6 +98,10 @@ class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
     value: bpy.props.StringProperty()
     @staticmethod
     def operator(layout, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
+        if depress is None:
+            cur_value = getattr(targetObj, propName, None)
+            depress = cur_value == value
+            print(cur_value, value, depress)
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetString.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class MPM_OT_Empty(bpy.types.Operator):
     bl_idname = "op.mpm_empty"
