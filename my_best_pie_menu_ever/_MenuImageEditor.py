@@ -91,7 +91,7 @@ def DrawSimilarTexutreNameList(layout, context):
 
 
 class MPM_OT_DeleteImage(bpy.types.Operator):
-    bl_idname = "op.mpm_image_delete"
+    bl_idname = "mpm.image_delete"
     bl_label = "Delete Image"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -113,7 +113,7 @@ class MPM_OT_DeleteImage(bpy.types.Operator):
 
 
 class MPM_OT_ReloadImage(bpy.types.Operator):
-    bl_idname = "op.mpm_image_reload"
+    bl_idname = "mpm.image_reload"
     bl_label = "Reload Image"
 
     @classmethod
@@ -126,7 +126,7 @@ class MPM_OT_ReloadImage(bpy.types.Operator):
 
 
 class MPM_OT_LostRefImagePanel(bpy.types.Operator):
-    bl_idname = "op.mpm_image_lost_ref_image_panel"
+    bl_idname = "mpm.image_lost_ref_image_panel"
     bl_label = "Show Lost Reference Image"
 
     def invoke(self, context, event):
@@ -151,7 +151,7 @@ class MPM_OT_LostRefImagePanel(bpy.types.Operator):
 
 
 class MPM_OT_SeparateTextureChannelPanel(bpy.types.Operator):
-    bl_idname = "op.mpm_image_separate_texture_channel_panel"
+    bl_idname = "mpm.image_separate_texture_channel_panel"
     bl_label = "Separate Texture Channel"
     channels: bpy.props.BoolVectorProperty(size=4)
     output_type: bpy.props.EnumProperty(items=[("exr", "exr", ""), ("png", "png", "")])

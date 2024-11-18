@@ -29,7 +29,7 @@ def MenuPrimary(pie, context):
 
 
 class MPM_OT_ClearTransform(bpy.types.Operator):
-    bl_idname = "op.mpm_clear_transform"
+    bl_idname = "mpm.clear_transform"
     bl_label = "Reset Bone Transform"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -63,7 +63,7 @@ def MenuSecondary(pie, context):
 
 
 class MPM_OT_ARP_SnapIKFK(bpy.types.Operator):
-    bl_idname = "op.mpm_arp_snapikfk"
+    bl_idname = "mpm.arp_snapikfk"
     bl_label = "AutoRigPro: Snap IK-FK"
     bl_options = {'REGISTER', 'UNDO'}
 

@@ -47,7 +47,7 @@ def LayoutSwitchSelectionOperator(context, layout):
 
 
 class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):
-    bl_idname = "op.mpm_switch_selection_tool_tweak"
+    bl_idname = "mpm.switch_selection_tool_tweak"
     bl_label = "TWEAK"
     bl_description = "Tweak selection tool"
 
@@ -61,7 +61,7 @@ class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):
 
 
 class MPM_OT_SwitchSelectionToolBox(bpy.types.Operator):
-    bl_idname = "op.mpm_switch_selection_tool_box"
+    bl_idname = "mpm.switch_selection_tool_box"
     bl_label = "BOX"
     bl_description = "Box selection tool"
 
@@ -75,7 +75,7 @@ class MPM_OT_SwitchSelectionToolBox(bpy.types.Operator):
 
 
 class MPM_OT_SwitchSelectionToolCircle(bpy.types.Operator):
-    bl_idname = "op.mpm_switch_selection_tool_circle"
+    bl_idname = "mpm.switch_selection_tool_circle"
     bl_label = "CIRCLE"
     bl_description = "Circle selection tool"
 
@@ -89,7 +89,7 @@ class MPM_OT_SwitchSelectionToolCircle(bpy.types.Operator):
 
 
 class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
-    bl_idname = "op.mpm_switch_selection_tool_lasso"
+    bl_idname = "mpm.switch_selection_tool_lasso"
     bl_label = "LASSO"
     bl_description = "Lasso selection tool"
 
@@ -103,7 +103,7 @@ class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
 
 
 class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
-    bl_idname = "op.mpm_remove_unused_vgroup"
+    bl_idname = "mpm.remove_unused_vgroup"
     bl_label = "Remove Unused VGroup"
     bl_options = {"REGISTER", "UNDO"}
 

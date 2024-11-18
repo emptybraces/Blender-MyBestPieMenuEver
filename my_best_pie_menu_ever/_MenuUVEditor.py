@@ -34,7 +34,7 @@ def LayoutSwitchSelectionOperator(context, layout):
 
 
 class MPM_OT_UVMenuSwitchSelectionToolTweak(bpy.types.Operator):
-    bl_idname = "op.mpm_uvmenu_switch_selection_tool_tweak"
+    bl_idname = "mpm.uvmenu_switch_selection_tool_tweak"
     bl_label = "TWEAK"
     bl_description = "Tweak selection tool"
 
@@ -51,7 +51,7 @@ class MPM_OT_UVMenuSwitchSelectionToolTweak(bpy.types.Operator):
 
 
 class MPM_OT_UVMenuSwitchSelectionToolBox(bpy.types.Operator):
-    bl_idname = "op.mpm_uvmenu_switch_selection_tool_box"
+    bl_idname = "mpm.uvmenu_switch_selection_tool_box"
     bl_label = "BOX"
     bl_description = "Box selection tool"
 
@@ -68,7 +68,7 @@ class MPM_OT_UVMenuSwitchSelectionToolBox(bpy.types.Operator):
 
 
 class MPM_OT_UVMenuSwitchSelectionToolCircle(bpy.types.Operator):
-    bl_idname = "op.mpm_uvmenu_switch_selection_tool_circle"
+    bl_idname = "mpm.uvmenu_switch_selection_tool_circle"
     bl_label = "CIRCLE"
     bl_description = "Circle selection tool"
 
@@ -85,7 +85,7 @@ class MPM_OT_UVMenuSwitchSelectionToolCircle(bpy.types.Operator):
 
 
 class MPM_OT_UVMenuSwitchSelectionToolLasso(bpy.types.Operator):
-    bl_idname = "op.mpm_uvmenu_switch_selection_tool_lasso"
+    bl_idname = "mpm.uvmenu_switch_selection_tool_lasso"
     bl_label = "LASSO"
     bl_description = "Lasso selection tool"
 

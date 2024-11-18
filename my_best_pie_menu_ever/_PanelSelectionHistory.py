@@ -16,7 +16,7 @@ def PanelHistory(layout, context):
 
 # --------------------------------------------------------------------------------
 class MPM_OT_SelectionHistory(bpy.types.Operator):
-    bl_idname = "op.mpm_selection_history"
+    bl_idname = "mpm.selection_history"
     bl_description = "selection history"
     bl_label = "Selection History"
 

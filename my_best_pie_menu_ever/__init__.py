@@ -47,7 +47,7 @@ classes = (
 
 cat_3dview = "3D View"
 cat_image = "Image"
-addon_opid = "op.mpm_open_pie_menu"
+addon_opid = "mpm.open_pie_menu"
 
 
 def find_keymap(keymapName, itemName):

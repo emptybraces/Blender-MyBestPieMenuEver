@@ -58,7 +58,7 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
 
 
 class MPM_OT_OpenPieMenu(bpy.types.Operator):
-    bl_idname = "op.mpm_open_pie_menu"
+    bl_idname = "mpm.open_pie_menu"
     bl_label = "My Best Pie Menu Ever"
 
     def modal(self, context, event):

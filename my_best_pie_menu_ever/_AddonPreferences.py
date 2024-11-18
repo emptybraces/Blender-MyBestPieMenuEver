@@ -142,7 +142,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
 
 # class MPM_OT_RevertKeymap(bpy.types.Operator):
-#     bl_idname = "op.mpm_revert_keymap"
+#     bl_idname = "mpm.revert_keymap"
 #     bl_label = "Revert All Keymap"
 #     bl_options = {'REGISTER', 'UNDO'}
 #     # 戻し方が分からん・・・

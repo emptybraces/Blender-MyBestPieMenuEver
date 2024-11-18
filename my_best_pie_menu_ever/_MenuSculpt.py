@@ -89,7 +89,7 @@ def MenuPrimary(pie, context):
 
 
 class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
-    bl_idname = "op.mpm_make_mask_with_selected_vert"
+    bl_idname = "mpm.make_mask_with_selected_vert"
     bl_label = "Fill mask with selected verts"
     bl_options = {'REGISTER', 'UNDO'}
     is_overwrite: bpy.props.BoolProperty(name="Overwrite", options={"HIDDEN"})
@@ -132,7 +132,7 @@ def mode_change_handler(scene):
         else:
             bpy.context.active_object.show_wire = False
 class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
-    bl_idname = "op.mpm_auto_wireframe_enable"
+    bl_idname = "mpm.auto_wireframe_enable"
     bl_label = "Auto Show Wireframe"
     bl_options = {'REGISTER', 'UNDO'}
     

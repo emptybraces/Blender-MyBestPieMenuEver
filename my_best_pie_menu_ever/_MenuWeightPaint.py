@@ -53,6 +53,8 @@ def MenuPrimary(pie, context):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
+    # 蓄積
+    _Util.layout_prop(c, brush, "use_accumulate")
     # ぼかしブラシの強さ
     smooth_brush = None
     for brush in bpy.data.brushes:

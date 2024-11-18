@@ -155,7 +155,7 @@ def MenuSecondary(pie, context):
 
 
 class MPM_OT_TexPaint_SwapColor(bpy.types.Operator):
-    bl_idname = "op.mpm_texpaint_swap_color"
+    bl_idname = "mpm.texpaint_swap_color"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -168,7 +168,7 @@ class MPM_OT_TexPaint_SwapColor(bpy.types.Operator):
 
 
 class MPM_OT_TexPaint_SetBlack(bpy.types.Operator):
-    bl_idname = "op.mpm_texpaint_set_black"
+    bl_idname = "mpm.texpaint_set_black"
     bl_label = "Set Black"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -178,7 +178,7 @@ class MPM_OT_TexPaint_SetBlack(bpy.types.Operator):
 
 
 class MPM_OT_TexPaint_SetWhite(bpy.types.Operator):
-    bl_idname = "op.mpm_texpaint_set_white"
+    bl_idname = "mpm.texpaint_set_white"
     bl_label = "Set White"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -188,7 +188,7 @@ class MPM_OT_TexPaint_SetWhite(bpy.types.Operator):
 
 
 class MPM_OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
-    bl_idname = "op.mpm_texpaint_toggle_ctrl_behaviour"
+    bl_idname = "mpm.texpaint_toggle_ctrl_behaviour"
     bl_label = "Toggle Ctrl Behaviour"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -209,7 +209,7 @@ g_lastBrushName = ""
 
 
 class MPM_OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
-    bl_idname = "op.mpm_texpaint_switch_ctrl_behaviour"
+    bl_idname = "mpm.texpaint_switch_ctrl_behaviour"
     bl_label = "Switch Ctrl Behaviour"
 
     @classmethod
@@ -239,7 +239,7 @@ class MPM_OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
 
 
 class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
-    bl_idname = "op.mpm_texpaint_change_soften"
+    bl_idname = "mpm.texpaint_change_soften"
     bl_label = "Change Soften"
 
     def modal(self, context, event):

@@ -33,7 +33,7 @@ class MPM_OT_SetterBase():
         op.propName = propName
         op.value = not getattr(targetObj, propName, False) if clsid == MPM_OT_SetBoolToggle.bl_idname else value
 class MPM_OT_SetPointer(bpy.types.Operator):
-    bl_idname = "op.mpm_set_pointer"
+    bl_idname = "mpm.set_pointer"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     attrName: bpy.props.StringProperty()
@@ -59,7 +59,7 @@ class MPM_OT_SetPointer(bpy.types.Operator):
         # print(layout, op.propObj, op.attrNameValue, targetObj, value)
         layout.enabled = isActive and targetObj != None
 class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.mpm_set_bool"
+    bl_idname = "mpm.set_bool"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.BoolProperty()
@@ -67,7 +67,7 @@ class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
     def operator(layout, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetBool.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.mpm_set_invert"
+    bl_idname = "mpm.set_invert"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.BoolProperty()
@@ -76,7 +76,7 @@ class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetBoolToggle.bl_idname, text, targetObj, propName, None, icon, depress, isActive)
 
 class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.mpm_set_int"
+    bl_idname = "mpm.set_int"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.IntProperty()
@@ -84,7 +84,7 @@ class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
     def operator(layout, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetInt.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.mpm_set_single"
+    bl_idname = "mpm.set_single"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.FloatProperty()
@@ -92,7 +92,7 @@ class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
     def operator(layout, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetSingle.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "op.mpm_set_string"
+    bl_idname = "mpm.set_string"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     value: bpy.props.StringProperty()
@@ -104,12 +104,12 @@ class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
             print(cur_value, value, depress)
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetString.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 class MPM_OT_Empty(bpy.types.Operator):
-    bl_idname = "op.mpm_empty"
+    bl_idname = "mpm.empty"
     bl_label = "empty"
     def execute(self, context):
         return {'FINISHED'}
 class MPM_OT_CallPanel(bpy.types.Operator):
-    bl_idname = "op.mpm_call_panel"
+    bl_idname = "mpm.call_panel"
     bl_label = "call panel"
     name: bpy.props.StringProperty()
     keep_open: bpy.props.BoolProperty(default=True)

@@ -140,7 +140,7 @@ def DrawImageEditor(layout, context):
 
 
 class MPM_OT_ChangeUITypeUV(bpy.types.Operator):
-    bl_idname = "op.mpm_change_ui_type_uv"
+    bl_idname = "mpm.change_ui_type_uv"
     bl_label = "UV Editor"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -154,7 +154,7 @@ class MPM_OT_ChangeUITypeUV(bpy.types.Operator):
 
 
 class MPM_OT_ChangeUITypeImage(bpy.types.Operator):
-    bl_idname = "op.mpm_change_ui_type_image"
+    bl_idname = "mpm.change_ui_type_image"
     bl_label = "Image Editor"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -168,7 +168,7 @@ class MPM_OT_ChangeUITypeImage(bpy.types.Operator):
 
 
 class MPM_OT_ChangeMode(bpy.types.Operator):
-    bl_idname = "op.mpm_change_mode"
+    bl_idname = "mpm.change_mode"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty()
@@ -180,7 +180,7 @@ class MPM_OT_ChangeMode(bpy.types.Operator):
 
 
 class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
-    bl_idname = "op.mpm_change_mode_with_armature"
+    bl_idname = "mpm.change_mode_with_armature"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty()
@@ -202,7 +202,7 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
 
 
 class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
-    bl_idname = "op.mpm_change_sculpt_mode_with_mask"
+    bl_idname = "mpm.change_sculpt_mode_with_mask"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
 
@@ -214,12 +214,12 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
     def execute(self, context):
         context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode="SCULPT")
-        bpy.ops.op.mpm_make_mask_with_selected_vert(is_invert=True)
+        bpy.ops.mpm.make_mask_with_selected_vert(is_invert=True)
         return {"FINISHED"}
 
 
 class MPM_OT_ChangeModePose(bpy.types.Operator):
-    bl_idname = "op.mpm_change_mode_pose"
+    bl_idname = "mpm.change_mode_pose"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
 

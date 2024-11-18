@@ -129,7 +129,7 @@ def MenuPrimary(pie, context):
 
 
 class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_add_vertex_group_panel"
+    bl_idname = "mpm.editmesh_add_vertex_group_panel"
     bl_label = "Add Vertex Group"
     bl_options = {'REGISTER', 'UNDO'}
     vgroup_name: bpy.props.StringProperty(name="Name", default="Group", description="Vertex group name")
@@ -167,7 +167,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
 
 
 class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_select_vertex_group_panel"
+    bl_idname = "mpm.editmesh_select_vertex_group_panel"
     bl_label = "Select Vertex Groups"
     vg_counts = []
     init_verts = []
@@ -226,7 +226,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
 
 
 class MPM_OT_SelectVertexGroup(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_select_vertex_group"
+    bl_idname = "mpm.editmesh_select_vertex_group"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     ID_CLEAR_SELS = "CLEAR SELECTION"
@@ -272,7 +272,7 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
 
 
 class MPM_OT_MirrorSeam(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_mirror_seam"
+    bl_idname = "mpm.editmesh_mirror_seam"
     bl_label = "Mirror Seam"
     bl_options = {'REGISTER', 'UNDO'}
     is_clear: bpy.props.BoolProperty()
@@ -289,7 +289,7 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
 
 
 class MPM_OT_MirrorSharp(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_mirror_sharp"
+    bl_idname = "mpm.editmesh_mirror_sharp"
     bl_label = "Mirror Sharp"
     bl_options = {'REGISTER', 'UNDO'}
     is_clear: bpy.props.BoolProperty()
@@ -308,7 +308,7 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
 
 
 class MPM_OT_VertCreasePanel(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_vert_crease_panel"
+    bl_idname = "mpm.editmesh_vert_crease_panel"
     bl_label = "Vert Crease"
     bl_options = {'REGISTER', 'UNDO'}
     crease_value: bpy.props.FloatProperty(
@@ -344,7 +344,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
 
 
 class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
-    bl_idname = "op.mpm_editmesh_edge_crease_panel"
+    bl_idname = "mpm.editmesh_edge_crease_panel"
     bl_label = "Edge Crease"
     bl_options = {'REGISTER', 'UNDO'}
     crease_value: bpy.props.FloatProperty(
@@ -381,7 +381,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
 
 
 class MPM_OT_DuplicateMirror(bpy.types.Operator):
-    bl_idname = "op.mpm_duplicate_mirror"
+    bl_idname = "mpm.duplicate_mirror"
     bl_label = "Mirror Duplication"
     bl_options = {'REGISTER', 'UNDO'}
     mirror_x: bpy.props.BoolProperty(name="Mirror X", default=True)
@@ -523,7 +523,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 
 
 class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
-    bl_idname = "op.mpm_generate_bone_from_edge"
+    bl_idname = "mpm.generate_bone_from_edge"
     bl_label = "Generate Bone from Selected Edge"
     bl_options = {'REGISTER', 'UNDO'}
 

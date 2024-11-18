@@ -194,7 +194,7 @@ class MPM_OT_Utility_CopyPRSBase():
 
 
 class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
-    bl_idname = "op.mpm_copy_position"
+    bl_idname = "mpm.copy_position"
     bl_label = "Position"
     bl_description = "Position copy from active_object to selections."
     bl_options = {'REGISTER', 'UNDO'}
@@ -202,7 +202,7 @@ class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator
 
 
 class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
-    bl_idname = "op.mpm_copy_rosition"
+    bl_idname = "mpm.copy_rosition"
     bl_label = "Rotation"
     bl_description = "Rotation copy from active_object to selections."
     bl_options = {'REGISTER', 'UNDO'}
@@ -210,7 +210,7 @@ class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator
 
 
 class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
-    bl_idname = "op.mpm_copy_scale"
+    bl_idname = "mpm.copy_scale"
     bl_label = "Scale"
     bl_description = "Scale copy from active_object to selections."
     bl_options = {'REGISTER', 'UNDO'}
@@ -219,7 +219,7 @@ class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
 
 
 class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
-    bl_idname = "op.mpm_change_language"
+    bl_idname = "mpm.change_language"
     bl_label = "Change Language"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -233,7 +233,7 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
 
 
 class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_orientation_set_reset"
+    bl_idname = "mpm.pivot_orientation_set_reset"
     bl_label = ""
     bl_description = "Pivit=Origin, Orientation=Global"
     bl_options = {"REGISTER", "UNDO"}
@@ -245,7 +245,7 @@ class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
 
 
 class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_orientation_set_cursor"
+    bl_idname = "mpm.pivot_orientation_set_cursor"
     bl_label = ""
     bl_description = "Pivit=Cursor, Orientation=Cursor"
     bl_options = {"REGISTER", "UNDO"}
@@ -258,7 +258,7 @@ class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_viewport_shading_set_solid"
+    bl_idname = "mpm.pivot_viewport_shading_set_solid"
     bl_label = ""
     bl_description = "Overlay=True, Shading=SOLID"
     bl_options = {"REGISTER", "UNDO"}
@@ -271,7 +271,7 @@ class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
-    bl_idname = "op.mpm_pivot_viewport_shading_set_material"
+    bl_idname = "mpm.pivot_viewport_shading_set_material"
     bl_label = ""
     bl_description = "Overlay=True, Shading=MATERIAL"
     bl_options = {"REGISTER", "UNDO"}
@@ -285,7 +285,7 @@ class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
 
 
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
-    bl_idname = "op.mpm_open_file"
+    bl_idname = "mpm.open_file"
     bl_label = "Open Path"
     path: bpy.props.StringProperty()
 
@@ -297,7 +297,7 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
-    bl_idname = "op.mpm_arp_export_panel"
+    bl_idname = "mpm.arp_export_panel"
     bl_label = "Export with ARP"
 
     @classmethod
@@ -326,7 +326,7 @@ class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
-    bl_idname = "op.mpm_arp_export_all"
+    bl_idname = "mpm.arp_export_all"
     bl_label = "Export with all meshes tied current armature"
 
     @classmethod
@@ -358,7 +358,7 @@ class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
-    bl_idname = "op.mpm_arp_export_single"
+    bl_idname = "mpm.arp_export_single"
     bl_label = "Export with selected mesh"
 
     @classmethod
@@ -386,7 +386,7 @@ class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
 
 
 class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
-    bl_idname = "op.mpm_snap_cursor_to_selected_ex"
+    bl_idname = "mpm.snap_cursor_to_selected_ex"
     bl_label = "Snap 3DCursor to selected EX"
     bl_description = "Snap 3DCursor to selected EX"
     bl_options = {'REGISTER', 'UNDO'}
@@ -438,7 +438,7 @@ class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
 
 
 class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
-    bl_idname = "op.mpm_snap_cursor_on_view_plane"
+    bl_idname = "mpm.snap_cursor_on_view_plane"
     bl_label = ""
     bl_description = "Move 3DCursor on View Plane"
     bl_options = {'REGISTER', 'UNDO'}
@@ -494,7 +494,7 @@ class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
-    bl_idname = "op.mpm_viewport_camera_transform_save"
+    bl_idname = "mpm.viewport_camera_transform_save"
     bl_label = "Save"
     bl_description = "Save the current viewport camera position and rotation"
 
@@ -510,7 +510,7 @@ class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
-    bl_idname = "op.mpm_viewport_camera_transform_restore_panel"
+    bl_idname = "mpm.viewport_camera_transform_restore_panel"
     bl_label = "Restore"
     bl_description = "Restore the saved viewport camera position and rotation"
     init_values = {}
@@ -552,7 +552,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestore(bpy.types.Operator):
-    bl_idname = "op.mpm_viewport_camera_transform_restore"
+    bl_idname = "mpm.viewport_camera_transform_restore"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     idx: bpy.props.IntProperty()
@@ -568,7 +568,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestore(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestoreRemove(bpy.types.Operator):
-    bl_idname = "op.mpm_viewport_camera_transform_restore_remove"
+    bl_idname = "mpm.viewport_camera_transform_restore_remove"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     idx: bpy.props.IntProperty()
@@ -580,7 +580,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestoreRemove(bpy.types.Operator):
 
 
 class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
-    bl_idname = "op.mpm_open_directory"
+    bl_idname = "mpm.open_directory"
     bl_label = "Open the directory location of the currently opened blend file"
 
     def execute(self, context):
@@ -605,7 +605,7 @@ class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 class MPM_OT_Utility_DumpMissingReference(bpy.types.Operator):
-    bl_idname = "op.mpm_dump_Missing_reference"
+    bl_idname = "mpm.dump_Missing_reference"
     bl_label = "Check Missing Reference"
 
     def execute(self, context):
