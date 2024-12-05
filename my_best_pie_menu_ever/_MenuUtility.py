@@ -130,9 +130,11 @@ def DrawView3D(layout, context):
     box = c2.box()
     box.label(text="Animation")
     c = box.column(align=True)
+    r = c.row(align=True)    
+    _Util.layout_prop(r, context.scene, "frame_current", isActive=False)
+    _Util.layout_operator(r, MPM_OT_Utility_AnimationFrameReset.bl_idname)
 
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
-
 
 def DrawImageEditor(layout, context):
     row = layout.row(align=True)
@@ -604,22 +606,13 @@ class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 
-class MPM_OT_Utility_DumpMissingReference(bpy.types.Operator):
-    bl_idname = "mpm.dump_Missing_reference"
-    bl_label = "Check Missing Reference"
+class MPM_OT_Utility_AnimationFrameReset(bpy.types.Operator):
+    bl_idname = "mpm.animation_frame_reset"
+    bl_label = "Reset"
 
     def execute(self, context):
-        missing_images = []
-        for image in bpy.data.images:
-            file_path = bpy.path.abspath(image.filepath)
-            if not os.path.exists(file_path):
-                missing_images.append(image)
-        if missing_images:
-            _Util.show_report_warn(self, "The following image reference is missing:")
-            for image in missing_images:
-                _Util.show_report_warn(self, image.name, image.path)
-        else:
-            _Util.show_report(self, "There are no images with missing references.")
+        bpy.context.scene.frame_set(1)
+        return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
 
@@ -644,6 +637,7 @@ classes = (
     MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
     MPM_OT_Utility_OpenDirectory,
+    MPM_OT_Utility_AnimationFrameReset,
 )
 
 

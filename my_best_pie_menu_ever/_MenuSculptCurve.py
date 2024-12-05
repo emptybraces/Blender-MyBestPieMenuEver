@@ -18,7 +18,7 @@ def MenuPrimary(pie, context):
         if i.use_paint_sculpt_curves:
             is_use = current_brush.name == i.name
             op = _Util.MPM_OT_SetPointer.operator(col2, i.name.replace(" Curves", ""), tool, "brush", i)
-            cnt += 1;
+            cnt += 1
             if cnt == 10:
                  col2 = rowinbox.column()
     # col2 = row.box().column()

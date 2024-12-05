@@ -10,7 +10,7 @@ import bmesh
 
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text='Sculpt Primary')
+    box.label(text="Sculpt Primary")
 
     c = box.column()
     _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
@@ -27,7 +27,7 @@ def MenuPrimary(pie, context):
     limit_rows = _AddonPreferences.Accessor.get_sculpt_limit_row_count()
     filters = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name().strip()
     if filters:
-        for filter_name in filters.split(','):
+        for filter_name in filters.split(","):
             for brush_data in bpy.data.brushes:
                 if brush_data.use_paint_sculpt and filter_name.strip().lower() == brush_data.name.lower():
                     op = _Util.MPM_OT_SetPointer.operator(col2, brush_data.name, tool, "brush", brush_data, depress=current_brush == brush_data)
@@ -91,7 +91,7 @@ def MenuPrimary(pie, context):
 class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
     bl_idname = "mpm.make_mask_with_selected_vert"
     bl_label = "Fill mask with selected verts"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     is_overwrite: bpy.props.BoolProperty(name="Overwrite", options={"HIDDEN"})
     is_invert: bpy.props.BoolProperty(name="Invert", options={"HIDDEN"})
 
@@ -125,19 +125,14 @@ class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def mode_change_handler(scene):
-    if bpy.context.active_object:
-        if bpy.context.mode == "SCULPT":
-            bpy.context.active_object.show_wire = bpy.context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
-        else:
-            bpy.context.active_object.show_wire = False
 class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
     bl_idname = "mpm.auto_wireframe_enable"
     bl_label = "Auto Show Wireframe"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     
 
     def execute(self, context):
+        from ._PieMenu import mode_change_handler
         context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode = not context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
         context.active_object.show_wire = context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
         indices = []

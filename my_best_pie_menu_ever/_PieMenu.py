@@ -43,7 +43,7 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
     # bl_idname = "VIEW3D_PT_my_pie_menu"
     bl_space_type = "VIEW_3D"
     bl_region_type = "WINDOW"
-    bl_label = f"My Pie Menu v{g.ver[0]}.{g.ver[1]}.{g.ver[2]}"
+    bl_label = f"MyBestPieMenuEver v{g.ver[0]}.{g.ver[1]}.{g.ver[2]}"
 
     def draw(self, context):
         # 西、東、南、北、北西、北東、南西、南東
@@ -145,12 +145,24 @@ class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
     distance: bpy.props.FloatProperty()
 
 
+def mode_change_handler(scene):
+    if bpy.context.active_object and scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
+        bpy.context.active_object.show_wire = bpy.context.mode == "SCULPT"
+
+
 class MPM_Prop(bpy.types.PropertyGroup):
     def init(self):
         self.PrevModeNameTemp = bpy.context.mode
         self.ColorPalettePopoverEnum = "ColorPalette"
         if bpy.context.tool_settings.image_paint.palette is not None:
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
+        if self.IsAutoEnableWireframeOnSculptMode:
+            for i in bpy.app.handlers.depsgraph_update_pre:
+                if i.__name__ == mode_change_handler.__name__:
+                    # print("atta", i)
+                    break
+            else:
+                bpy.app.handlers.depsgraph_update_pre.append(mode_change_handler)
 
     # 直前のモード
     PrevModeName: bpy.props.StringProperty()
@@ -205,7 +217,6 @@ class MPM_Prop(bpy.types.PropertyGroup):
 
 
 # --------------------------------------------------------------------------------
-
 classes = (
     VIEW3D_MT_my_pie_menu,
     MPM_OT_OpenPieMenu,
