@@ -3,7 +3,7 @@ import subprocess
 import bpy
 from . import _Util
 from . import _AddonPreferences
-from ._MenuPose import MPM_OT_ClearTransform
+from ._MenuPose import MPM_OT_ResetBoneTransform
 from . import g
 import mathutils
 import bmesh
@@ -112,7 +112,7 @@ def DrawView3D(layout, context):
 
     if armature != None:
         _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
-    _Util.layout_operator(c, MPM_OT_ClearTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    _Util.layout_operator(c, MPM_OT_ResetBoneTransform.bl_idname, isActive=_Util.is_armature_in_selected())
 
     c.separator()
 

@@ -14,6 +14,7 @@ def MenuPrimary(pie, context):
     arm = context.object.data
     box = row.box()
     box.row().prop(arm, "pose_position", expand=True)
+    _Util.layout_operator(box, MPM_OT_ResetBoneTransform.bl_idname, isActive=_Util.is_armature_in_selected())
 
     # thirdparty shortcut
     box = row.box()
@@ -28,8 +29,8 @@ def MenuPrimary(pie, context):
         box.prop(arm, 'layers')
 
 
-class MPM_OT_ClearTransform(bpy.types.Operator):
-    bl_idname = "mpm.clear_transform"
+class MPM_OT_ResetBoneTransform(bpy.types.Operator):
+    bl_idname = "mpm.reset_bone_transform"
     bl_label = "Reset Bone Transform"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -98,7 +99,7 @@ class MPM_OT_ARP_SnapIKFK(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 classes = (
-    MPM_OT_ClearTransform,
+    MPM_OT_ResetBoneTransform,
     MPM_OT_ARP_SnapIKFK,
 )
 
