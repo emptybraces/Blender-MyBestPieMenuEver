@@ -42,20 +42,32 @@ def PieMenuDraw_Utility(layout, context):
 
 
 def DrawView3D(layout, context):
-    row = layout.row(align=True)
-    box = row.box()
-    # ツールメニュー
-    box.label(text="Tool")
+    row = layout.row()
+    col = row.column()
+
+    # ピボット、座標軸
+    box = col.box()
+    box.label(text="Pivot, Orientations")
     c = box.column(align=True)
-    # 行開始
     r = c.row(align=True)
-    r.prop(context.tool_settings, "transform_pivot_point", text="", icon_only=True)
-    r.prop_with_popover(context.scene.transform_orientation_slots[0], "type", text="", panel="VIEW3D_PT_transform_orientations",)
+    r.label(text="Pivot")
+    for item in bpy.types.ToolSettings.bl_rna.properties["transform_pivot_point"].enum_items:
+        _Util.MPM_OT_SetString.operator(r, "", context.tool_settings, "transform_pivot_point", item.identifier,
+                                        item.icon, context.tool_settings.transform_pivot_point == item.identifier)
+
+    r = c.row(align=True)
+    r.label(text="Orientation")
+    for item in bpy.types.TransformOrientationSlot.bl_rna.properties["type"].enum_items:
+        _Util.MPM_OT_SetString.operator(r, "", context.scene.transform_orientation_slots[0], "type", item.identifier,
+                                        item.icon, context.scene.transform_orientation_slots[0].type == item.identifier)
     r = c.row(align=True)
     _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Reset.bl_idname, text="Reset")
     _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Cursor.bl_idname, text="Cursor")
 
     # 3Dカーソル
+    box = col.box()
+    box.label(text="3D Cursor")
+    c = box.column(align=True)
     r = c.row(align=True)
     r.label(text="3d_cursor", icon="CURSOR")
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
@@ -63,12 +75,14 @@ def DrawView3D(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
 
-    # オーバーレイ
-    overlay = context.space_data.overlay
-    r = box.row(align=True)
-    c = r.column(align=True)
-    c.active = getattr(context.space_data, "overlay", None) != None
+    # 設定
+    box = col.box()
+    box.label(text="Settings")
+    c = box.column(align=True)
+
+    overlay = getattr(context.space_data, "overlay", None)
     r = c.row(align=True)
+    r.enabled = overlay != None
     _Util.layout_prop(r, overlay, "show_overlays")
     r = r.row(align=True)
     r.scale_x = 0.7
@@ -87,19 +101,15 @@ def DrawView3D(layout, context):
     r = r.row()
     _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
 
-    # 3Dカーソル
-    r = c.row(align=True)
-    r.label(text="VPCamera", icon="VIEW_CAMERA")
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformSave.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformRestorePanel.bl_idname)
-
+    # -------------------------------
+    # 次の列
+    col = row.column()
     # オブジェクトメニュー
-    c2 = row.column()
-    box = c2.box()
-    box.label(text="Object")
-
+    box = col.box()
+    box.label(text="Selected Object")
     c = box.column(align=True)
-    c.active = context.active_object != None
+
+    c.enabled = context.active_object != None
     r = c.row(align=True)
     _Util.layout_prop(r, context.active_object, "show_in_front")
     armature = _Util.get_armature(context.active_object)
@@ -108,14 +118,14 @@ def DrawView3D(layout, context):
     _Util.layout_prop(c, context.active_object, "show_wire")
     _Util.layout_prop(c, context.active_object, "display_type")
 
-    c.separator()
-
     if armature != None:
         _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
+
+    # UV
+    c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+    # ポーズ
     _Util.layout_operator(c, MPM_OT_ResetBoneTransform.bl_idname, isActive=_Util.is_armature_in_selected())
-
-    c.separator()
-
+    # コピー
     r = c.row(align=True)
     r.active = context.active_object is not None and 1 < len(context.selected_objects)
     r.label(text="Copy")
@@ -123,18 +133,31 @@ def DrawView3D(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
     _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
 
-    # UV
-    c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+    # -------------------------------
+    # 次の列
+    col = row.column()
 
     # Animation
-    box = c2.box()
+    box = col.box()
     box.label(text="Animation")
     c = box.column(align=True)
-    r = c.row(align=True)    
+
+    r = c.row(align=True)
     _Util.layout_prop(r, context.scene, "frame_current", isActive=False)
     _Util.layout_operator(r, MPM_OT_Utility_AnimationFrameReset.bl_idname)
 
     _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
+
+    # その他
+    box = col.box()
+    box.label(text="Etc")
+    c = box.column(align=True)
+    # ビューポートカメラ保存
+    r = c.row(align=True)
+    r.label(text="VPCamera", icon="VIEW_CAMERA")
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformSave.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformRestorePanel.bl_idname)
+
 
 def DrawImageEditor(layout, context):
     row = layout.row(align=True)
