@@ -124,7 +124,10 @@ def DrawView3D(layout, context):
     # UV
     c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
     # ポーズ
-    _Util.layout_operator(c, MPM_OT_ResetBoneTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    c.label(text="________________________________________")
+    r = c.row(align=True)
+    r.label(text="Armature")
+    _Util.layout_operator(r, MPM_OT_ResetBoneTransform.bl_idname, isActive=_Util.is_armature_in_selected())
     # コピー
     r = c.row(align=True)
     r.active = context.active_object is not None and 1 < len(context.selected_objects)
