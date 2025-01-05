@@ -76,33 +76,40 @@ def DrawView3D(layout, context):
     box = col.box()
     box.label(text="Settings")
     c = box.column(align=True)
+    view = context.space_data
+    shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading   
 
+    # オーバーレイ、ボー、
     overlay = getattr(context.space_data, "overlay", None)
     r = c.row(align=True)
     r.enabled = overlay != None
-    _Util.layout_prop(r, overlay, "show_overlays")
+    _Util.layout_prop(r, overlay, "show_overlays", "Overlay")
     r = r.row(align=True)
-    r.scale_x = 0.7
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="S")
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="M")
+    _Util.layout_prop(r, overlay, "show_bones", "Bone", isActive=overlay.show_overlays)
 
-    #
-    _Util.layout_prop(c, overlay, "show_bones", isActive=overlay.show_overlays)
-    _Util.layout_prop(c, overlay, "show_wireframes", isActive=overlay.show_overlays)
-    _Util.layout_prop(c, overlay, "show_annotation", isActive=overlay.show_overlays)
+    # ワイヤーフレーム、アノテーション
+    r = c.row(align=True)
+    _Util.layout_prop(r, overlay, "show_wireframes", "Wireframe", isActive=overlay.show_overlays)
+    _Util.layout_prop(r, overlay, "show_annotation", "Annotation", isActive=overlay.show_overlays)
     # 透過
-    view = context.space_data
-    shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
     r = c.row()
     _Util.layout_prop(r, shading, "show_xray", text="")
-    r = r.row()
     _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
+    # シェーディングモード
+    r = c.row(align=True)
+    r.label(text="Shading")
+    for item in bpy.types.View3DShading.bl_rna.properties["type"].enum_items:
+        _Util.MPM_OT_SetString.operator(r, "", shading, "type", item.identifier, item.icon, shading.type == item.identifier)
+    # オーバーレイとシェーディングのペアショートカット切り替え
+    r = r.row(align=True)
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="Ov+Solid")
+    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="UnOv+Mat")
     # シェーディングカラー
     r = c.row()
     r.label(text="Shading Color")
     _Util.MPM_OT_SetString.operator(r, "MAT", shading, "color_type", "MATERIAL", "MATERIAL", shading.color_type == "MATERIAL")
     _Util.MPM_OT_SetString.operator(r, "OBJ", shading, "color_type", "OBJECT", "OBJECT_DATA", shading.color_type == "OBJECT")
-    _Util.MPM_OT_SetString.operator(r, "VCOL", shading, "color_type", "TEXTURE", "TEXTURE", shading.color_type == "TEXTURE")
+    _Util.MPM_OT_SetString.operator(r, "VCOL", shading, "color_type", "VERTEX", "VPAINT_HLT", shading.color_type == "VERTEX")
 
     # -------------------------------
     # 次の列
@@ -308,7 +315,7 @@ class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
 class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
     bl_idname = "mpm.pivot_viewport_shading_set_material"
     bl_label = ""
-    bl_description = "Overlay=True, Shading=MATERIAL"
+    bl_description = "Overlay=False, Shading=MATERIAL"
     bl_options = {"REGISTER", "UNDO"}
     args: bpy.props.StringProperty()
 
@@ -589,7 +596,6 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
 class MPM_OT_Utility_ViewportCameraTransformRestore(bpy.types.Operator):
     bl_idname = "mpm.viewport_camera_transform_restore"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
     idx: bpy.props.IntProperty()
 
     def execute(self, context):
