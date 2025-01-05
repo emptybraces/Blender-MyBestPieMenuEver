@@ -95,11 +95,17 @@ def DrawView3D(layout, context):
     _Util.layout_prop(c, overlay, "show_annotation", isActive=overlay.show_overlays)
     # 透過
     view = context.space_data
-    shading = view.shading if view.type == 'VIEW_3D' else context.scene.display.shading
+    shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
     r = c.row()
     _Util.layout_prop(r, shading, "show_xray", text="")
     r = r.row()
     _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
+    # シェーディングカラー
+    r = c.row()
+    r.label(text="Shading Color")
+    _Util.MPM_OT_SetString.operator(r, "MAT", shading, "color_type", "MATERIAL", "MATERIAL", shading.color_type == "MATERIAL")
+    _Util.MPM_OT_SetString.operator(r, "OBJ", shading, "color_type", "OBJECT", "OBJECT_DATA", shading.color_type == "OBJECT")
+    _Util.MPM_OT_SetString.operator(r, "VCOL", shading, "color_type", "TEXTURE", "TEXTURE", shading.color_type == "TEXTURE")
 
     # -------------------------------
     # 次の列
@@ -120,9 +126,12 @@ def DrawView3D(layout, context):
 
     if armature != None:
         _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
-
     # UV
     c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+    # ビューポートオブジェクトカラー
+    r = c.row(align=True)
+    r.scale_x = 0.5
+    _Util.layout_prop(r, context.active_object, "color", isActive=shading.color_type == "OBJECT")
     # ポーズ
     c.label(text="________________________________________")
     r = c.row(align=True)
