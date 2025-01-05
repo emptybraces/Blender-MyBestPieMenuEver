@@ -47,7 +47,7 @@ def DrawView3D(layout, context):
 
     # ピボット、座標軸
     box = col.box()
-    box.label(text="Pivot, Orientations")
+    box.label(text="Anchor")
     c = box.column(align=True)
     r = c.row(align=True)
     r.label(text="Pivot")
@@ -65,11 +65,8 @@ def DrawView3D(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Cursor.bl_idname, text="Cursor")
 
     # 3Dカーソル
-    box = col.box()
-    box.label(text="3D Cursor")
-    c = box.column(align=True)
     r = c.row(align=True)
-    r.label(text="3d_cursor", icon="CURSOR")
+    r.label(text="3D Cursor")
     _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
@@ -173,12 +170,11 @@ def DrawView3D(layout, context):
 
 def DrawImageEditor(layout, context):
     row = layout.row(align=True)
-    # ツールメニュー
-    box = row.box()
-    box.label(text="Tool")
+    col = row.column()
+    # Pivotメニュー
+    box = col.box()
+    box.label(text="Anchor")
     c = box.column(align=True)
-
-    # ピボット
     r = c.row(align=True)
     # r.prop(context.space_data, "pivot_point")
     data = context.space_data
@@ -188,11 +184,13 @@ def DrawImageEditor(layout, context):
     _Util.MPM_OT_SetString.operator(r, "", data, "pivot_point", "CENTER", icon="PIVOT_BOUNDBOX")
     _Util.MPM_OT_SetString.operator(r, "", data, "pivot_point", "INDIVIDUAL_ORIGINS", icon="PIVOT_INDIVIDUAL")
 
-    # ストレッチ
+    # 設定メニュー
+    box = col.box()
+    box.label(text="Settings")
+    c = box.column(align=True)
     c.prop(data.uv_editor, "show_stretch")
 
     # カラー
-
     r = c.row(align=True)
     r.label(text="Tex Channels")
     # for i in _Util.enum_values(context.space_data, "display_channels"):
@@ -208,7 +206,7 @@ def DrawImageEditor(layout, context):
     # オブジェクトメニュー
     c = row.column()
     box = c.box()
-    box.label(text="Object")
+    box.label(text="Selected Object")
     # UV
     c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
 
