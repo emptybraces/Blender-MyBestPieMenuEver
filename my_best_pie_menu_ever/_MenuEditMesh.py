@@ -2,9 +2,11 @@ import bpy
 import bmesh
 import blf
 from . import _Util
+from . import _UtilInput
+from . import _UtilBlf
 from . import g
 from ._MenuObject import LayoutSwitchSelectionOperator
-from mathutils import Vector, Matrix
+from mathutils import Vector, Matrix, Color
 import time
 import math
 # --------------------------------------------------------------------------------
@@ -104,7 +106,7 @@ def MenuPrimary(pie, context):
     # ボーンアーマチュア作成
     _Util.layout_operator(c, MPM_OT_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
-    _Util.layout_operator(c, MPM_OT_AlignViewToEdgeNormalSide.bl_idname, icon="VIEW_CAMERA")
+    _Util.layout_operator(c, MPM_OT_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
 
     # Applyメニュー
     box = c3.box()
@@ -525,7 +527,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 
 class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
     bl_idname = "mpm.generate_along_from_edge"
-    bl_label = "Generate Bones along Selected Edge"
+    bl_label = "Generate bones along selected edges"
     bl_options = {"REGISTER", "UNDO"}
 
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
@@ -706,86 +708,86 @@ class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_AlignViewToEdgeNormalSide(bpy.types.Operator):
-    bl_idname = "mpm.align_view_to_edge_normal_side"
+class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
+    bl_idname = "mpm.align_view_to_edge_normal_side_modal"
     bl_label = "Align view to edge normal side"
 
-    dir: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
-    invert: bpy.props.BoolProperty(name="Invert", description="",  default=False)
+    dir: bpy.props.FloatVectorProperty(size=3, default=(0, 0, 1))
+    invert: bpy.props.BoolProperty()
+    original_location: Vector
+    original_rotation: Matrix
+    start_location: Vector
+    start_rotation: Matrix
+    target_location: Vector
+    target_rotation: Matrix
+    translate_duration = 0.2
+    start_time = 0.0
+    timer = None
+    label_handler = None
+    mouse_pos: Vector = Vector((0, 0, 0))
 
     @classmethod
     def poll(self, context):
         obj = context.edit_object
         return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 
-    def execute(self, context):
-        dir = Vector((0, 0, 0))
-        dir.x = 1 if self.dir == "X" else 0
-        dir.y = 1 if self.dir == "Y" else 0
-        dir.z = 1 if self.dir == "Z" else 0
-        dir *= -1 if self.invert else 1
-        bpy.ops.mpm.align_view_to_edge_normal_side_modal("INVOKE_DEFAULT", dir=dir, invert=self.invert)
-        return {"FINISHED"}
-
-
-class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
-    bl_idname = "mpm.align_view_to_edge_normal_side_modal"
-    bl_label = ""
-    dir: bpy.props.FloatVectorProperty(size=3)
-    invert: bpy.props.BoolProperty()
-    start_location: Vector
-    start_rotation: Matrix
-    target_location: Vector
-    target_rotation: Matrix
-    duration = 0.2
-    start_time: float
-    timer = None
-    label_handler = None
-    mouse_pos: Vector = Vector((0, 0, 0))
-    is_pressed_key = False
-
-    def draw_label(self, context, event):
-        font_id = 0  # デフォルトのフォントを使用
-        fontsize = 25
-        line_height = fontsize
-        blf.size(font_id, fontsize)
-        blf.position(font_id, self.mouse_pos.x, self.mouse_pos.y, 0)
-        blf.draw(0, "Align view to edge normal side:")
-        blf.position(font_id, self.mouse_pos.x, self.mouse_pos.y + line_height, 0)
-        blf.draw(0, f"X={self.dir[0]}, Y={self.dir[1]}, Z={self.dir[2]}")
+    def invoke(self, context, event):
+        self.is_reverting = False
+        self.mouse_pos.x = event.mouse_x
+        self.mouse_pos.y = event.mouse_y
+        self.original_location = context.region_data.view_location.copy()
+        self.original_rotation = context.region_data.view_rotation.copy()
+        _UtilInput.init()
+        print(1)
+        return self.execute(context)
 
     def execute(self, context):
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
         selected_edges = [edge for edge in bm.edges if edge.select]
-        # 選択された辺の中心、エッジ方向
-        total_center = Vector((0, 0, 0))
-        total_direction = Vector((0, 0, 0))
-        total_edge_normal = Vector((0, 0, 0))
-        for edge in selected_edges:
-            v1 = obj.matrix_world @ edge.verts[0].co
-            v2 = obj.matrix_world @ edge.verts[1].co
-            total_center += (v1 + v2) / 2
-            total_direction += (v2 - v1).normalized()
-            # 辺に接続する面の法線
-            connected_faces = edge.link_faces
-            if not connected_faces:
-                nv1 = obj.matrix_world.to_3x3() @ v1.normal  # to_3x3は回転・スケール行列のフィルタ
-                nv2 = obj.matrix_world.to_3x3() @ v2.normal
-                total_edge_normal += (nv1 + nv2).normalized()
-            else:
-                # 法線を計算（複数の面がある場合は平均法線を使用）
-                normal = Vector((0, 0, 0))
-                for face in connected_faces:
-                    normal += face.normal
-                total_edge_normal += normal.normalized()
-        average_center = total_center / len(selected_edges)
-        average_direction = total_direction.normalized()
-        average_normal = total_edge_normal.normalized()
+        selected_faces = [face for face in bm.faces if face.select]
+        total_center = _Util.VEC3()
+        total_normal = _Util.VEC3()
+        if any(selected_faces):
+            for face in selected_faces:
+                total_center += obj.matrix_world @ face.calc_center_median()
+                total_normal += obj.matrix_world.to_3x3() @ face.normal
+            average_center = total_center / len(selected_faces)
+        else:
+            for edge in selected_edges:
+                v1 = obj.matrix_world @ edge.verts[0].co
+                v2 = obj.matrix_world @ edge.verts[1].co
+                total_center += (v1 + v2) / 2
+                # 辺に接続する面の法線
+                connected_faces = edge.link_faces
+                if not connected_faces:
+                    nv1 = obj.matrix_world.to_3x3() @ v1.normal  # to_3x3は回転・スケール行列のフィルタ
+                    nv2 = obj.matrix_world.to_3x3() @ v2.normal
+                    total_normal += (nv1 + nv2).normalized()
+                else:
+                    # 法線を計算（複数の面がある場合は平均法線を使用）
+                    normal = Vector((0, 0, 0))
+                    for face in connected_faces:
+                        normal += face.normal
+                    total_normal += normal.normalized()
+            average_center = total_center / len(selected_edges)
+        average_normal = total_normal.normalized()
         # 法線に対して横方向を計算
-        side_vector = average_direction.cross(average_normal).normalized()
+        # side_vector = average_direction.cross(average_normal).normalized()
+        # side_vector = average_normal.cross(_Util.VEC3_Z()).normalized()
+        side_vector = Vector(self.dir).cross(average_normal).normalized()
         # ビューポートの正面方向と一致するように回転を計算
-        rotation = side_vector.rotation_difference(self.dir)
+        # rotation = _Util.view_rotation(side_vector, Vector(self.dir))
+        # print(side_vector, Vector(self.dir))
+        # if self.dir[0] != 0:
+        #     side_vector.x *= self.dir[0]
+        # if self.dir[1] != 0:
+        #     side_vector.y *= self.dir[1]
+        # if self.dir[2] != 0:
+        #     side_vector.z *= self.dir[2]
+        # side_vector = side_vector.normalized()
+        # print(side_vector)
+        rotation = _Util.view_rotation(side_vector, _Util.VEC3_Z())
         # ビューポート値を更新
         self.start_location = context.region_data.view_location.copy()
         self.start_rotation = context.region_data.view_rotation.copy()
@@ -794,43 +796,58 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.elapsed = 0.0
         self.start_time = time.time()
         if self.timer is None:
-            print("eventSTart")
             self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
             context.window_manager.modal_handler_add(self)
         if self.label_handler is None:
-            print("eventSTart2")
             self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (self, context), "WINDOW", 'POST_PIXEL')
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        self.mouse_pos.x = event.mouse_x
-        self.mouse_pos.y = event.mouse_y
-        bpy.context.area.tag_redraw()
-        if event.type in {"X", "Y", "Z"}:
-            if event.value == "PRESS" and not self.is_pressed_key:
-                self.dir[0] = 0 if event.type != "X" else -1 if self.dir[0] == 1 else 1
-                self.dir[1] = 0 if event.type != "Y" else -1 if self.dir[1] == 1 else 1
-                self.dir[2] = 0 if event.type != "Z" else -1 if self.dir[2] == 1 else 1
-                self.is_pressed_key = True
+        if self.is_reverting:
+            self.elapsed = time.time() - self.start_time
+            t = min(1.0, self.elapsed / self.translate_duration)
+            context.region_data.view_location = self.target_location.lerp(self.original_location, t)
+            context.region_data.view_rotation = self.target_rotation.slerp(self.original_rotation, t)
+            if 1 <= self.elapsed:
+                return self.cancel(context)
+            else:
+                return {"RUNNING_MODAL"}
+
+        context.area.tag_redraw()
+        self.mouse_pos.x = _Util.lerp(self.mouse_pos.x, event.mouse_x, 0.05)
+        self.mouse_pos.y = _Util.lerp(self.mouse_pos.y, event.mouse_y, 0.05)
+        if _UtilInput.is_pressed_key(event, "X")[0]:
+            self.dir = Vector((-1 if self.dir[0] == 1 else 1, 0, 0))
+            return self.execute(context)
+        if _UtilInput.is_pressed_key(event, "Y")[0]:
+            self.dir = Vector((0, -1 if self.dir[1] == 1 else 1, 0))
+            return self.execute(context)
+        if _UtilInput.is_pressed_key(event, "Z")[0]:
+            if event.alt:
+                context.space_data.shading.show_xray = not context.space_data.shading.show_xray
+            else:
+                self.dir = Vector((0, 0, -1 if self.dir[2] == 1 else 1))
                 return self.execute(context)
-            elif event.value == "RELEASE":  
-                self.is_pressed_key = False
-        elif 0.1 < self.elapsed and event.type in {"LEFTMOUSE", "RIGHTMOUSE", "MIDDLEMOUSE", "ESC", "SPACE", "RET"}:
+        if event.type == "WHEELUPMOUSE":
+            context.region_data.view_distance -= 0.5
+        elif event.type == "WHEELDOWNMOUSE":
+            context.region_data.view_distance += 0.5
+        if _UtilInput.is_pressed_keys(event, "LEFTMOUSE", "RET"):
             return self.cancel(context)
+        if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "MIDDLEMOUSE", "ESC", "SPACE", "RET"):
+            self.is_reverting = True
+            self.start_time = time.time()
+            return {"RUNNING_MODAL"}
+            # アニメ
         if self.elapsed <= 1 and event.type == "TIMER":
             self.elapsed = time.time() - self.start_time
-            progress = self.elapsed / self.duration
-            t = min(progress, 1.0)
-            # アニメ
-            new_location = self.start_location.lerp(self.target_location, t)
-            new_rotation = self.start_rotation.slerp(self.target_rotation, t)
-            context.region_data.view_location = new_location
-            context.region_data.view_rotation = new_rotation
+            t = min(1.0, self.elapsed / self.translate_duration)
+            context.region_data.view_location = self.start_location.lerp(self.target_location, t)
+            context.region_data.view_rotation = self.start_rotation.slerp(self.target_rotation, t)
         return {"RUNNING_MODAL"}
 
     def cancel(self, context):
-        print("cancel")
-        _Util.show_report(self, "CANCELLED")
+        # _Util.show_report(self, "CANCELLED")
         if self.label_handler:
             bpy.types.SpaceView3D.draw_handler_remove(self.label_handler, "WINDOW")
             self.label_handler = None
@@ -838,6 +855,28 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
             context.window_manager.event_timer_remove(self.timer)
             self.timer = None
         return {"CANCELLED"}
+
+    def draw_label(self, context, event):
+        if self.is_reverting:
+            return
+        fid = 0  # デフォルトのフォントを使用
+        x = self.mouse_pos.x
+        y = self.mouse_pos.y
+        _UtilBlf.animate_clipping(fid, x, 500, self.timer.time_duration)
+        text = "Align view to edge normal side"
+        _UtilBlf.draw_title(fid, text, x, y)
+
+        if self.dir[0] != 0:
+            text = "+X" if self.dir[0] == 1 else "-X"
+        elif self.dir[1] != 0:
+            text = "+Y" if self.dir[1] == 1 else "-Y"
+        elif self.dir[2] != 0:
+            text = "+Z" if self.dir[2] == 1 else "-Z"
+
+        _UtilBlf.draw_field(fid, "Direction = ", text, "| press X, Y, Z, twice to invert", x, y, 0)
+        _UtilBlf.draw_field(fid, "Wireframe = ", str(bpy.context.space_data.shading.show_xray), "| press ALT + Z", x, y, 1)
+        _UtilBlf.draw_info(fid, "Mousewheel: Zoom", x, y, 3)
+        _UtilBlf.draw_info(fid, "LMB: Finish", x, y, 4)
 
 
 # --------------------------------------------------------------------------------
@@ -851,7 +890,6 @@ classes = (
     MPM_OT_EdgeCreasePanel,
     MPM_OT_DuplicateMirror,
     MPM_OT_GenterateBonesAlongSelectedEdge,
-    MPM_OT_AlignViewToEdgeNormalSide,
     MPM_OT_AlignViewToEdgeNormalSideModal,
 )
 

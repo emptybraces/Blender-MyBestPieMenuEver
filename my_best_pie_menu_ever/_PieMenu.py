@@ -1,6 +1,8 @@
 ﻿if "bpy" in locals():
     import imp
     imp.reload(_Util)
+    imp.reload(_UtilInput)
+    imp.reload(_UtilBlf)
     imp.reload(_AddonPreferences)
     imp.reload(_MenuMode)
     imp.reload(_MenuUtility)
@@ -16,6 +18,8 @@
     imp.reload(_PanelSelectionHistory)
 else:
     from . import _Util
+    from . import _UtilInput
+    from . import _UtilBlf
     from . import _AddonPreferences
     from . import _MenuMode
     from . import _MenuUtility
