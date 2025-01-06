@@ -35,6 +35,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Quick access to Vertex groups.
 - Mirror duplication.
 - Generate bones along selected edges.
+- Align view to edge normal side.
 - And shortcuts various functions.
 
 ### [PAINT_TEXTURE mode]

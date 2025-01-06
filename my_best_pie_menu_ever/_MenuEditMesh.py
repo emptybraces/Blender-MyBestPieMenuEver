@@ -1,11 +1,12 @@
 import bpy
 import bmesh
+import blf
 from . import _Util
 from . import g
-from math import degrees
 from ._MenuObject import LayoutSwitchSelectionOperator
-
-import itertools
+from mathutils import Vector, Matrix
+import time
+import math
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -101,7 +102,9 @@ def MenuPrimary(pie, context):
     # クリーズ
     _Util.layout_operator(c, MPM_OT_EdgeCreasePanel.bl_idname)
     # ボーンアーマチュア作成
-    _Util.layout_operator(c, MPM_OT_GenterateBoneFromEdge.bl_idname, icon="BONE_DATA")
+    _Util.layout_operator(c, MPM_OT_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
+    # 法線サイドへビューポートカメラを移動
+    _Util.layout_operator(c, MPM_OT_AlignViewToEdgeNormalSide.bl_idname, icon="VIEW_CAMERA")
 
     # Applyメニュー
     box = c3.box()
@@ -131,14 +134,14 @@ def MenuPrimary(pie, context):
 class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_add_vertex_group_panel"
     bl_label = "Add Vertex Group"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     vgroup_name: bpy.props.StringProperty(name="Name", default="Group", description="Vertex group name")
     weight: bpy.props.FloatProperty(name="Weight", default=1.0, min=0.0, max=1.0)
 
     @classmethod
     def poll(self, context):
         # 選択されたオブジェクトがメッシュであり、少なくとも1つの頂点が選択されているかどうかをチェック
-        obj = context.object
+        obj = context.edit_object
         return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
 
     def execute(self, context):
@@ -228,7 +231,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
 class MPM_OT_SelectVertexGroup(bpy.types.Operator):
     bl_idname = "mpm.editmesh_select_vertex_group"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     ID_CLEAR_SELS = "CLEAR SELECTION"
     vgroup_name: bpy.props.StringProperty()
 
@@ -274,7 +277,7 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
 class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_seam"
     bl_label = "Mirror Seam"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     is_clear: bpy.props.BoolProperty()
 
     def execute(self, context):
@@ -291,7 +294,7 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
 class MPM_OT_MirrorSharp(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_sharp"
     bl_label = "Mirror Sharp"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     is_clear: bpy.props.BoolProperty()
 
     def execute(self, context):
@@ -310,7 +313,7 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
 class MPM_OT_VertCreasePanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_vert_crease_panel"
     bl_label = "Vert Crease"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     crease_value: bpy.props.FloatProperty(
         name="Crease",
         description="Adjust the crease value of selected edges",
@@ -324,8 +327,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         obj = context.edit_object
-        bm = bmesh.from_edit_mesh(obj.data)
-        return obj and obj.type == "MESH" and any(e.select for e in bm.verts)
+        return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
 
     def execute(self, context):
         mesh = context.object.data
@@ -346,7 +348,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
 class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_edge_crease_panel"
     bl_label = "Edge Crease"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     crease_value: bpy.props.FloatProperty(
         name="Crease",
         description="Adjust the crease value of selected edges",
@@ -360,8 +362,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         obj = context.edit_object
-        bm = bmesh.from_edit_mesh(obj.data)
-        return obj and obj.type == "MESH" and any(e.select for e in bm.edges)
+        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 
     def execute(self, context):
         mesh = context.object.data
@@ -383,7 +384,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
 class MPM_OT_DuplicateMirror(bpy.types.Operator):
     bl_idname = "mpm.duplicate_mirror"
     bl_label = "Mirror Duplication"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     mirror_x: bpy.props.BoolProperty(name="Mirror X", default=True)
     mirror_y: bpy.props.BoolProperty(name="Mirror Y", default=False)
     mirror_z: bpy.props.BoolProperty(name="Mirror Z", default=False)
@@ -522,10 +523,10 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
-    bl_idname = "mpm.generate_bone_from_edge"
-    bl_label = "Generate Bone from Selected Edge"
-    bl_options = {'REGISTER', 'UNDO'}
+class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
+    bl_idname = "mpm.generate_along_from_edge"
+    bl_label = "Generate Bones along Selected Edge"
+    bl_options = {"REGISTER", "UNDO"}
 
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     order_invert: bpy.props.BoolProperty(name="Invert", description="")
@@ -535,8 +536,13 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
     angle_for_isolate: bpy.props.IntProperty(
         name="Separates edge groups by vertices with edge pairs that are lower than the specified angle", description="", default=0, min=0, max=120)
 
+    @classmethod
+    def poll(self, context):
+        obj = context.edit_object
+        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+
     def execute(self, context):
-        obj = context.object
+        obj = context.edit_object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
         if not any(e.select for e in bm.edges):
@@ -560,7 +566,7 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
                     connected_vecs = [(e.other_vert(v).co - v.co).normalized() for e in v.link_edges if e.select]
                     # for i, j in itertools.combinations(connected_vecs, 2):
                     # _Util.show_report(self, "combinations", i, j)
-                    angle = degrees(connected_vecs[0].angle(connected_vecs[1]))
+                    angle = math.degrees(connected_vecs[0].angle(connected_vecs[1]))
                     # _Util.show_report(self, "angle=", angle)
                     # 指定鋭角だった場合
                     if angle <= limit_angle:
@@ -700,6 +706,140 @@ class MPM_OT_GenterateBoneFromEdge(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class MPM_OT_AlignViewToEdgeNormalSide(bpy.types.Operator):
+    bl_idname = "mpm.align_view_to_edge_normal_side"
+    bl_label = "Align view to edge normal side"
+
+    dir: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
+    invert: bpy.props.BoolProperty(name="Invert", description="",  default=False)
+
+    @classmethod
+    def poll(self, context):
+        obj = context.edit_object
+        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+
+    def execute(self, context):
+        dir = Vector((0, 0, 0))
+        dir.x = 1 if self.dir == "X" else 0
+        dir.y = 1 if self.dir == "Y" else 0
+        dir.z = 1 if self.dir == "Z" else 0
+        dir *= -1 if self.invert else 1
+        bpy.ops.mpm.align_view_to_edge_normal_side_modal("INVOKE_DEFAULT", dir=dir, invert=self.invert)
+        return {"FINISHED"}
+
+
+class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
+    bl_idname = "mpm.align_view_to_edge_normal_side_modal"
+    bl_label = ""
+    dir: bpy.props.FloatVectorProperty(size=3)
+    invert: bpy.props.BoolProperty()
+    start_location: Vector
+    start_rotation: Matrix
+    target_location: Vector
+    target_rotation: Matrix
+    duration = 0.2
+    start_time: float
+    timer = None
+    label_handler = None
+    mouse_pos: Vector = Vector((0, 0, 0))
+    is_pressed_key = False
+
+    def draw_label(self, context, event):
+        font_id = 0  # デフォルトのフォントを使用
+        fontsize = 25
+        line_height = fontsize
+        blf.size(font_id, fontsize)
+        blf.position(font_id, self.mouse_pos.x, self.mouse_pos.y, 0)
+        blf.draw(0, "Align view to edge normal side:")
+        blf.position(font_id, self.mouse_pos.x, self.mouse_pos.y + line_height, 0)
+        blf.draw(0, f"X={self.dir[0]}, Y={self.dir[1]}, Z={self.dir[2]}")
+
+    def execute(self, context):
+        obj = context.edit_object
+        bm = bmesh.from_edit_mesh(obj.data)
+        selected_edges = [edge for edge in bm.edges if edge.select]
+        # 選択された辺の中心、エッジ方向
+        total_center = Vector((0, 0, 0))
+        total_direction = Vector((0, 0, 0))
+        total_edge_normal = Vector((0, 0, 0))
+        for edge in selected_edges:
+            v1 = obj.matrix_world @ edge.verts[0].co
+            v2 = obj.matrix_world @ edge.verts[1].co
+            total_center += (v1 + v2) / 2
+            total_direction += (v2 - v1).normalized()
+            # 辺に接続する面の法線
+            connected_faces = edge.link_faces
+            if not connected_faces:
+                nv1 = obj.matrix_world.to_3x3() @ v1.normal  # to_3x3は回転・スケール行列のフィルタ
+                nv2 = obj.matrix_world.to_3x3() @ v2.normal
+                total_edge_normal += (nv1 + nv2).normalized()
+            else:
+                # 法線を計算（複数の面がある場合は平均法線を使用）
+                normal = Vector((0, 0, 0))
+                for face in connected_faces:
+                    normal += face.normal
+                total_edge_normal += normal.normalized()
+        average_center = total_center / len(selected_edges)
+        average_direction = total_direction.normalized()
+        average_normal = total_edge_normal.normalized()
+        # 法線に対して横方向を計算
+        side_vector = average_direction.cross(average_normal).normalized()
+        # ビューポートの正面方向と一致するように回転を計算
+        rotation = side_vector.rotation_difference(self.dir)
+        # ビューポート値を更新
+        self.start_location = context.region_data.view_location.copy()
+        self.start_rotation = context.region_data.view_rotation.copy()
+        self.target_rotation = rotation
+        self.target_location = average_center
+        self.elapsed = 0.0
+        self.start_time = time.time()
+        if self.timer is None:
+            print("eventSTart")
+            self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
+            context.window_manager.modal_handler_add(self)
+        if self.label_handler is None:
+            print("eventSTart2")
+            self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (self, context), "WINDOW", 'POST_PIXEL')
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context, event):
+        self.mouse_pos.x = event.mouse_x
+        self.mouse_pos.y = event.mouse_y
+        bpy.context.area.tag_redraw()
+        if event.type in {"X", "Y", "Z"}:
+            if event.value == "PRESS" and not self.is_pressed_key:
+                self.dir[0] = 0 if event.type != "X" else -1 if self.dir[0] == 1 else 1
+                self.dir[1] = 0 if event.type != "Y" else -1 if self.dir[1] == 1 else 1
+                self.dir[2] = 0 if event.type != "Z" else -1 if self.dir[2] == 1 else 1
+                self.is_pressed_key = True
+                return self.execute(context)
+            elif event.value == "RELEASE":  
+                self.is_pressed_key = False
+        elif 0.1 < self.elapsed and event.type in {"LEFTMOUSE", "RIGHTMOUSE", "MIDDLEMOUSE", "ESC", "SPACE", "RET"}:
+            return self.cancel(context)
+        if self.elapsed <= 1 and event.type == "TIMER":
+            self.elapsed = time.time() - self.start_time
+            progress = self.elapsed / self.duration
+            t = min(progress, 1.0)
+            # アニメ
+            new_location = self.start_location.lerp(self.target_location, t)
+            new_rotation = self.start_rotation.slerp(self.target_rotation, t)
+            context.region_data.view_location = new_location
+            context.region_data.view_rotation = new_rotation
+        return {"RUNNING_MODAL"}
+
+    def cancel(self, context):
+        print("cancel")
+        _Util.show_report(self, "CANCELLED")
+        if self.label_handler:
+            bpy.types.SpaceView3D.draw_handler_remove(self.label_handler, "WINDOW")
+            self.label_handler = None
+        if self.timer:
+            context.window_manager.event_timer_remove(self.timer)
+            self.timer = None
+        return {"CANCELLED"}
+
+
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_MirrorSeam,
@@ -710,7 +850,9 @@ classes = (
     MPM_OT_VertCreasePanel,
     MPM_OT_EdgeCreasePanel,
     MPM_OT_DuplicateMirror,
-    MPM_OT_GenterateBoneFromEdge,
+    MPM_OT_GenterateBonesAlongSelectedEdge,
+    MPM_OT_AlignViewToEdgeNormalSide,
+    MPM_OT_AlignViewToEdgeNormalSideModal,
 )
 
 
