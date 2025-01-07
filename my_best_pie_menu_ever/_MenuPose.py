@@ -68,6 +68,10 @@ class MPM_OT_ARP_SnapIKFK(bpy.types.Operator):
     bl_label = "AutoRigPro: Snap IK-FK"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        return _Util.get_armature(context.active_object) != None
+
     def execute(self, context):
         current_mode = context.active_object.mode
         arm = _Util.get_armature(context.active_object)

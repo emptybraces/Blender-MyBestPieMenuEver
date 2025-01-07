@@ -20,11 +20,6 @@ def MenuPrimary(pie, context):
     # box menu
     row = box.row()
 
-    # util
-    box = row.box()
-    box.label(text="Utility", icon="MODIFIER")
-    MirrorVertexGroup(box)
-
     # brushes
     box = row.box()
     box.label(text="Brush Property", icon="BRUSH_DATA")
@@ -72,6 +67,12 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", min(1, brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
 
+    # util
+    box = row.box()
+    box.label(text="Utility", icon="MODIFIER")
+    MirrorVertexGroup(box)
+
+
 # --------------------------------------------------------------------------------
 
 
@@ -82,9 +83,8 @@ def MenuSecondary(pie, context):
 
 
 def MirrorVertexGroup(layout):
-    r = layout.column(align=True)
-    r.label(text="Create VGroup Mirror:")
-    r = r.row(align=True)
+    r = layout.row(align=True)
+    r.label(text="Create VGroup Mirror")
     _Util.layout_operator(r, MPM_OT_MirrorVGFromSelectedListItem.bl_idname)
     _Util.layout_operator(r, MPM_OT_MirrorVGFromSelectedBone.bl_idname)
 
@@ -134,12 +134,12 @@ class MPM_OT_MirrorVGFromSelectedBone(bpy.types.Operator):
 
 class MPM_OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
     bl_idname = "mpm.mirror_vg_from_list"
-    bl_label = "Selected VGroup"
+    bl_label = "Active"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context):
-        return context.active_object != None
+        return context.active_object != None and any(context.active_object.vertex_groups)
 
     def execute(self, context):
         msg = ""

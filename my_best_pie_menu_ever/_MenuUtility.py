@@ -1,16 +1,23 @@
 import os
 import subprocess
 import bpy
+import bmesh
 from . import _Util
 from . import _AddonPreferences
 from ._MenuPose import MPM_OT_ResetBoneTransform
 from . import g
-import mathutils
-import bmesh
+from time import time
+from mathutils import Vector, Quaternion
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
+
+
+class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
+    pos: bpy.props.FloatVectorProperty()
+    rot: bpy.props.FloatVectorProperty(size=4)
+    distance: bpy.props.FloatProperty()
 
 
 def PieMenuDraw_Utility(layout, context):
@@ -77,7 +84,7 @@ def DrawView3D(layout, context):
     box.label(text="Settings")
     c = box.column(align=True)
     view = context.space_data
-    shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading   
+    shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
 
     # オーバーレイ、ボー、
     overlay = getattr(context.space_data, "overlay", None)
@@ -232,14 +239,14 @@ class MPM_OT_Utility_CopyPRSBase():
                     obj.rotation_euler = active_obj.rotation_euler
                 elif type(self) is MPM_OT_Utility_CopyScale:
                     obj.scale = active_obj.scale
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
     bl_idname = "mpm.copy_position"
     bl_label = "Position"
     bl_description = "Position copy from active_object to selections."
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     def execute(self, context): return super().execute(context)
 
 
@@ -247,7 +254,7 @@ class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator
     bl_idname = "mpm.copy_rosition"
     bl_label = "Rotation"
     bl_description = "Rotation copy from active_object to selections."
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     def execute(self, context): return super().execute(context)
 
 
@@ -255,7 +262,7 @@ class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
     bl_idname = "mpm.copy_scale"
     bl_label = "Scale"
     bl_description = "Scale copy from active_object to selections."
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     def execute(self, context): return super().execute(context)
 # --------------------------------------------------------------------------------
 
@@ -364,7 +371,7 @@ class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
             c.label(text=i)
 
     def execute(self, context):
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
@@ -431,7 +438,7 @@ class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
     bl_idname = "mpm.snap_cursor_to_selected_ex"
     bl_label = "Snap 3DCursor to selected EX"
     bl_description = "Snap 3DCursor to selected EX"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     perpendicular: bpy.props.FloatProperty(
         name="Perpendicular", description="Slide in the direction of the perpendicular vector between the two selected items")
     offset: bpy.props.FloatVectorProperty(name="Offset")
@@ -451,29 +458,29 @@ class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
         selected_objects = context.selected_objects
-        center = sum((obj.matrix_world.translation for obj in selected_objects), mathutils.Vector()) / len(selected_objects)
+        center = sum((obj.matrix_world.translation for obj in selected_objects), Vector()) / len(selected_objects)
         self.perpendicular_vec = None
         if obj.mode == "EDIT":
             bm = bmesh.from_edit_mesh(obj.data)
             selected_verts = [v.co for v in bm.verts if v.select]
             if 0 < len(selected_verts):
-                center = sum(selected_verts, mathutils.Vector()) / len(selected_verts)
+                center = sum(selected_verts, Vector()) / len(selected_verts)
                 center = obj.matrix_world @ center  # オブジェクトのワールドマトリクスを考慮
             if 2 == len(selected_verts):
-                self.perpendicular_vec = (selected_verts[1] - selected_verts[0]).cross(mathutils.Vector((0, 0, 1)))
+                self.perpendicular_vec = (selected_verts[1] - selected_verts[0]).cross(Vector((0, 0, 1)))
                 self.perpendicular_vec.normalize()
         else:
             if 2 == len(selected_objects):
                 self.perpendicular_vec = (selected_objects[1].matrix_world.translation -
-                                          selected_objects[0].matrix_world.translation).cross(mathutils.Vector((0, 0, 1)))
+                                          selected_objects[0].matrix_world.translation).cross(Vector((0, 0, 1)))
                 self.perpendicular_vec.normalize()
             selected_objects = context.selected_objects
-            center = sum((obj.matrix_world.translation for obj in selected_objects), mathutils.Vector()) / len(selected_objects)
+            center = sum((obj.matrix_world.translation for obj in selected_objects), Vector()) / len(selected_objects)
         # 3Dカーソルの位置を設定
         p = center.copy()
         if self.perpendicular_vec != None:
             p += self.perpendicular_vec * self.perpendicular
-        p += mathutils.Vector(self.offset)
+        p += Vector(self.offset)
         context.scene.cursor.location = p
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
@@ -483,7 +490,7 @@ class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
     bl_idname = "mpm.snap_cursor_on_view_plane"
     bl_label = ""
     bl_description = "Move 3DCursor on View Plane"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def modal(self, context, event):
         context.area.tag_redraw()
@@ -538,24 +545,27 @@ class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
 class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
     bl_idname = "mpm.viewport_camera_transform_save"
     bl_label = "Save"
-    bl_description = "Save the current viewport camera position and rotation"
+    bl_description = "Save the current viewport camera transform"
 
     def execute(self, context):
-        area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
-        space = next(space for space in area.spaces if space.type == 'VIEW_3D')
         prop = context.scene.mpm_prop.ViewportCameraTransforms.add()
-        prop.pos = space.region_3d.view_location.copy()
-        prop.rot = space.region_3d.view_rotation.copy()
-        prop.distance = space.region_3d.view_distance
+        prop.pos = context.region_data.view_location.copy()
+        prop.rot = context.region_data.view_rotation.copy()
+        prop.distance = context.region_data.view_distance
         # self.report({'INFO'}, f"Saved Location: {prop.pos}, Rotation: {prop.rot}, Distance: {prop.distance}")
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
     bl_idname = "mpm.viewport_camera_transform_restore_panel"
     bl_label = "Restore"
-    bl_description = "Restore the saved viewport camera position and rotation"
-    init_values = {}
+    bl_description = "Restore the saved viewport camera transform"
+    bl_options = {"REGISTER", "UNDO"}
+    anim_start_time = 0.0
+    anim_elapsed = 0.0
+    anim_duration = 0.5
+    is_canceling = False
+    timer = None
 
     @classmethod
     def poll(cls, context):
@@ -563,61 +573,98 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
 
     def invoke(self, context, event):
         # 現在値を保存
-        area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
-        space = next(space for space in area.spaces if space.type == 'VIEW_3D')
-        self.init_values["pos"] = space.region_3d.view_location.copy()
-        self.init_values["rot"] = space.region_3d.view_rotation.copy()
-        self.init_values["distance"] = space.region_3d.view_distance
+        data = context.region_data
+        self.original_transform = (data.view_location.copy(), data.view_rotation.copy(), data.view_distance)
         g.is_force_cancelled_piemenu = True
+        self.anim_elapsed = 9
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        self.layout.label(text="Click to apply.")
-        c = self.layout.column(align=True)
+        c = self.layout.column()
+        c.label(text="Click to apply.")
+        c = c.column(align=True)
         for i, data in enumerate(context.scene.mpm_prop.ViewportCameraTransforms):
-            data = context.scene.mpm_prop.ViewportCameraTransforms[i]
-            name = f"#{i} - POS({int(data.pos[0])},{int(data.pos[1])},{int(data.pos[2])}), D({int(data.distance)})"
+            # 方角を求める
+            directions = [
+                ("↑", Vector((0, 1, 0))),
+                ("↗", Vector((0.707, 0.707, 0))),
+                ("→", Vector((1, 0, 0))),
+                ("↘", Vector((0.707, -0.707, 0))),
+                ("↓", Vector((0, -1, 0))),
+                ("↙", Vector((-0.707, -0.707, 0))),
+                ("←", Vector((-1, 0, 0))),
+                ("↖", Vector((-0.707, 0.707, 0))),
+            ]
+            # 現在のカメラの向き（+Yベクトルを回転させる）
+            camera_direction = Quaternion(data.rot) @ Vector((0, 1, 0))
+            # 最小角度を探す
+            closest_direction = None
+            min_angle = float("inf")
+            for name, direction in directions:
+                angle = camera_direction.angle(direction)
+                if angle < min_angle:
+                    min_angle = angle
+                    closest_direction = name
+            label = f"POS({int(data.pos[0])},{int(data.pos[1])},{int(data.pos[2])}), ROT({closest_direction}), D({int(data.distance)})"
             r = c.row(align=True)
-            r.operator(MPM_OT_Utility_ViewportCameraTransformRestore.bl_idname, text=name).idx = i
-            r.operator(MPM_OT_Utility_ViewportCameraTransformRestoreRemove.bl_idname, text="", icon="X").idx = i
+            _Util.MPM_OT_CallbackOperator.operator(r, label, self.bl_idname+str(i), self.on_click_restore, (context, i))
+            _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_remove, (context, i), "X")
+            _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_movedown, (context, i), "TRIA_DOWN")
+            _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_moveup, (context, i), "TRIA_UP")
+
+    def on_click_moveup(self, context, idx):
+        if 0 < idx:
+            context.scene.mpm_prop.ViewportCameraTransforms.move(idx, idx-1)
+
+    def on_click_movedown(self, context, idx):
+        if idx + 1 < len(context.scene.mpm_prop.ViewportCameraTransforms):
+            context.scene.mpm_prop.ViewportCameraTransforms.move(idx, idx+1)
+
+    def on_click_remove(self, context, idx):
+        context.scene.mpm_prop.ViewportCameraTransforms.remove(idx)
+
+    def on_click_restore(self, context, idx):
+        data = context.scene.mpm_prop.ViewportCameraTransforms[idx]
+        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
+                                                            target_pos=data["pos"], target_rot=data["rot"], target_distance=data["distance"])
 
     def cancel(self, context):
-        # 復元
-        area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
-        space = next(space for space in area.spaces if space.type == 'VIEW_3D')
-        space.region_3d.view_location = self.init_values["pos"]
-        space.region_3d.view_rotation = self.init_values["rot"]
-        space.region_3d.view_distance = self.init_values["distance"]
+        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
+                                                            target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
 
     def execute(self, context):
-        return {'FINISHED'}
-
-
-class MPM_OT_Utility_ViewportCameraTransformRestore(bpy.types.Operator):
-    bl_idname = "mpm.viewport_camera_transform_restore"
-    bl_label = ""
-    idx: bpy.props.IntProperty()
-
-    def execute(self, context):
-        area = next(area for area in context.screen.areas if area.type == 'VIEW_3D')
-        space = next(space for space in area.spaces if space.type == 'VIEW_3D')
-        data = context.scene.mpm_prop.ViewportCameraTransforms[self.idx]
-        space.region_3d.view_location = data.pos
-        space.region_3d.view_rotation = data.rot
-        space.region_3d.view_distance = data.distance
         return {"FINISHED"}
 
 
-class MPM_OT_Utility_ViewportCameraTransformRestoreRemove(bpy.types.Operator):
-    bl_idname = "mpm.viewport_camera_transform_restore_remove"
+class MPM_OT_Utility_ViewportCameraTransformRestoreModal(bpy.types.Operator):
+    bl_idname = "mpm.viewport_camera_transform_restore_modal"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
-    idx: bpy.props.IntProperty()
+    bl_options = {"REGISTER", "UNDO"}
+    target_transform: bpy.props.PointerProperty(type=MPM_Prop_ViewportCameraTransform)
+    target_pos: bpy.props.FloatVectorProperty(size=3)
+    target_rot: bpy.props.FloatVectorProperty(size=4)
+    target_distance: bpy.props.FloatProperty()
+    anim_start_time = 0.0
+    anim_elapsed = 0.0
+    anim_duration = 0.25
+    is_canceling = False
 
-    def execute(self, context):
-        context.scene.mpm_prop.ViewportCameraTransforms.remove(self.idx)
+    def invoke(self, context, event):
+        self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
+        data = context.region_data
+        self.start_transform = (data.view_location.copy(), data.view_rotation.copy(), data.view_distance)
+        context.window_manager.modal_handler_add(self)
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context, event):
+        if self.timer.time_duration <= self.anim_duration:
+            t = min(1.0, self.timer.time_duration / self.anim_duration)
+            context.region_data.view_location = self.start_transform[0].lerp(self.target_pos, t)
+            context.region_data.view_rotation = self.start_transform[1].slerp(self.target_rot, t)
+            context.region_data.view_distance = _Util.lerp(self.start_transform[2], self.target_distance, t)
+            return {"RUNNING_MODAL"}
+        context.window_manager.event_timer_remove(self.timer)
         return {"FINISHED"}
-    import bpy
 
 
 class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
@@ -657,6 +704,7 @@ class MPM_OT_Utility_AnimationFrameReset(bpy.types.Operator):
 
 
 classes = (
+    MPM_Prop_ViewportCameraTransform,
     MPM_OT_Utility_CopyPosition,
     MPM_OT_Utility_CopyRosition,
     MPM_OT_Utility_CopyScale,
@@ -667,8 +715,7 @@ classes = (
     MPM_OT_Utility_ViewportShadingSetMaterial,
     MPM_OT_Utility_ViewportCameraTransformSave,
     MPM_OT_Utility_ViewportCameraTransformRestorePanel,
-    MPM_OT_Utility_ViewportCameraTransformRestore,
-    MPM_OT_Utility_ViewportCameraTransformRestoreRemove,
+    MPM_OT_Utility_ViewportCameraTransformRestoreModal,
     MPM_OT_Utility_OpenFile,
     MPM_OT_Utility_ARPExportPanel,
     MPM_OT_Utility_ARPExportSingle,

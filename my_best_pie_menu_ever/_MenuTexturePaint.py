@@ -119,13 +119,9 @@ def MenuPrimary(pie, context):
 def DrawBehaviourOfControlKey(layout):
     row = layout.row(align=True)
     row.label(text="Holding Ctrl Key is")
-    ctrl_behaviour = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
-    if ctrl_behaviour:  # Erase Alpha mode
-        _Util.layout_operator(row, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=False)
-        _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "Erase Alpha", False, depress=True)
-    else:
-        _Util.layout_operator(row, _Util.MPM_OT_Empty.bl_idname, "SubColor", False, depress=True)
-        _Util.layout_operator(row, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=False)
+    is_erace_alpha = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
+    _Util.layout_operator(row, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", is_erace_alpha, depress=not is_erace_alpha)
+    _Util.layout_operator(row, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", not is_erace_alpha, depress=is_erace_alpha)
 
 
 def DrawBrushAngle(context, layout):

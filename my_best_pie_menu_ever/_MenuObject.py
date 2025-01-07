@@ -107,6 +107,10 @@ class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
     bl_label = "Remove Unused VGroup"
     bl_options = {"REGISTER", "UNDO"}
 
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
     def execute(self, context):
         current_mode = context.active_object.mode
         if current_mode != "OBJECT":

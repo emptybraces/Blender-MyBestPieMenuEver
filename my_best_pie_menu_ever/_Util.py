@@ -1,5 +1,6 @@
 import bpy
 import math
+from typing import Callable
 from mathutils import Vector, Quaternion, Matrix
 from bpy.types import Panel, Menu, Operator
 from rna_prop_ui import PropertyPanel
@@ -26,7 +27,7 @@ class MPM_OT_SetterBase():
         target = getattr(context, self.propName, None)
         if target != None:
             setattr(target, self.propName, self.value)
-        return {'FINISHED'}
+        return {"FINISHED"}
 
     @staticmethod
     def operator(layout, clsid, text, targetObj, propName, value=None, icon="NONE", depress=None, isActive=None):
@@ -45,7 +46,7 @@ class MPM_OT_SetterBase():
 class MPM_OT_SetPointer(bpy.types.Operator):
     bl_idname = "mpm.set_pointer"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     attrName: bpy.props.StringProperty()
     attrNameTarget: bpy.props.StringProperty()
     attrNameValue: bpy.props.StringProperty()
@@ -55,7 +56,7 @@ class MPM_OT_SetPointer(bpy.types.Operator):
         value = getattr(context, self.attrNameValue, None)
         # print(context, self.attrNameTarget, self.attrNameValue, target, value)
         setattr(target, self.attrName, value)
-        return {'FINISHED'}
+        return {"FINISHED"}
 
     @staticmethod
     def operator(layout, text, targetObj, propName, value, isActive=True, depress=False):
@@ -73,9 +74,9 @@ class MPM_OT_SetPointer(bpy.types.Operator):
 
 
 class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "mpm.set_bool"
+    bl_idname = "mpm.util_set_bool"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     value: bpy.props.BoolProperty()
 
     @staticmethod
@@ -84,9 +85,9 @@ class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
 
 
 class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "mpm.set_invert"
+    bl_idname = "mpm.util_set_invert"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     value: bpy.props.BoolProperty()
 
     @staticmethod
@@ -95,9 +96,9 @@ class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
 
 
 class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "mpm.set_int"
+    bl_idname = "mpm.util_set_int"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     value: bpy.props.IntProperty()
 
     @staticmethod
@@ -106,9 +107,9 @@ class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
 
 
 class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "mpm.set_single"
+    bl_idname = "mpm.util_set_single"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     value: bpy.props.FloatProperty()
 
     @staticmethod
@@ -117,9 +118,9 @@ class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
 
 
 class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
-    bl_idname = "mpm.set_string"
+    bl_idname = "mpm.util_set_string"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
     value: bpy.props.StringProperty()
 
     @staticmethod
@@ -131,12 +132,24 @@ class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetString.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 
 
-class MPM_OT_Empty(bpy.types.Operator):
-    bl_idname = "mpm.empty"
-    bl_label = "empty"
+class MPM_OT_CallbackOperator(bpy.types.Operator):
+    bl_idname = "mpm.util_callback"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    key: bpy.props.StringProperty()
+    func_dict: dict[str, Callable[[], None]] = {}
 
     def execute(self, context):
-        return {'FINISHED'}
+        f, args = self.func_dict[self.key]
+        f(*args)  # 引数展開
+        return {"FINISHED"}
+
+    @staticmethod
+    def operator(layout, text, unique_id, func, args, icon="NONE", isActive=True, depress=False):
+        op = layout.operator(MPM_OT_CallbackOperator.bl_idname, text=text, icon=icon, depress=depress)
+        op.key = unique_id + "_" + func.__name__
+        MPM_OT_CallbackOperator.func_dict[op.key] = (func, args)
+        layout.enabled = isActive
 
 
 class MPM_OT_CallPanel(bpy.types.Operator):
@@ -147,7 +160,7 @@ class MPM_OT_CallPanel(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.wm.call_panel(name=self.name, keep_open=self.keep_open)
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 # --------------------------------------------------------------------------------
@@ -190,7 +203,7 @@ def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon=
 
 def layout_for_mirror(layout):
     row = layout.row(align=True)
-    row.label(icon='MOD_MIRROR')
+    row.label(icon="MOD_MIRROR")
     sub = row.row(align=True)
     sub.scale_x = 0.9
     return row, sub
@@ -326,9 +339,13 @@ def view_rotation(view_dir, up_dir):
     rotation_matrix = Matrix((
         right,      # X軸
         up,         # Y軸
-        view_dir   # Z軸 
+        view_dir   # Z軸
     )).transposed()  # Blenderの行列は列優先なので転置
     return rotation_matrix.to_quaternion()
+
+
+def get_any_view3d_space():
+    return next((area.spaces.active for area in bpy.context.screen.areas if area.type == "VIEW_3D"), None)
 
 
 # --------------------------------------------------------------------------------
@@ -339,7 +356,7 @@ classes = (
     MPM_OT_SetSingle,
     MPM_OT_SetPointer,
     MPM_OT_SetString,
-    MPM_OT_Empty,
+    MPM_OT_CallbackOperator,
     MPM_OT_CallPanel,
 )
 

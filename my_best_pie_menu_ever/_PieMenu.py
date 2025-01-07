@@ -78,7 +78,7 @@ class MPM_OT_OpenPieMenu(bpy.types.Operator):
                 context.window.screen = context.window.screen
                 return {"FINISHED"}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
-        return {'RUNNING_MODAL'}
+        return {"RUNNING_MODAL"}
 
     def invoke(self, context, event):
         g.is_force_cancelled_piemenu = False
@@ -143,12 +143,6 @@ def Placeholder(pie, context, text):
 # --------------------------------------------------------------------------------
 
 
-class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
-    pos: bpy.props.FloatVectorProperty()
-    rot: bpy.props.FloatVectorProperty(size=4)
-    distance: bpy.props.FloatProperty()
-
-
 def mode_change_handler(scene):
     if bpy.context.active_object and scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
         bpy.context.active_object.show_wire = bpy.context.mode == "SCULPT"
@@ -173,10 +167,10 @@ class MPM_Prop(bpy.types.PropertyGroup):
     PrevModeNameTemp: bpy.props.StringProperty()
 
     # ビューポートカメラ位置保存スタック
-    ViewportCameraTransforms: bpy.props.CollectionProperty(type=MPM_Prop_ViewportCameraTransform)
+    ViewportCameraTransforms: bpy.props.CollectionProperty(type=_MenuUtility.MPM_Prop_ViewportCameraTransform)
 
     # スカルプトモードのワイヤーフレーム
-    IsAutoEnableWireframeOnSculptMode: bpy.props.BoolProperty()
+    IsAutoEnableWireframeOnSculptMode: bpy.props.BoolProperty() = False
 
     # テクスチャペイントのカラーパレット
     def on_update_color_palette_popover_enum(self, context):
@@ -224,7 +218,6 @@ class MPM_Prop(bpy.types.PropertyGroup):
 classes = (
     VIEW3D_MT_my_pie_menu,
     MPM_OT_OpenPieMenu,
-    MPM_Prop_ViewportCameraTransform,
     MPM_Prop,
 )
 modules = [
@@ -244,10 +237,10 @@ modules = [
 
 
 def register():
-    _Util.register_classes(classes)
-    bpy.types.Scene.mpm_prop = bpy.props.PointerProperty(type=MPM_Prop)
     for m in modules:
         m.register()
+    _Util.register_classes(classes)
+    bpy.types.Scene.mpm_prop = bpy.props.PointerProperty(type=MPM_Prop)
 
 
 def unregister():

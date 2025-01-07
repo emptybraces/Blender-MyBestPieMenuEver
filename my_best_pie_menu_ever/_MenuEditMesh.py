@@ -839,7 +839,7 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
             self.start_time = time.time()
             return {"RUNNING_MODAL"}
             # アニメ
-        if self.elapsed <= 1 and event.type == "TIMER":
+        if self.elapsed <= self.translate_duration and event.type == "TIMER":
             self.elapsed = time.time() - self.start_time
             t = min(1.0, self.elapsed / self.translate_duration)
             context.region_data.view_location = self.start_location.lerp(self.target_location, t)
