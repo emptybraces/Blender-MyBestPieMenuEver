@@ -1,12 +1,11 @@
 import bpy
 import bmesh
-import blf
 from . import _Util
 from . import _UtilInput
 from . import _UtilBlf
 from . import g
 from ._MenuObject import LayoutSwitchSelectionOperator
-from mathutils import Vector, Matrix, Color
+from mathutils import Vector, Matrix
 import time
 import math
 # --------------------------------------------------------------------------------
@@ -23,24 +22,24 @@ def MenuPrimary(pie, context):
     # ヘッダー
     r.label(text="Proportional")
     # プロポーショナル
-    r2 = r.row(align=True)
+    rr = r.row(align=True)
     tool_settings = context.scene.tool_settings
-    _Util.layout_prop(r2, tool_settings, "use_proportional_edit", text="")
-    r2.prop_with_popover(tool_settings, "proportional_edit_falloff", text="", icon_only=True, panel="VIEW3D_PT_proportional_edit",)
-    _Util.layout_prop(r2, tool_settings, "use_proportional_connected")
+    _Util.layout_prop(rr, tool_settings, "use_proportional_edit", text="")
+    rr.prop_with_popover(tool_settings, "proportional_edit_falloff", text="", icon_only=True, panel="VIEW3D_PT_proportional_edit",)
+    _Util.layout_prop(rr, tool_settings, "use_proportional_connected")
     # r2.label(text="                                          ")
 
     # スナップ
     # box2 = r.box()
     r.label(text="Snap")
-    r2 = r.row(align=True)
-    _Util.layout_prop(r2, tool_settings, "use_snap", text="")
+    rr = r.row(align=True)
+    _Util.layout_prop(rr, tool_settings, "use_snap", text="")
     snap_items = bpy.types.ToolSettings.bl_rna.properties["snap_elements"].enum_items
     for elem in tool_settings.snap_elements:
         icon = snap_items[elem].icon
         break
     del snap_items
-    r2.popover(panel="VIEW3D_PT_snapping", icon=icon, text="",)
+    rr.popover(panel="VIEW3D_PT_snapping", icon=icon, text="",)
 
     r = box.row(align=True)
     c = r.column(align=True)
@@ -67,10 +66,10 @@ def MenuPrimary(pie, context):
     box = c.box()
     box.label(text="UV", icon="UV")
     cc = box.column(align=True)
-    r2 = cc.row(align=True)
-    _Util.layout_operator(r2, "mesh.mark_seam").clear = False
-    _Util.layout_operator(r2, "mesh.mark_seam", "", icon="REMOVE").clear = True
-    row, sub = _Util.layout_for_mirror(r2)
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, "mesh.mark_seam").clear = False
+    _Util.layout_operator(rr, "mesh.mark_seam", "", icon="REMOVE").clear = True
+    row, sub = _Util.layout_for_mirror(rr)
     _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
     _Util.layout_operator(cc, "uv.unwrap")
@@ -81,6 +80,22 @@ def MenuPrimary(pie, context):
     box.label(text="Vertex", icon="VERTEXSEL")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
+
+    # 非表示
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, MPM_OT_HideVerts.bl_idname, "Hide", icon="HIDE_ON").mode = "Hide"
+    _Util.layout_operator(rr, MPM_OT_HideVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Hide Other"
+    _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "Show", icon="HIDE_OFF").mode = "Show"
+    _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
+    _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
+    # _Util.MPM_OT_CallbackOperator.operator(rr, "Hide", "EditMesh.hide", lambda: bpy.ops.mesh.hide(
+    #     unselected=False), None, "HIDE_ON", _Util.is_selected_verts(context.edit_object))
+    # _Util.MPM_OT_CallbackOperator.operator(rr, "", "EditMesh.hide_other", lambda: bpy.ops.mesh.hide(
+    #     unselected=True), None, "ARROW_LEFTRIGHT", _Util.is_selected_verts(context.edit_object))
+    # _Util.MPM_OT_CallbackOperator.operator(rr, "Show", "EditMesh.hide", lambda: bpy.ops.mesh.hide(
+    #     unselected=False), None, "HIDE_ON", _Util.is_selected_verts(context.edit_object))
+    # _Util.MPM_OT_CallbackOperator.operator(rr, "", "EditMesh.hide_other", lambda: bpy.ops.mesh.hide(
+    #     unselected=True), None, "ARROW_LEFTRIGHT", _Util.is_selected_verts(context.edit_object))
 
     # VertexGroupメニュー
     box = c2.box()
@@ -94,11 +109,11 @@ def MenuPrimary(pie, context):
     box = c3.box()
     box.label(text="Edge", icon="EDGESEL")
     c = box.column(align=True)
-    r2 = c.row(align=True)
+    rr = c.row(align=True)
     # シャープ
-    _Util.layout_operator(r2, "mesh.mark_sharp").clear = False
-    _Util.layout_operator(r2, "mesh.mark_sharp", "", icon="REMOVE").clear = True
-    row, sub = _Util.layout_for_mirror(r2)
+    _Util.layout_operator(rr, "mesh.mark_sharp").clear = False
+    _Util.layout_operator(rr, "mesh.mark_sharp", "", icon="REMOVE").clear = True
+    row, sub = _Util.layout_for_mirror(rr)
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
     # クリーズ
@@ -112,12 +127,12 @@ def MenuPrimary(pie, context):
     box = c3.box()
     box.label(text="Apply", icon="MODIFIER")
     c = box.column(align=True)
-    r2 = c.row(align=False)
-    r2.label(text="Symmetrize", icon="MOD_MIRROR")
-    op = _Util.layout_operator(r2, "mesh.symmetry_snap", "+X to -X")
+    rr = c.row(align=False)
+    rr.label(text="Symmetrize", icon="MOD_MIRROR")
+    op = _Util.layout_operator(rr, "mesh.symmetry_snap", "+X to -X")
     op.direction = 'POSITIVE_X'
     op.factor = 1
-    op = _Util.layout_operator(r2, "mesh.symmetry_snap", "-X to +X")
+    op = _Util.layout_operator(rr, "mesh.symmetry_snap", "-X to +X")
     op.direction = 'NEGATIVE_X'
     op.factor = 1
     # 頂点ミラー複製
@@ -125,9 +140,9 @@ def MenuPrimary(pie, context):
     # 法線
     _Util.layout_operator(c, "mesh.normals_make_consistent", icon="NORMALS_FACE").inside = False
     # マージ
-    r2 = c.row(align=True)
-    r2.operator_menu_enum("mesh.merge", "type")
-    _Util.layout_operator(r2, "mesh.remove_doubles", icon="X")
+    rr = c.row(align=True)
+    rr.operator_menu_enum("mesh.merge", "type")
+    _Util.layout_operator(rr, "mesh.remove_doubles", icon="X")
     _Util.layout_operator(c, "mesh.delete_loose", icon="X")
 
 # --------------------------------------------------------------------------------
@@ -142,9 +157,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        # 選択されたオブジェクトがメッシュであり、少なくとも1つの頂点が選択されているかどうかをチェック
-        obj = context.edit_object
-        return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
+        return _Util.is_selected_verts(context.edit_object)
 
     def execute(self, context):
         obj = context.object
@@ -276,6 +289,52 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
+class MPM_OT_HideVerts(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_hide_verts"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = """Hides the selected vertex.
+Option1: Hides all vertices except the selected."""
+    mode: bpy.props.EnumProperty(name="Mode", items=[("Hide", "Hide", ""), ("Hide Other", "Hide Other", "")])
+
+    @classmethod
+    def poll(self, context):
+        return _Util.is_selected_verts(context.edit_object)
+
+    def execute(self, context):
+        if self.mode == "Hide":
+            return bpy.ops.mesh.hide(unselected=False)
+        else:
+            return bpy.ops.mesh.hide(unselected=True)
+
+
+class MPM_OT_ShowVerts(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_show_verts"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = """Show the hide vertices.
+Option1: Shown vertices are selected.
+Option2: Select only the shown vertices."""
+    mode: bpy.props.EnumProperty(name="Mode", items=[("Show", "Show", ""), ("Show Only", "Show Only", ""), ("Show Selected", "Show Selected", "")])
+
+    @classmethod
+    def poll(self, context):
+        obj = context.edit_object
+        return obj and obj.type == "MESH" and any(e.hide for e in bmesh.from_edit_mesh(obj.data).verts)
+
+    def execute(self, context):
+        if self.mode == "Show":
+            bpy.ops.mesh.reveal(select=False)
+        elif self.mode == "Show Only":
+            bpy.ops.mesh.reveal(select=True)
+        elif self.mode == "Show Selected":
+            bpy.ops.mesh.select_all(action="DESELECT")
+            bpy.ops.mesh.reveal(select=True)
+        return {"FINISHED"}
+
+# --------------------------------------------------------------------------------
+
+
 class MPM_OT_MirrorSeam(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_seam"
     bl_label = "Mirror Seam"
@@ -328,8 +387,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.edit_object
-        return obj and obj.type == "MESH" and any(v.select for v in bmesh.from_edit_mesh(obj.data).verts)
+        return _Util.is_selected_verts(context.edit_object)
 
     def execute(self, context):
         mesh = context.object.data
@@ -351,20 +409,12 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_edge_crease_panel"
     bl_label = "Edge Crease"
     bl_options = {"REGISTER", "UNDO"}
-    crease_value: bpy.props.FloatProperty(
-        name="Crease",
-        description="Adjust the crease value of selected edges",
-        min=0.0,
-        max=1.0,
-        default=0.0,
-        step=0.1,
-        precision=2
-    )
+    crease_value: bpy.props.FloatProperty(name="Crease", description="Adjust the crease value of selected edges",
+                                          min=0.0, max=1.0, default=0.0, step=0.1, precision=2)
 
     @classmethod
     def poll(self, context):
-        obj = context.edit_object
-        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+        return _Util.is_selected_edges(context.edit_object)
 
     def execute(self, context):
         mesh = context.object.data
@@ -393,11 +443,10 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        bm = bmesh.from_edit_mesh(context.object.data)
-        return any(e.select for e in bm.verts)
+        return _Util.is_selected_verts(context.edit_object)
 
     def execute(self, context):
-        obj = context.object
+        obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
 
         selected_verts = [v for v in bm.verts if v.select]
@@ -540,8 +589,7 @@ class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.edit_object
-        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+        return _Util.is_selected_edges(context.edit_object)
 
     def execute(self, context):
         obj = context.edit_object
@@ -728,8 +776,7 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.edit_object
-        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+        return _Util.is_selected_edges(context.edit_object)
 
     def invoke(self, context, event):
         self.is_reverting = False
@@ -738,7 +785,6 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.original_location = context.region_data.view_location.copy()
         self.original_rotation = context.region_data.view_rotation.copy()
         _UtilInput.init()
-        print(1)
         return self.execute(context)
 
     def execute(self, context):
@@ -761,8 +807,8 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
                 # 辺に接続する面の法線
                 connected_faces = edge.link_faces
                 if not connected_faces:
-                    nv1 = obj.matrix_world.to_3x3() @ v1.normal  # to_3x3は回転・スケール行列のフィルタ
-                    nv2 = obj.matrix_world.to_3x3() @ v2.normal
+                    nv1 = obj.matrix_world.to_3x3() @ edge.verts[0].normal  # to_3x3は回転・スケール行列のフィルタ
+                    nv2 = obj.matrix_world.to_3x3() @ edge.verts[1].normal
                     total_normal += (nv1 + nv2).normalized()
                 else:
                     # 法線を計算（複数の面がある場合は平均法線を使用）
@@ -832,9 +878,11 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
             context.region_data.view_distance -= 0.5
         elif event.type == "WHEELDOWNMOUSE":
             context.region_data.view_distance += 0.5
+
+            return {"PASS_THROUGH"}
         if _UtilInput.is_pressed_keys(event, "LEFTMOUSE", "RET"):
             return self.cancel(context)
-        if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "MIDDLEMOUSE", "ESC", "SPACE", "RET"):
+        if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "ESC", "SPACE", "RET"):
             self.is_reverting = True
             self.start_time = time.time()
             return {"RUNNING_MODAL"}
@@ -875,8 +923,11 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 
         _UtilBlf.draw_field(fid, "Direction = ", text, "| press X, Y, Z, twice to invert", x, y, 0)
         _UtilBlf.draw_field(fid, "Wireframe = ", str(bpy.context.space_data.shading.show_xray), "| press ALT + Z", x, y, 1)
-        _UtilBlf.draw_info(fid, "Mousewheel: Zoom", x, y, 3)
-        _UtilBlf.draw_info(fid, "LMB: Finish", x, y, 4)
+        _UtilBlf.draw_field(fid, "Zoom", None, "| mousewheel", x, y, 2)
+        _UtilBlf.draw_field(fid, "Cancel", None, "| right click", x + 100, y, 2)
+        _UtilBlf.draw_field(fid, "Finish", None, "| left click", x + 200, y, 2)
+        # _UtilBlf.draw_msg(fid, "Mousewheel: Zoom", x, y, 4)
+        # _UtilBlf.draw_msg(fid, "LMB: Finish", x, y, 5)
 
 
 # --------------------------------------------------------------------------------
@@ -888,6 +939,8 @@ classes = (
     MPM_OT_SelectVertexGroup,
     MPM_OT_VertCreasePanel,
     MPM_OT_EdgeCreasePanel,
+    MPM_OT_HideVerts,
+    MPM_OT_ShowVerts,
     MPM_OT_DuplicateMirror,
     MPM_OT_GenterateBonesAlongSelectedEdge,
     MPM_OT_AlignViewToEdgeNormalSideModal,

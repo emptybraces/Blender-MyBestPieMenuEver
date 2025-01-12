@@ -33,6 +33,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 ### [EDIT mode]
 - Quick access to Edge/Vertex crease.
 - Quick access to Vertex groups.
+- Show/hide advanced shortcuts.
 - Mirror duplication.
 - Generate bones along selected edges.
 - Align view to edge normal side.

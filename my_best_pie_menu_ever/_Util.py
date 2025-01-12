@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import math
 from typing import Callable
 from mathutils import Vector, Quaternion, Matrix
@@ -135,19 +136,22 @@ class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
 class MPM_OT_CallbackOperator(bpy.types.Operator):
     bl_idname = "mpm.util_callback"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     key: bpy.props.StringProperty()
     func_dict: dict[str, Callable[[], None]] = {}
 
     def execute(self, context):
         f, args = self.func_dict[self.key]
-        f(*args)  # 引数展開
+        if args:
+            f(*args)  # 引数展開
+        else:
+            f()
         return {"FINISHED"}
 
     @staticmethod
     def operator(layout, text, unique_id, func, args, icon="NONE", isActive=True, depress=False):
         op = layout.operator(MPM_OT_CallbackOperator.bl_idname, text=text, icon=icon, depress=depress)
-        op.key = unique_id + "_" + func.__name__
+        op.key = unique_id + "." + func.__name__
         MPM_OT_CallbackOperator.func_dict[op.key] = (func, args)
         layout.enabled = isActive
 
@@ -174,6 +178,11 @@ def select_active(obj):
 
 def select_add(obj):
     obj.select_set(True)
+    
+def is_selected_verts(obj):
+    return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).verts)
+def is_selected_edges(obj):
+    return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 
 
 def print_enum_values(obj, prop_name):
@@ -283,6 +292,8 @@ def show_report_warn(self, *args):
 def show_report_error(self, *args):
     self.report({"ERROR"}, " ".join(map(str, args)))
 
+def clamp(value, min_value, max_value):
+    return max(min(value, max_value), min_value)
 
 def lerp(start, end, t):
     return start + t * (end - start)

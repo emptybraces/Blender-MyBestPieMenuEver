@@ -35,6 +35,7 @@ files = "Import/export FBX from/to disk"
 # - [ビューポート]ユーティリティペインを整理。
 # - [UV]ユーティリティペインを更新。
 # - [EditMesh]AlignViewToEdgeNormalSideを追加。
+# - [EditMesh]表示、非表示ショートカットを追加。
 # - [修正]頂点グループ選択処理が遅いバグを修正。
 # - [修正]ワイヤーフレーム自動オンが起動時に働かないバグを修正。
 #
