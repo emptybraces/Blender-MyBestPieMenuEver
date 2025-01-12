@@ -14,6 +14,7 @@ VEC3 = (lambda: Vector((0, 0, 0)))
 VEC3_X = (lambda: Vector((1, 0, 0)))
 VEC3_Y = (lambda: Vector((0, 1, 0)))
 VEC3_Z = (lambda: Vector((0, 0, 1)))
+callbacks = {}
 # HT – ヘッダー
 # MT – メニュー
 # OT – オペレーター
@@ -178,9 +179,12 @@ def select_active(obj):
 
 def select_add(obj):
     obj.select_set(True)
-    
+
+
 def is_selected_verts(obj):
     return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).verts)
+
+
 def is_selected_edges(obj):
     return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 
@@ -292,8 +296,10 @@ def show_report_warn(self, *args):
 def show_report_error(self, *args):
     self.report({"ERROR"}, " ".join(map(str, args)))
 
+
 def clamp(value, min_value, max_value):
     return max(min(value, max_value), min_value)
+
 
 def lerp(start, end, t):
     return start + t * (end - start)
@@ -308,10 +314,14 @@ def lerp_out_cubic(start, end, t):
     return start + (end - start) * (1 - (1 - t) ** 3)
 
 
-def lerp_multi_distance(points, t):
+def lerp_inverse(value, frm, to):
+    if frm == to:
+        return 1
+    return (value - frm) / (to - frm)
+
+
+def lerp_segments_by_distance(points, t):
     num_points = len(points)
-    if num_points < 2:
-        raise ValueError("At least two points are required for interpolation.")
     # 各セグメントの距離を計算
     distances = []
     total_distance = 0.0
@@ -328,10 +338,32 @@ def lerp_multi_distance(points, t):
             segment_t = (t * total_distance - accumulated_distance) / distance
             p1 = points[i]
             p2 = points[i + 1]
-            interpolated_position = (1 - segment_t) * p1 + segment_t * p2
-            return interpolated_position
+            return (lerp(p1, p2, segment_t), i, segment_t)
         accumulated_distance += distance
     return points[-1]
+
+
+def lerp_inverse_segments_by_distance(points, idx):
+    num_points = len(points)
+    if num_points - 1 == idx:
+        return 1
+    # 各セグメントの距離を計算
+    distances = []
+    total_distance = 0.0
+    for i in range(num_points - 1):
+        p1 = points[i]
+        p2 = points[i + 1]
+        distance = (p2 - p1).length
+        distances.append(distance)
+        total_distance += distance
+    accumulated_distance = 0.0
+    idx_to_distance = 0.0
+    for i, distance in enumerate(distances):
+        if idx <= i:
+            idx_to_distance = lerp(accumulated_distance, accumulated_distance + distance, i-idx)
+            break
+        accumulated_distance += distance
+    return idx_to_distance / total_distance
 
 
 def replace_leading_underscores(string, replacement_char):
@@ -357,6 +389,17 @@ def view_rotation(view_dir, up_dir):
 
 def get_any_view3d_space():
     return next((area.spaces.active for area in bpy.context.screen.areas if area.type == "VIEW_3D"), None)
+
+
+def callback_try(key, *args):
+    cb = callbacks.get(key, lambda *args: None)
+    if callable(cb):
+        cb(*args)
+
+
+def callback_remove(key):
+    if key in callbacks:
+        del callbacks[key]
 
 
 # --------------------------------------------------------------------------------

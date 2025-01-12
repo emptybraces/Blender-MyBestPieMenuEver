@@ -21,8 +21,8 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Move 3DCursor on ViewPlane.
 - Quickly switch the UVMap of the active object.
 - Reset all bone transform of selected object.
-- World position/rotation/scale can be copy/paste to selected objects.
-- Viewport camera's current position/rotation/distance can be saved/restored stacablity.
+- World transform can be copy/paste to selected objects.
+- Viewport camera's current transform can be saved/restored stackability, and animation feature.
 - (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
 - (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 

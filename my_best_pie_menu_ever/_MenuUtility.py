@@ -2,6 +2,7 @@ import os
 import subprocess
 import bpy
 import bmesh
+import math
 from . import _Util
 from . import _AddonPreferences
 from ._MenuPose import MPM_OT_ResetBoneTransform
@@ -15,7 +16,7 @@ from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_locatio
 
 
 class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
-    pos: bpy.props.FloatVectorProperty()
+    pos: bpy.props.FloatVectorProperty(size=3)
     rot: bpy.props.FloatVectorProperty(size=4)
     distance: bpy.props.FloatProperty()
 
@@ -561,40 +562,35 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
     bl_label = "Restore"
     bl_description = "Restore the saved viewport camera transform"
     bl_options = {"REGISTER", "UNDO"}
-    anim_start_time = 0.0
-    anim_elapsed = 0.0
-    anim_duration = 0.5
-    is_canceling = False
-    timer = None
+    is_skip = False
 
     @classmethod
     def poll(cls, context):
         return 0 < len(context.scene.mpm_prop.ViewportCameraTransforms)
 
     def invoke(self, context, event):
+        g.is_force_cancelled_piemenu = True
         # 現在値を保存
         data = context.region_data
         self.original_transform = (data.view_location.copy(), data.view_rotation.copy(), data.view_distance)
-        g.is_force_cancelled_piemenu = True
-        self.anim_elapsed = 9
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         c = self.layout.column()
         c.label(text="Click to apply.")
         c = c.column(align=True)
+        # 方角を求める
+        directions = [
+            ("↑", Quaternion((0, 0, 1), math.radians(0)) @ _Util.VEC3_Y()),
+            ("↖", Quaternion((0, 0, 1), math.radians(45)) @ _Util.VEC3_Y()),
+            ("←", Quaternion((0, 0, 1), math.radians(90)) @ _Util.VEC3_Y()),
+            ("↙", Quaternion((0, 0, 1), math.radians(135)) @ _Util.VEC3_Y()),
+            ("↓", Quaternion((0, 0, 1), math.radians(180)) @ _Util.VEC3_Y()),
+            ("↘", Quaternion((0, 0, 1), math.radians(225)) @ _Util.VEC3_Y()),
+            ("→", Quaternion((0, 0, 1), math.radians(270)) @ _Util.VEC3_Y()),
+            ("↗", Quaternion((0, 0, 1), math.radians(315)) @ _Util.VEC3_Y()),
+        ]
         for i, data in enumerate(context.scene.mpm_prop.ViewportCameraTransforms):
-            # 方角を求める
-            directions = [
-                ("↑", Vector((0, 1, 0))),
-                ("↗", Vector((0.707, 0.707, 0))),
-                ("→", Vector((1, 0, 0))),
-                ("↘", Vector((0.707, -0.707, 0))),
-                ("↓", Vector((0, -1, 0))),
-                ("↙", Vector((-0.707, -0.707, 0))),
-                ("←", Vector((-1, 0, 0))),
-                ("↖", Vector((-0.707, 0.707, 0))),
-            ]
             # 現在のカメラの向き（+Yベクトルを回転させる）
             camera_direction = Quaternion(data.rot) @ Vector((0, 1, 0))
             # 最小角度を探す
@@ -611,6 +607,14 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
             _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_remove, (context, i), "X")
             _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_movedown, (context, i), "TRIA_DOWN")
             _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_moveup, (context, i), "TRIA_UP")
+        c.label(text = "Transition")
+        r = c.row(align=True)
+        _Util.layout_prop(r, self, "transition_factor", isActive=1 < len(context.scene.mpm_prop.ViewportCameraTransforms))
+        _Util.layout_prop(r, self, "transition_span", isActive=1 < len(context.scene.mpm_prop.ViewportCameraTransforms))
+        _Util.MPM_OT_CallbackOperator.operator(r, "Play", self.bl_idname+".transition_animation", self.on_click_play, (context,), "PLAY")
+
+    def execute(self, context):
+        return {"FINISHED"}
 
     def on_click_moveup(self, context, idx):
         if 0 < idx:
@@ -625,44 +629,83 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
 
     def on_click_restore(self, context, idx):
         data = context.scene.mpm_prop.ViewportCameraTransforms[idx]
+        self.is_skip = False
+        _Util.callbacks["on_finish"] = lambda: self._on_finish(context, idx)
         bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
                                                             target_pos=data["pos"], target_rot=data["rot"], target_distance=data["distance"])
+
+    def on_click_play(self, context):
+        _Util.callbacks["on_finish"] = lambda: self._on_finish(context, -1)
+        # _Util.callbacks["on_update_factor"] = lambda x: setattr(self, "transition_factor", x)
+        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT", anim_whole=True, anim_duration=self.transition_span)
 
     def cancel(self, context):
         bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
                                                             target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
 
-    def execute(self, context):
-        return {"FINISHED"}
+    def _on_transition_update(self, context):
+        if MPM_OT_Utility_ViewportCameraTransformRestorePanel.is_skip:
+            return
+        MPM_OT_Utility_ViewportCameraTransformRestorePanel.set_view(self.transition_factor)
+
+    transition_factor: bpy.props.FloatProperty(name="Factor", default=0.0, min=0.0, max=1.0, step=0.1, update=_on_transition_update)
+    transition_span: bpy.props.FloatProperty(name="Duration", default=5, min=1)
+
+    def _on_finish(self, context, idx):
+        _Util.callback_remove("on_finish")
+        _Util.callback_remove("on_update_factor")
+        pos = [Vector(i.pos) for i in context.scene.mpm_prop.ViewportCameraTransforms]
+        MPM_OT_Utility_ViewportCameraTransformRestorePanel.is_skip = True
+        if idx == -1:
+            idx = len(pos) - 1
+        self.transition_factor = _Util.lerp_inverse_segments_by_distance(pos, idx)
+        MPM_OT_Utility_ViewportCameraTransformRestorePanel.is_skip = False
+
+    @staticmethod
+    def set_view(factor):
+        data = bpy.context.scene.mpm_prop.ViewportCameraTransforms
+        pos = [Vector(i.pos) for i in data]
+        rot = [Quaternion(i.rot) for i in data]
+        distance = [i.distance for i in data]
+        value, idx, t = _Util.lerp_segments_by_distance(pos, factor)
+        bpy.context.region_data.view_location = value
+        bpy.context.region_data.view_rotation = rot[idx].slerp(rot[idx+1], t)
+        bpy.context.region_data.view_distance = _Util.lerp(distance[idx], distance[idx+1], t)
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestoreModal(bpy.types.Operator):
     bl_idname = "mpm.viewport_camera_transform_restore_modal"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
-    target_transform: bpy.props.PointerProperty(type=MPM_Prop_ViewportCameraTransform)
     target_pos: bpy.props.FloatVectorProperty(size=3)
     target_rot: bpy.props.FloatVectorProperty(size=4)
     target_distance: bpy.props.FloatProperty()
+    anim_duration: bpy.props.FloatProperty(default=0.25)
+    anim_whole: bpy.props.BoolProperty()
     anim_start_time = 0.0
-    anim_elapsed = 0.0
-    anim_duration = 0.25
-    is_canceling = False
 
     def invoke(self, context, event):
-        self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
+        if self.anim_whole == False:
+            self.anim_duration = 0.25
         data = context.region_data
         self.start_transform = (data.view_location.copy(), data.view_rotation.copy(), data.view_distance)
+        self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        if self.timer.time_duration <= self.anim_duration:
-            t = min(1.0, self.timer.time_duration / self.anim_duration)
-            context.region_data.view_location = self.start_transform[0].lerp(self.target_pos, t)
-            context.region_data.view_rotation = self.start_transform[1].slerp(self.target_rot, t)
-            context.region_data.view_distance = _Util.lerp(self.start_transform[2], self.target_distance, t)
-            return {"RUNNING_MODAL"}
+        if not event.type in {"RIGHTMOUSE", "ESC"} and self.timer.time_duration <= self.anim_duration:
+            if self.anim_whole:
+                t = min(1.0, self.timer.time_duration / self.anim_duration)
+                MPM_OT_Utility_ViewportCameraTransformRestorePanel.set_view(t)
+                return {"RUNNING_MODAL"}
+            else:
+                t = min(1.0, self.timer.time_duration / self.anim_duration)
+                context.region_data.view_location = self.start_transform[0].lerp(self.target_pos, t)
+                context.region_data.view_rotation = self.start_transform[1].slerp(self.target_rot, t)
+                context.region_data.view_distance = _Util.lerp(self.start_transform[2], self.target_distance, t)
+                return {"RUNNING_MODAL"}
+        _Util.callback_try("on_finish")
         context.window_manager.event_timer_remove(self.timer)
         return {"FINISHED"}
 

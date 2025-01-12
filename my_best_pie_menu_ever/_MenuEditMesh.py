@@ -744,10 +744,10 @@ class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
                     bone.head += n_list[i] * self.slide_to_normal
                     bone.tail += n_list[i+1] * self.slide_to_normal
                 else:
-                    bone.head = obj.matrix_world @ _Util.lerp_multi_distance(co_list, (i) / (fixed_count-1))
-                    bone.tail = obj.matrix_world @ _Util.lerp_multi_distance(co_list, (i+1) / (fixed_count-1))
-                    bone.head += _Util.lerp_multi_distance(n_list, (i) / (fixed_count-1)) * self.slide_to_normal
-                    bone.tail += _Util.lerp_multi_distance(n_list, (i+1) / (fixed_count-1)) * self.slide_to_normal
+                    bone.head = obj.matrix_world @ _Util.lerp_segments_by_distance(co_list, (i) / (fixed_count-1))[0]
+                    bone.tail = obj.matrix_world @ _Util.lerp_segments_by_distance(co_list, (i+1) / (fixed_count-1))[0]
+                    bone.head += _Util.lerp_segments_by_distance(n_list, (i) / (fixed_count-1))[0] * self.slide_to_normal
+                    bone.tail += _Util.lerp_segments_by_distance(n_list, (i+1) / (fixed_count-1))[0] * self.slide_to_normal
                 # print(i, (i) / fixed_count, (i+1) / fixed_count)
                 # print("n=", info_list[i]["n"], info_list[i+1]["n"], self.slide_to_normal)
                 bone.parent = prev_bone if self.bone_chain else None
