@@ -142,8 +142,12 @@ def Placeholder(pie, context, text):
 # c.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
 # --------------------------------------------------------------------------------
 
-
+last_mode = ""
 def mode_change_handler(scene):
+    global last_mode
+    if last_mode == bpy.context.mode:
+        return
+    last_mode = bpy.context.mode
     if bpy.context.active_object and scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
         bpy.context.active_object.show_wire = bpy.context.mode == "SCULPT"
 
