@@ -88,14 +88,6 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "Show", icon="HIDE_OFF").mode = "Show"
     _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
     _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
-    # _Util.MPM_OT_CallbackOperator.operator(rr, "Hide", "EditMesh.hide", lambda: bpy.ops.mesh.hide(
-    #     unselected=False), None, "HIDE_ON", _Util.is_selected_verts(context.edit_object))
-    # _Util.MPM_OT_CallbackOperator.operator(rr, "", "EditMesh.hide_other", lambda: bpy.ops.mesh.hide(
-    #     unselected=True), None, "ARROW_LEFTRIGHT", _Util.is_selected_verts(context.edit_object))
-    # _Util.MPM_OT_CallbackOperator.operator(rr, "Show", "EditMesh.hide", lambda: bpy.ops.mesh.hide(
-    #     unselected=False), None, "HIDE_ON", _Util.is_selected_verts(context.edit_object))
-    # _Util.MPM_OT_CallbackOperator.operator(rr, "", "EditMesh.hide_other", lambda: bpy.ops.mesh.hide(
-    #     unselected=True), None, "ARROW_LEFTRIGHT", _Util.is_selected_verts(context.edit_object))
 
     # VertexGroupメニュー
     box = c2.box()
@@ -189,6 +181,8 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
     bl_label = "Select Vertex Groups"
     vg_counts = []
     init_verts = []
+    limit_rows = 50
+    single_width = 170
 
     @classmethod
     def poll(self, context):
@@ -209,25 +203,25 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
             for i in v[deform_layer].keys():
                 self.vg_counts[i] += 1
         g.is_force_cancelled_piemenu = True
-        return context.window_manager.invoke_props_dialog(self)
+        column_cnt = int(1 + int(len(obj.vertex_groups) / self.limit_rows))
+        return context.window_manager.invoke_props_dialog(self, width=self.single_width * column_cnt)
 
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
-        # clear ボタン
-        _Util.layout_operator(self.layout, MPM_OT_SelectVertexGroup.bl_idname,
-                              text=MPM_OT_SelectVertexGroup.ID_CLEAR_SELS).vgroup_name = MPM_OT_SelectVertexGroup.ID_CLEAR_SELS
+        _Util.MPM_OT_CallbackOperator.operator(self.layout, "Deselect All", self.bl_idname + ".clear",
+                                               self.on_click_clear, (context, ), "X", _Util.is_selected_verts(context.edit_object))
         # vgrupsボタン
         cnt = 0
-        limit_rows = 25
         r = self.layout.row(align=True)
-        cc = r.column(align=True)
+        c = r.column(align=True)
         obj = context.object
         for vg in obj.vertex_groups:
             vcnt = self.vg_counts[vg.index]
-            _Util.layout_operator(cc, MPM_OT_SelectVertexGroup.bl_idname, text=(f"{vg.name} (vcnt={vcnt})"), isActive=0 < vcnt).vgroup_name = vg.name
+            _Util.MPM_OT_CallbackOperator.operator(c, f"{vg.name} (vcnt={vcnt})", self.bl_idname + vg.name,
+                                                   self.on_click_item, (context, vg.name), isActive=0 < vcnt)
             cnt += 1
-            if cnt % limit_rows == 0:
-                cc = r.column(align=True)
+            if cnt % self.limit_rows == 0:
+                c = r.column(align=True)
 
     def cancel(self, context):
         # 復元
@@ -238,41 +232,28 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
             bm.verts[index].select = True
         bmesh.update_edit_mesh(context.object.data)
         context.object.update_from_editmode()
+        _Util.MPM_OT_CallbackOperator.clear()
 
     def execute(self, context):
+        _Util.MPM_OT_CallbackOperator.clear()
         return {"FINISHED"}
 
+    def on_click_clear(self, context):
+        bpy.ops.mesh.select_all(action="DESELECT")
 
-class MPM_OT_SelectVertexGroup(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_select_vertex_group"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
-    ID_CLEAR_SELS = "CLEAR SELECTION"
-    vgroup_name: bpy.props.StringProperty()
-
-    def execute(self, context):
-        obj = context.object
-        if self.vgroup_name == MPM_OT_SelectVertexGroup.ID_CLEAR_SELS:
-            bm = bmesh.from_edit_mesh(obj.data)
-            bm.select_flush(False)
-            for v in bm.verts:
-                v.select = False
-            bmesh.update_edit_mesh(obj.data)
-            obj.update_from_editmode()
-            return {"FINISHED"}
-        if self.vgroup_name not in obj.vertex_groups:
-            self.report({"WARNING"}, f"Can't found VGroup: {self.vgroup_name}")
-            return {"CANCELLED"}
+    def on_click_item(self, context, vgname):
+        bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type="VERT")
+        obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
         deform_layer = bm.verts.layers.deform.active
         if not deform_layer:
-            self.report({"WARNING"}, f"Unexptected: {self.vgroup_name}")
+            self.report({"WARNING"}, f"Unexptected: {vgname}")
             return {"CANCELLED"}
 
-        # 選択されている頂点があるかどう調べる
+        # 選択されている頂点があるかどうか調べる
         bm.select_flush(False)
         is_select = True
-        vg_idx = obj.vertex_groups[self.vgroup_name].index
+        vg_idx = obj.vertex_groups[vgname].index
         for v in bm.verts:
             if vg_idx in v[deform_layer]:
                 if v.select:
@@ -285,7 +266,7 @@ class MPM_OT_SelectVertexGroup(bpy.types.Operator):
                     v.select = False
         bmesh.update_edit_mesh(obj.data)
         obj.update_from_editmode()
-        return {"FINISHED"}
+
 # --------------------------------------------------------------------------------
 
 
@@ -936,7 +917,6 @@ classes = (
     MPM_OT_MirrorSharp,
     MPM_OT_AddVertexGroupPanel,
     MPM_OT_SelectVertexGroupPanel,
-    MPM_OT_SelectVertexGroup,
     MPM_OT_VertCreasePanel,
     MPM_OT_EdgeCreasePanel,
     MPM_OT_HideVerts,

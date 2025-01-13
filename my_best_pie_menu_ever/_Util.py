@@ -151,11 +151,16 @@ class MPM_OT_CallbackOperator(bpy.types.Operator):
 
     @staticmethod
     def operator(layout, text, unique_id, func, args, icon="NONE", isActive=True, depress=False):
+        if isActive != None:
+            layout = layout.row(align=True)
+            layout.enabled = isActive
         op = layout.operator(MPM_OT_CallbackOperator.bl_idname, text=text, icon=icon, depress=depress)
         op.key = unique_id + "." + func.__name__
         MPM_OT_CallbackOperator.func_dict[op.key] = (func, args)
-        layout.enabled = isActive
 
+    @classmethod
+    def clear(cls):
+        cls.func_dict.clear()
 
 class MPM_OT_CallPanel(bpy.types.Operator):
     bl_idname = "mpm.call_panel"

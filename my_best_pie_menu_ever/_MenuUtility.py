@@ -607,14 +607,20 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
             _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_remove, (context, i), "X")
             _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_movedown, (context, i), "TRIA_DOWN")
             _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname+str(i), self.on_click_moveup, (context, i), "TRIA_UP")
-        c.label(text = "Transition")
+        c.label(text="Transition")
         r = c.row(align=True)
         _Util.layout_prop(r, self, "transition_factor", isActive=1 < len(context.scene.mpm_prop.ViewportCameraTransforms))
         _Util.layout_prop(r, self, "transition_span", isActive=1 < len(context.scene.mpm_prop.ViewportCameraTransforms))
         _Util.MPM_OT_CallbackOperator.operator(r, "Play", self.bl_idname+".transition_animation", self.on_click_play, (context,), "PLAY")
 
     def execute(self, context):
+        _Util.MPM_OT_CallbackOperator.clear()
         return {"FINISHED"}
+
+    def cancel(self, context):
+        _Util.MPM_OT_CallbackOperator.clear()
+        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
+                                                            target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
 
     def on_click_moveup(self, context, idx):
         if 0 < idx:
@@ -638,10 +644,6 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
         _Util.callbacks["on_finish"] = lambda: self._on_finish(context, -1)
         # _Util.callbacks["on_update_factor"] = lambda x: setattr(self, "transition_factor", x)
         bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT", anim_whole=True, anim_duration=self.transition_span)
-
-    def cancel(self, context):
-        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
-                                                            target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
 
     def _on_transition_update(self, context):
         if MPM_OT_Utility_ViewportCameraTransformRestorePanel.is_skip:
