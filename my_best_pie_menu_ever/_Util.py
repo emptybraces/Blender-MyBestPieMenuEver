@@ -61,13 +61,13 @@ class MPM_OT_SetPointer(bpy.types.Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def operator(layout, text, targetObj, propName, value, isActive=True, depress=False):
+    def operator(layout, text, targetObj, propName, value, isActive=True, depress=False, icon_value=0):
         key_target = replace_leading_underscores(text, '-')
         key_value = key_target + "_value"
         # context_pointer_setはopeartorの前で設定しないと有効にならない
         layout.context_pointer_set(name=key_target, data=targetObj)
         layout.context_pointer_set(name=key_value, data=value)
-        op = layout.operator(MPM_OT_SetPointer.bl_idname, text=text, depress=depress)
+        op = layout.operator(MPM_OT_SetPointer.bl_idname, text=text, depress=depress, icon_value=icon_value)
         op.attrName = propName
         op.attrNameTarget = key_target
         op.attrNameValue = key_value
@@ -186,8 +186,13 @@ def select_add(obj):
     obj.select_set(True)
 
 
-def is_selected_verts(obj):
-    return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).verts)
+def is_selected_verts(context):
+    if context.mode == "EDIT_MESH":
+        obj = context.edit_object
+        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).verts)
+    else:
+        obj = context.active_object
+        return obj and obj.type == "MESH" and any(v.select for v in obj.data.vertices)
 
 
 def is_selected_edges(obj):

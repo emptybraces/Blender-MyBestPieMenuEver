@@ -1,6 +1,9 @@
 import bpy
 from . import _Util
 from . import _AddonPreferences
+from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
+from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
+
 import bmesh
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
@@ -25,34 +28,62 @@ def MenuPrimary(pie, context):
     tool = context.tool_settings.sculpt
     current_brush = tool.brush
     limit_rows = _AddonPreferences.Accessor.get_sculpt_limit_row_count()
-    filters = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name().strip()
-    if filters:
-        for filter_name in filters.split(","):
-            for brush_data in bpy.data.brushes:
-                if brush_data.use_paint_sculpt and filter_name.strip().lower() == brush_data.name.lower():
-                    op = _Util.MPM_OT_SetPointer.operator(col2, brush_data.name, tool, "brush", brush_data, depress=current_brush == brush_data)
-                    cnt += 1
-                    if cnt % limit_rows == 0:
-                        col2 = row2.column(align=True)
-    else:
-        for i in bpy.data.brushes:
-            if i.use_paint_sculpt:
-                op = _Util.MPM_OT_SetPointer.operator(col2, i.name, tool, "brush", i, depress=current_brush == i)
-                cnt += 1
-                if cnt % limit_rows == 0:
-                    col2 = row2.column(align=True)
+    filter_names = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name().strip().split(",")
+    
+    # context.workspace.tools.from_space_view3d_mode(context.mode, create=False)
+    tool_defs = []
+    for item in ToolSelectPanelHelper._tools_flatten(VIEW3D_PT_tools_active.tools_from_context(context, context.mode)):
+        if item and item.data_block:
+            # print(dir(item))
+            icon_value = ToolSelectPanelHelper._icon_value_from_icon_handle(item.icon)
+            tool_defs.append((item.data_block, icon_value))
+            # print(item.label, item.data_block, icon_value)
+            # print(item)
+            # row2.template_icon(icon_value=icon_value, scale=0.5)
+    # if filters:
+    #     for filter_name in filters.split(","):
+    #         for brush_data in bpy.data.brushes:
+    #             if brush_data.use_paint_sculpt and filter_name.strip().lower() == brush_data.name.lower():
+    #                 _Util.MPM_OT_SetPointer.operator(col2, brush_data.name, tool, "brush", brush_data, depress=current_brush == brush_data)
+    #                 cnt += 1
+    #                 if cnt % limit_rows == 0:
+    #                     col2 = row2.column(align=True)
+    # else:
+    def _is_in_fileter(brush):
+        if len(filter_names) == 1 and filter_names[0] == "":
+            return True
+        for filter_name in filter_names:
+            if filter_name.strip().lower() == brush.name.lower():
+                return True
+        return False
+    for i in bpy.data.brushes:
+        if i.use_paint_sculpt and _is_in_fileter(i):
+            rr = col2.row(align=False)
+            icon_value = 0
+            for t in tool_defs:
+                if t[0] == i.sculpt_tool:
+                    rr.template_icon(icon_value=t[1], scale=1)
+                    icon_value = t[1]
+            _Util.MPM_OT_SetPointer.operator(rr, i.name, tool, "brush", i, depress=current_brush == i)
+            # _Util.MPM_OT_SetPointer.operator(rr, i.name, tool, "brush", i, depress=current_brush == i, icon_value=icon_value)
+            cnt += 1
+            if cnt % limit_rows == 0:
+                col2 = row2.column(align=True)
     # Strokes
     cnt = 0
     box = row.box()
     box.label(text="Stroke", icon="STROKE")
     row2 = box.row(align=True)
     col2 = row2.column(align=True)
-    for i in _Util.enum_values(tool.brush, "stroke_method"):
-        is_use = tool.brush.stroke_method == i
-        _Util.MPM_OT_SetString.operator(col2, i, tool.brush, "stroke_method", i, depress=is_use)
+    for i in _Util.enum_values(current_brush, "stroke_method"):
+        is_use = current_brush.stroke_method == i
+        _Util.MPM_OT_SetString.operator(col2, i, current_brush, "stroke_method", i, depress=is_use)
         cnt += 1
         if cnt % limit_rows == 0:
             col2 = row2.column(align=True)
+    # その他のブラシプロパティ
+
+    # bpy.data.brushes["A_Folds_Brush_16b"].use_automasking_face_sets = False
 
     # Smoothブラシの強さ
     rr = c.row()
@@ -129,14 +160,13 @@ class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
     bl_idname = "mpm.auto_wireframe_enable"
     bl_label = "Auto Show Wireframe"
     bl_options = {"REGISTER", "UNDO"}
-    
 
     def execute(self, context):
         from ._PieMenu import mode_change_handler
         context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode = not context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
         context.active_object.show_wire = context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
         indices = []
-        for i,e in enumerate(bpy.app.handlers.depsgraph_update_pre):
+        for i, e in enumerate(bpy.app.handlers.depsgraph_update_pre):
             if e.__name__ == mode_change_handler.__name__:
                 # print("atta", i)
                 indices.append(i)

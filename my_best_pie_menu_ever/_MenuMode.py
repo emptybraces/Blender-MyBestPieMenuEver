@@ -26,7 +26,7 @@ def PieMenuDraw_ChangeModeLast(layout, context):
     elif context.scene.mpm_prop.PrevModeName == "PAINT_VERTEX":
         DrawOperatorVertexPaintMode(layout, context)
     else:
-        layout.separator() # これで空白を描画して、位置を調整してる
+        layout.separator()  # これで空白を描画して、位置を調整してる
 
 
 def PieMenuDraw_ChangeMode(layout, context):
@@ -87,6 +87,7 @@ def DrawOperatorSculptMode(layout, context):
     if active_type_is_mesh:
         op.mode = "SCULPT"
     _Util.layout_operator(r, MPM_OT_ChangeSculptModeWithMask.bl_idname, "", icon="MOD_MASK")
+    _Util.layout_operator(r, MPM_OT_ChangeSculptModeWithFaceSets.bl_idname, "", icon="FACESEL")
 
 
 def DrawOperatorPoseMode(layout, context):
@@ -205,16 +206,46 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
     bl_idname = "mpm.change_sculpt_mode_with_mask"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Switches to sculpt mode with the selected vertices as masks"
 
     @classmethod
     def poll(cls, context):
-        obj = context.active_object
-        return obj and obj.type == "MESH" and any(v.select for v in obj.data.vertices)
+        return context.mode != "SCLUPT" and _Util.is_selected_verts(context)
 
     def execute(self, context):
         context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode="SCULPT")
+        mod = next((m for m in bpy.context.active_object.modifiers if m.type == 'MULTIRES'), None)
+        if mod:
+            is_vp = mod.show_viewport
+            mod.show_viewport = False
         bpy.ops.mpm.make_mask_with_selected_vert(is_invert=True)
+        if mod:
+            mod.show_viewport = is_vp
+        return {"FINISHED"}
+
+
+class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
+    bl_idname = "mpm.change_sculpt_mode_with_facesets"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Switches to sculpt mode with the selected vertices as facesets"
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode != "SCLUPT" and _Util.is_selected_verts(context)
+
+    def execute(self, context):
+        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
+        bpy.ops.object.mode_set(mode="SCULPT")
+        mod = next((m for m in bpy.context.active_object.modifiers if m.type == "MULTIRES"), None)
+        if mod:
+            is_vp = mod.show_viewport
+            mod.show_viewport = False
+        bpy.ops.mpm.make_mask_with_selected_vert(is_invert=True)
+        bpy.ops.sculpt.face_sets_create(mode="MASKED")
+        if mod:
+            mod.show_viewport = is_vp
         return {"FINISHED"}
 
 
@@ -246,6 +277,7 @@ classes = (
     MPM_OT_ChangeMode,
     MPM_OT_ChangeModeWithArmature,
     MPM_OT_ChangeSculptModeWithMask,
+    MPM_OT_ChangeSculptModeWithFaceSets,
     MPM_OT_ChangeModePose,
     MPM_OT_ChangeUITypeUV,
     MPM_OT_ChangeUITypeImage,

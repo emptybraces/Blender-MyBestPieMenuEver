@@ -149,7 +149,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context.edit_object)
+        return _Util.is_selected_verts(context)
 
     def execute(self, context):
         obj = context.object
@@ -209,10 +209,10 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
         _Util.MPM_OT_CallbackOperator.operator(self.layout, "Deselect All", self.bl_idname + ".clear",
-                                               self.on_click_clear, (context, ), "X", _Util.is_selected_verts(context.edit_object))
+                                               self.on_click_clear, (context, ), "X", _Util.is_selected_verts(context))
         # vgrupsボタン
         cnt = 0
-        r = self.layout.row(align=True)
+        r = self.layout.row(align=False)
         c = r.column(align=True)
         obj = context.object
         for vg in obj.vertex_groups:
@@ -280,7 +280,7 @@ Option1: Hides all vertices except the selected."""
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context.edit_object)
+        return _Util.is_selected_verts(context)
 
     def execute(self, context):
         if self.mode == "Hide":
@@ -368,7 +368,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context.edit_object)
+        return _Util.is_selected_verts(context)
 
     def execute(self, context):
         mesh = context.object.data
@@ -424,7 +424,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context.edit_object)
+        return _Util.is_selected_verts(context)
 
     def execute(self, context):
         obj = context.edit_object

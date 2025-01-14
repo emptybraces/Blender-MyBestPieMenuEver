@@ -30,7 +30,7 @@ def MenuPrimary(pie, context):
     for i in bpy.data.brushes:
         if i.use_paint_image and i.name.lower() not in brush_exclude_list:
             is_use = context.tool_settings.image_paint.brush.name == i.name
-            _Util.MPM_OT_SetPointer.operator(c2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use)
+            _Util.MPM_OT_SetPointer.operator(c2, i.name, context.tool_settings.image_paint, "brush", i, depress=is_use, icon_value=c2.icon(i))
             cnt += 1
             if cnt % limit_rows == 0:
                 c2 = r2.column(align=True)
