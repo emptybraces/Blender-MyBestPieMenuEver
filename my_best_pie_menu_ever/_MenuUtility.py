@@ -132,10 +132,13 @@ def DrawView3D(layout, context):
     _Util.layout_prop(r, context.active_object, "show_in_front")
     armature = _Util.get_armature(context.active_object)
     _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
-
     _Util.layout_prop(c, context.active_object, "show_wire")
-    _Util.layout_prop(c, context.active_object, "display_type")
-
+    
+    r = c.row(align=True)
+    r.label(text="Display Type")
+    icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
+    for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
+        _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier, icons[i], context.active_object.display_type == item.identifier)
     if armature != None:
         _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
     # UV

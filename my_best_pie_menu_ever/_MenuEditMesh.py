@@ -56,7 +56,10 @@ def MenuPrimary(pie, context):
     box.label(text="Selection", icon="ZOOM_SELECTED")
     cc = box.column(align=True)
 
-    _Util.layout_operator(cc, "mesh.select_mirror").extend = True
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, "mesh.select_mirror").extend = False
+    _Util.layout_operator(rr, "mesh.select_mirror", "", icon = "ADD").extend = True
+
     _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
     op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
