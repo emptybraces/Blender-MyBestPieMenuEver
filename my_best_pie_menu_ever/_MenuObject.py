@@ -1,6 +1,6 @@
 import bpy
 from . import _Util
-from . import _MenuWeightPaint
+from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_RemoveUnusedVertexGroup
 from ._MenuPose import MPM_OT_ARP_SnapIKFK
 
 # --------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ def MenuPrimary(pie, context):
     r = box.row()
     c = r.column(align=True)
 
-    _MenuWeightPaint.MirrorVertexGroup(c)
+    MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
     # if imported
@@ -102,48 +102,6 @@ class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
-    bl_idname = "mpm.remove_unused_vgroup"
-    bl_label = "Remove Unused VGroup"
-    bl_options = {"REGISTER", "UNDO"}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object != None and any(context.active_object.vertex_groups)
-
-    def execute(self, context):
-        current_mode = context.active_object.mode
-        if current_mode != "OBJECT":
-            bpy.ops.object.mode_set(mode="OBJECT")
-
-        obj = bpy.context.active_object
-        remove_groups = []
-        for vg in obj.vertex_groups:
-            has_weight = False
-            for vertex in obj.data.vertices:
-                for group in vertex.groups:
-                    if group.group == vg.index:
-                        has_weight = True
-                        break
-                if has_weight:
-                    break
-            # ウェイトが存在しない頂点グループ
-            if not has_weight:
-                remove_groups.append(vg)
-
-        # 削除
-        if 0 < len(remove_groups):
-            _Util.show_msgbox("\n".join(["Remove: " + i.name for i in remove_groups]), "Remove Unused Vetex Group")
-            for vg in remove_groups:
-                _Util.show_report(self, f"Remove: {vg.name}")
-                obj.vertex_groups.remove(vg)
-        else:
-            _Util.show_msgbox("Not found unused vertex groups.", "Remove Unused Vetex Group")
-
-        if current_mode != "OBJECT":
-            bpy.ops.object.mode_set(mode=current_mode)
-        return {"FINISHED"}
-
 
 # --------------------------------------------------------------------------------
 classes = [
@@ -151,7 +109,6 @@ classes = [
     MPM_OT_SwitchSelectionToolBox,
     MPM_OT_SwitchSelectionToolCircle,
     MPM_OT_SwitchSelectionToolLasso,
-    MPM_OT_RemoveUnusedVertexGroup,
 ]
 
 

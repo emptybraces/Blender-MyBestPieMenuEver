@@ -124,7 +124,7 @@ def DrawView3D(layout, context):
     col = row.column()
     # オブジェクトメニュー
     box = col.box()
-    box.label(text="Selected Object")
+    box.label(text="Active Object")
     c = box.column(align=True)
 
     c.enabled = context.active_object != None
@@ -359,7 +359,7 @@ class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
         return 0 < len(context.selected_objects) and context.mode == "OBJECT" and active != None and _Util.get_armature(active) != None
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self, width=500)
 
     def draw(self, context):
@@ -572,7 +572,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
         return 0 < len(context.scene.mpm_prop.ViewportCameraTransforms)
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         # 現在値を保存
         data = context.region_data
         self.original_transform = (data.view_location.copy(), data.view_rotation.copy(), data.view_distance)

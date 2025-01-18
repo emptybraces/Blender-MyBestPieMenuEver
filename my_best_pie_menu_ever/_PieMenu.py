@@ -66,6 +66,7 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
     bl_label = "My Best Pie Menu Ever"
 
     def modal(self, context, event):
+        context.area.tag_redraw()
         if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu_modal:
             if getattr(context.area.spaces.active, "image", None):
                 context.area.spaces.active.image.reload()
@@ -88,7 +89,6 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
                 self.release(context)
                 return {"CANCELLED"}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
-        context.area.tag_redraw()
         return {"RUNNING_MODAL"}
 
     def invoke(self, context, event):
@@ -96,24 +96,26 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         self._init_mouse_pos = Vector((event.mouse_x, event.mouse_y))
         # print(self._init_mouse_pos)
         safe_margin_min = (500, 450)
-        safe_margin_max_y = 200
+        safe_margin_max_y = 250
         self._init_mouse_pos.x = max(self._init_mouse_pos.x, safe_margin_min[0])
-        self._init_mouse_pos.y = min(max(self._init_mouse_pos.y, safe_margin_min[1]), context.area.height - safe_margin_max_y)
+        
+        self._init_mouse_pos.y = min(max(self._init_mouse_pos.y, safe_margin_min[1]), context.window.height - safe_margin_max_y)
         context.scene.mpm_prop.init()
         context.window_manager.modal_handler_add(self)
-        self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (context, ), "WINDOW", "POST_PIXEL")
+        self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
         return {"RUNNING_MODAL"}
 
     def release(self, context):
-        # print("close")
         if self.label_handler:
             bpy.types.SpaceView3D.draw_handler_remove(self.label_handler, "WINDOW")
             self.label_handler = None
             context.area.tag_redraw()
 
-    def draw_label(self, context):
-        _UtilBlf.draw_msg(0, "Clicking the button while holding down the Shift-key does not close this pie menu.",
+    def draw_label(self):
+        if g.is_force_cancelled_piemenu_modal:
+            return
+        _UtilBlf.draw_msg(0, "Holding Shift while clicking keeps this PIE open for sequential button presses!",
                           self._init_mouse_pos.x, self._init_mouse_pos.y - 70, "center")
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
@@ -240,7 +242,7 @@ class MPM_Prop(bpy.types.PropertyGroup):
             return 0
         return obj.data.uv_layers.active_index
     UVMapPopoverEnum: bpy.props.EnumProperty(
-        name="UVMap",
+        name="Active UVMap",
         description="Select UVMap want to be active",
         items=on_items_UVMapEnum,
         get=on_get_UVMapEnum,

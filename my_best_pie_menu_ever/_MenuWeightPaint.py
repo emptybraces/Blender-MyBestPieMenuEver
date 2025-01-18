@@ -70,7 +70,9 @@ def MenuPrimary(pie, context):
     # util
     box = row.box()
     box.label(text="Utility", icon="MODIFIER")
-    MirrorVertexGroup(box)
+    cc = box.column(align=True)
+    MirrorVertexGroup(cc)
+    _Util.layout_operator(cc, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
 
 # --------------------------------------------------------------------------------
@@ -117,7 +119,7 @@ class MPM_OT_MirrorVGFromSelectedBone(bpy.types.Operator):
         msg = ""
         selected_objects = context.selected_objects
         names = []
-        g.is_force_cancelled_piemenu_modal = True
+        g.g.force_cancel_piemenu_modal(context)
         for obj in selected_objects:
             names = self.get_selected_bone_names(obj)
             if names != None and context.active_object.type == "MESH":
@@ -142,16 +144,21 @@ class MPM_OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
         return context.active_object != None and any(context.active_object.vertex_groups)
 
     def execute(self, context):
-        msg = ""
+        current_mode = context.active_object.mode
+        if current_mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
         obj = context.active_object
         target_name = obj.vertex_groups.active.name
         new_name, actural_name, is_replace = mirror_vgroup(obj, target_name)
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         if is_replace:
             bpy.ops.mpm.mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
         else:
-            msg += f"{target_name} -> {actural_name}\n"
+            msg = f"{target_name} -> {actural_name}\n"
             _Util.show_msgbox(msg if msg else "Invalid selection!", "Mirror VGroup from selected vgroup")
+        if current_mode != "OBJECT":
+            bpy.ops.object.mode_set(mode=current_mode)
+        # bpy.app.timers.register(__popup, first_interval=0)
         return {"FINISHED"}
 
 
@@ -217,10 +224,58 @@ def mirror_vgroup(obj, name):
 # --------------------------------------------------------------------------------
 
 
+class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
+    bl_idname = "mpm.remove_unused_vgroup"
+    bl_label = "Remove Unused VGroup"
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Bulk remove vertex groups that do not have weights set"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
+    def execute(self, context):
+        g.force_cancel_piemenu_modal(context)
+        current_mode = context.active_object.mode
+        if current_mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+
+        obj = bpy.context.active_object
+        remove_groups = []
+        for vg in obj.vertex_groups:
+            has_weight = False
+            for vertex in obj.data.vertices:
+                for group in vertex.groups:
+                    if group.group == vg.index:
+                        has_weight = True
+                        break
+                if has_weight:
+                    break
+            # ウェイトが存在しない頂点グループ
+            if not has_weight:
+                remove_groups.append(vg)
+
+        # 削除
+        if 0 < len(remove_groups):
+            _Util.show_msgbox("\n".join(["Remove: " + i.name for i in remove_groups]), "Remove Unused Vetex Group")
+            for vg in remove_groups:
+                _Util.show_report(self, f"Remove: {vg.name}")
+                obj.vertex_groups.remove(vg)
+        else:
+            _Util.show_msgbox("Not found unused vertex groups.", "Remove Unused Vetex Group")
+
+        if current_mode != "OBJECT":
+            bpy.ops.object.mode_set(mode=current_mode)
+        return {"FINISHED"}
+
+# --------------------------------------------------------------------------------
+
+
 classes = (
     MPM_OT_MirrorVGFromSelectedBone,
     MPM_OT_MirrorVGFromSelectedListItem,
     MPM_OT_MirrorVGOverwriteConfirm,
+    MPM_OT_RemoveUnusedVertexGroup,
 )
 
 

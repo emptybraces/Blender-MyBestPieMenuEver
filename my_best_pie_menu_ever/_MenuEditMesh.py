@@ -5,6 +5,7 @@ from . import _UtilInput
 from . import _UtilBlf
 from . import g
 from ._MenuObject import LayoutSwitchSelectionOperator
+from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_RemoveUnusedVertexGroup
 from mathutils import Vector, Matrix
 import time
 import math
@@ -83,6 +84,7 @@ def MenuPrimary(pie, context):
     box.label(text="Vertex", icon="VERTEXSEL")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
+    _Util.layout_operator(cc, MPM_OT_SelectFromVertexGroupPanel.bl_idname)
 
     # 非表示
     rr = cc.row(align=True)
@@ -96,8 +98,9 @@ def MenuPrimary(pie, context):
     box = c2.box()
     box.label(text="Vertex Group", icon="GROUP_VERTEX")
     cc = box.column(align=True)
-    _Util.layout_operator(cc, MPM_OT_SelectVertexGroupPanel.bl_idname)
     _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
+    MirrorVertexGroup(cc)
+    _Util.layout_operator(cc, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
     # Edgeメニュー
     c3 = r.column()
@@ -174,14 +177,14 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
+class MPM_OT_SelectFromVertexGroupPanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_select_vertex_group_panel"
-    bl_label = "Select Vertex Groups"
+    bl_label = "Select from wVertex Groups"
     vg_counts = []
     init_verts = []
     limit_rows = 50
@@ -205,7 +208,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
             # 頂点グループごとの登録頂点数を取得
             for i in v[deform_layer].keys():
                 self.vg_counts[i] += 1
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         column_cnt = int(1 + int(len(obj.vertex_groups) / self.limit_rows))
         return context.window_manager.invoke_props_dialog(self, width=self.single_width * column_cnt)
 
@@ -385,7 +388,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self)
 
 
@@ -412,7 +415,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 
@@ -562,6 +565,7 @@ class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
     bl_idname = "mpm.generate_along_from_edge"
     bl_label = "Generate bones along selected edges"
     bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Generates bones along the selected edge"
 
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     order_invert: bpy.props.BoolProperty(name="Invert", description="")
@@ -743,6 +747,7 @@ class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
 class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
     bl_idname = "mpm.align_view_to_edge_normal_side_modal"
     bl_label = "Align view to edge normal side"
+    bl_description = "Transition the view to a position looking perpendicular to the normal of the selected edge along any axis"
 
     dir: bpy.props.FloatVectorProperty(size=3, default=(0, 0, 1))
     invert: bpy.props.BoolProperty()
@@ -770,7 +775,7 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
         selected_edges = [edge for edge in bm.edges if edge.select]
@@ -917,7 +922,7 @@ classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
     MPM_OT_AddVertexGroupPanel,
-    MPM_OT_SelectVertexGroupPanel,
+    MPM_OT_SelectFromVertexGroupPanel,
     MPM_OT_VertCreasePanel,
     MPM_OT_EdgeCreasePanel,
     MPM_OT_HideVerts,

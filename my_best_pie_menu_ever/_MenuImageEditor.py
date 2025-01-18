@@ -100,7 +100,7 @@ class MPM_OT_DeleteImage(bpy.types.Operator):
         return context.area.spaces.active.image is not None
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
@@ -130,7 +130,7 @@ class MPM_OT_LostRefImagePanel(bpy.types.Operator):
     bl_label = "Show Lost Reference Image"
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_popup(self)
 
     def draw(self, context):
@@ -163,7 +163,7 @@ class MPM_OT_SeparateTextureChannelPanel(bpy.types.Operator):
         return context.area.spaces.active.image is not None
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu_modal = True
+        g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
