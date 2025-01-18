@@ -94,6 +94,11 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
     def invoke(self, context, event):
         g.is_force_cancelled_piemenu_modal = False
         self._init_mouse_pos = Vector((event.mouse_x, event.mouse_y))
+        # print(self._init_mouse_pos)
+        safe_margin_min = (500, 450)
+        safe_margin_max_y = 200
+        self._init_mouse_pos.x = max(self._init_mouse_pos.x, safe_margin_min[0])
+        self._init_mouse_pos.y = min(max(self._init_mouse_pos.y, safe_margin_min[1]), context.area.height - safe_margin_max_y)
         context.scene.mpm_prop.init()
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (context, ), "WINDOW", "POST_PIXEL")
