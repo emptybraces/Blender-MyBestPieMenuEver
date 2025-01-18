@@ -8,18 +8,16 @@ from . import _Util
 FONT_SIZE_BASE = 20
 FONT_SIZE_NORMAL = FONT_SIZE_BASE * 0.8
 FONT_SIZE_INFO = FONT_SIZE_BASE * 0.55
-COLOR_TITLE = colorsys.hsv_to_rgb(0.33, 0.5, 1)
-COLOR_NORMAL = colorsys.hsv_to_rgb(0, 0, 1)
-COLOR_VAR = colorsys.hsv_to_rgb(0.18, 0.8, 1)
-ALPHA_BASE = 0.8
-ALPHA_INFO = 0.4
+FONT_SIZE_MSG = FONT_SIZE_BASE * 0.7
+COLOR_TITLE = (*colorsys.hsv_to_rgb(0.33, 0.5, 1), 0.8)
+COLOR_NORMAL = (*colorsys.hsv_to_rgb(0, 0, 1), 0.8)
+COLOR_VAR = (*colorsys.hsv_to_rgb(0.18, 0.8, 1), 0.4)
+COLOR_MSG = (*colorsys.hsv_to_rgb(0.35, 0.5, 1), 0.6)
 OFS_X_TITLE = 60
 OFS_X_FIELD = 65
 OFS_Y_FIELD = -40
 OFS_X_INFO = 10
 OFS_Y_INFO = -16
-OFS_X_MSG = 200
-HEIGHT_MSG = 22
 HEIGHT_FIELD = 50
 
 
@@ -32,6 +30,7 @@ def animate_clipping(fid, x, width, t):
     else:
         blf.disable(fid, blf.CLIPPING)
 
+
 def draw_title(fid, text, x, y):
     x += -bpy.context.area.x + OFS_X_TITLE
     y += -bpy.context.area.y
@@ -39,7 +38,7 @@ def draw_title(fid, text, x, y):
     y = _Util.clamp(y, 0, bpy.context.area.height)
 
     blf.position(fid, x, y, 0)
-    blf.color(fid, COLOR_TITLE[0], COLOR_TITLE[1], COLOR_TITLE[2], ALPHA_BASE)
+    blf.color(fid, *COLOR_TITLE)
     blf.size(fid, FONT_SIZE_BASE)
     blf.draw(fid, "_" * (len(text) + 1))
 
@@ -63,18 +62,8 @@ def draw_info(fid, text, x, y):
     x = _Util.clamp(x, 0, bpy.context.area.width)
     y = _Util.clamp(y, 0, bpy.context.area.height)
     blf.position(fid, x, y, 0)
-    blf.color(fid, COLOR_NORMAL[0], COLOR_NORMAL[1], COLOR_NORMAL[2], ALPHA_INFO)
+    blf.color(fid, *COLOR_NORMAL)
     blf.size(fid, FONT_SIZE_INFO)
-    blf.draw(fid, text)
-
-def draw_msg(fid, text, x, y, idx):
-    xx = x - bpy.context.area.x + OFS_X_MSG
-    yy = y - bpy.context.area.y + OFS_Y_FIELD - idx * HEIGHT_MSG
-    xx = _Util.clamp(xx, 0, bpy.context.area.width)
-    yy = _Util.clamp(yy, 0, bpy.context.area.height)
-    blf.position(fid, xx, yy, 0)
-    blf.color(fid, COLOR_NORMAL[0], COLOR_NORMAL[1], COLOR_NORMAL[2], ALPHA_BASE)
-    blf.size(fid, FONT_SIZE_NORMAL)
     blf.draw(fid, text)
 
 
@@ -83,8 +72,9 @@ def draw_field(fid, field, var, info, x, y, idx):
     yy = y - bpy.context.area.y + OFS_Y_FIELD - idx * HEIGHT_FIELD
     xx = _Util.clamp(xx, 0, bpy.context.area.width)
     yy = _Util.clamp(yy, 0, bpy.context.area.height)
+    blf.disable(fid, blf.SHADOW)
     blf.position(fid, xx, yy, 0)
-    blf.color(fid, COLOR_NORMAL[0], COLOR_NORMAL[1], COLOR_NORMAL[2], ALPHA_BASE)
+    blf.color(fid, *COLOR_NORMAL)
     blf.size(fid, FONT_SIZE_NORMAL)
     blf.draw(fid, field)
     if var:
@@ -94,3 +84,19 @@ def draw_field(fid, field, var, info, x, y, idx):
         infox = xx + OFS_X_INFO
         infoy = yy + OFS_Y_INFO
         draw_info(fid, info, infox, infoy)
+
+
+def draw_msg(fid, text, x, y, align = "left"):
+    blf.size(fid, FONT_SIZE_MSG)
+    if align == "center":
+        xx = x - bpy.context.area.x - blf.dimensions(fid, text)[0] / 2
+    else:  
+        xx = x - bpy.context.area.x
+    yy = y - bpy.context.area.y
+    xx = _Util.clamp(xx, 0, bpy.context.area.width)
+    yy = _Util.clamp(yy, 0, bpy.context.area.height)
+    blf.enable(fid, blf.SHADOW)
+    blf.shadow_offset(fid, int(1), int(-1))
+    blf.position(fid, xx, yy, 0)
+    blf.color(fid, *COLOR_MSG)
+    blf.draw(fid, text)

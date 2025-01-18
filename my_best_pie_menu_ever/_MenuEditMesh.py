@@ -58,7 +58,7 @@ def MenuPrimary(pie, context):
 
     rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.select_mirror").extend = False
-    _Util.layout_operator(rr, "mesh.select_mirror", "", icon = "ADD").extend = True
+    _Util.layout_operator(rr, "mesh.select_mirror", "", icon="ADD").extend = True
 
     _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
     op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
@@ -174,7 +174,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu = True
+        g.is_force_cancelled_piemenu_modal = True
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 
@@ -205,7 +205,7 @@ class MPM_OT_SelectVertexGroupPanel(bpy.types.Operator):
             # 頂点グループごとの登録頂点数を取得
             for i in v[deform_layer].keys():
                 self.vg_counts[i] += 1
-        g.is_force_cancelled_piemenu = True
+        g.is_force_cancelled_piemenu_modal = True
         column_cnt = int(1 + int(len(obj.vertex_groups) / self.limit_rows))
         return context.window_manager.invoke_props_dialog(self, width=self.single_width * column_cnt)
 
@@ -385,7 +385,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu = True
+        g.is_force_cancelled_piemenu_modal = True
         return context.window_manager.invoke_props_dialog(self)
 
 
@@ -412,7 +412,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu = True
+        g.is_force_cancelled_piemenu_modal = True
         return context.window_manager.invoke_props_dialog(self)
 # --------------------------------------------------------------------------------
 
@@ -754,8 +754,6 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
     target_rotation: Matrix
     translate_duration = 0.2
     start_time = 0.0
-    timer = None
-    label_handler = None
     mouse_pos: Vector = Vector((0, 0, 0))
 
     @classmethod
@@ -769,9 +767,10 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.original_location = context.region_data.view_location.copy()
         self.original_rotation = context.region_data.view_rotation.copy()
         _UtilInput.init()
-        return self.execute(context)
-
-    def execute(self, context):
+        self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
+        context.window_manager.modal_handler_add(self)
+        self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
+        g.is_force_cancelled_piemenu_modal = True
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
         selected_edges = [edge for edge in bm.edges if edge.select]
@@ -795,17 +794,21 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
                     nv2 = obj.matrix_world.to_3x3() @ edge.verts[1].normal
                     total_normal += (nv1 + nv2).normalized()
                 else:
-                    # 法線を計算（複数の面がある場合は平均法線を使用）
+                    # 平均法線
                     normal = Vector((0, 0, 0))
                     for face in connected_faces:
                         normal += face.normal
                     total_normal += normal.normalized()
             average_center = total_center / len(selected_edges)
-        average_normal = total_normal.normalized()
+        self.average_normal = total_normal.normalized()
+        self.target_location = average_center
+        return self.execute(context)
+
+    def execute(self, context):
         # 法線に対して横方向を計算
         # side_vector = average_direction.cross(average_normal).normalized()
         # side_vector = average_normal.cross(_Util.VEC3_Z()).normalized()
-        side_vector = Vector(self.dir).cross(average_normal).normalized()
+        side_vector = Vector(self.dir).cross(self.average_normal).normalized()
         # ビューポートの正面方向と一致するように回転を計算
         # rotation = _Util.view_rotation(side_vector, Vector(self.dir))
         # print(side_vector, Vector(self.dir))
@@ -822,14 +825,9 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.start_location = context.region_data.view_location.copy()
         self.start_rotation = context.region_data.view_rotation.copy()
         self.target_rotation = rotation
-        self.target_location = average_center
+        # self.target_location = average_center
         self.elapsed = 0.0
         self.start_time = time.time()
-        if self.timer is None:
-            self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
-            context.window_manager.modal_handler_add(self)
-        if self.label_handler is None:
-            self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (self, context), "WINDOW", 'POST_PIXEL')
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
@@ -842,6 +840,13 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
                 return self.cancel(context)
             else:
                 return {"RUNNING_MODAL"}
+        # アニメ
+        if self.elapsed <= self.translate_duration:
+            self.elapsed = time.time() - self.start_time
+            t = min(1.0, self.elapsed / self.translate_duration)
+            context.region_data.view_location = self.start_location.lerp(self.target_location, t)
+            context.region_data.view_rotation = self.start_rotation.slerp(self.target_rotation, t)
+            return {"RUNNING_MODAL"}
 
         context.area.tag_redraw()
         self.mouse_pos.x = _Util.lerp(self.mouse_pos.x, event.mouse_x, 0.05)
@@ -860,35 +865,30 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
                 return self.execute(context)
         if event.type == "WHEELUPMOUSE":
             context.region_data.view_distance -= 0.5
+            return {"RUNNING_MODAL"}
         elif event.type == "WHEELDOWNMOUSE":
             context.region_data.view_distance += 0.5
-
-            return {"PASS_THROUGH"}
+            return {"RUNNING_MODAL"}
         if _UtilInput.is_pressed_keys(event, "LEFTMOUSE", "RET"):
             return self.cancel(context)
         if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "ESC", "SPACE", "RET"):
             self.is_reverting = True
             self.start_time = time.time()
             return {"RUNNING_MODAL"}
-            # アニメ
-        if self.elapsed <= self.translate_duration and event.type == "TIMER":
-            self.elapsed = time.time() - self.start_time
-            t = min(1.0, self.elapsed / self.translate_duration)
-            context.region_data.view_location = self.start_location.lerp(self.target_location, t)
-            context.region_data.view_rotation = self.start_rotation.slerp(self.target_rotation, t)
         return {"RUNNING_MODAL"}
 
     def cancel(self, context):
         # _Util.show_report(self, "CANCELLED")
         if self.label_handler:
             bpy.types.SpaceView3D.draw_handler_remove(self.label_handler, "WINDOW")
+            context.area.tag_redraw()
             self.label_handler = None
         if self.timer:
             context.window_manager.event_timer_remove(self.timer)
             self.timer = None
         return {"CANCELLED"}
 
-    def draw_label(self, context, event):
+    def draw_label(self):
         if self.is_reverting:
             return
         fid = 0  # デフォルトのフォントを使用
@@ -910,8 +910,6 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         _UtilBlf.draw_field(fid, "Zoom", None, "| mousewheel", x, y, 2)
         _UtilBlf.draw_field(fid, "Cancel", None, "| right click", x + 100, y, 2)
         _UtilBlf.draw_field(fid, "Finish", None, "| left click", x + 200, y, 2)
-        # _UtilBlf.draw_msg(fid, "Mousewheel: Zoom", x, y, 4)
-        # _UtilBlf.draw_msg(fid, "LMB: Finish", x, y, 5)
 
 
 # --------------------------------------------------------------------------------

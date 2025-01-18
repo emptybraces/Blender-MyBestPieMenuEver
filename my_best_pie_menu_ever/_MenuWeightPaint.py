@@ -117,7 +117,7 @@ class MPM_OT_MirrorVGFromSelectedBone(bpy.types.Operator):
         msg = ""
         selected_objects = context.selected_objects
         names = []
-        g.is_force_cancelled_piemenu = True
+        g.is_force_cancelled_piemenu_modal = True
         for obj in selected_objects:
             names = self.get_selected_bone_names(obj)
             if names != None and context.active_object.type == "MESH":
@@ -146,7 +146,7 @@ class MPM_OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
         obj = context.active_object
         target_name = obj.vertex_groups.active.name
         new_name, actural_name, is_replace = mirror_vgroup(obj, target_name)
-        g.is_force_cancelled_piemenu = True
+        g.is_force_cancelled_piemenu_modal = True
         if is_replace:
             bpy.ops.mpm.mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
         else:

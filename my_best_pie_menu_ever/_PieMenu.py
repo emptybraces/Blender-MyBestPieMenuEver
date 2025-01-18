@@ -61,33 +61,55 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
         PieMenuDraw_Primary(pie, context)
 
 
-class MPM_OT_OpenPieMenu(bpy.types.Operator):
+class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
     bl_idname = "mpm.open_pie_menu"
     bl_label = "My Best Pie Menu Ever"
 
     def modal(self, context, event):
-        if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu:
+        if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu_modal:
             if getattr(context.area.spaces.active, "image", None):
                 context.area.spaces.active.image.reload()
+            if event.shift or g.is_request_reopen_piemenu:
+                g.is_request_reopen_piemenu = False
+                if self._init_mouse_pos:
+                    context.window.cursor_warp(int(self._init_mouse_pos.x), int(self._init_mouse_pos.y))
+                bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
+                context.window.cursor_warp(event.mouse_x, event.mouse_y)
+                return {"RUNNING_MODAL"}
+            self.release(context)
             return {"FINISHED"}
         elif event.type in {"RIGHTMOUSE", "ESC"}:
+            self.release(context)
             return {"CANCELLED"}
         else:
-            d = math.dist(self._initial_mouse, Vector((event.mouse_x, event.mouse_y)))
+            d = math.dist(self._init_mouse_pos, Vector((event.mouse_x, event.mouse_y)))
             if 700 < d:
                 context.window.screen = context.window.screen
-                return {"FINISHED"}
+                self.release(context)
+                return {"CANCELLED"}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
+        context.area.tag_redraw()
         return {"RUNNING_MODAL"}
 
     def invoke(self, context, event):
-        g.is_force_cancelled_piemenu = False
-        self._initial_mouse = Vector((event.mouse_x, event.mouse_y))
+        g.is_force_cancelled_piemenu_modal = False
+        self._init_mouse_pos = Vector((event.mouse_x, event.mouse_y))
         context.scene.mpm_prop.init()
         context.window_manager.modal_handler_add(self)
+        self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (context, ), "WINDOW", "POST_PIXEL")
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
         return {"RUNNING_MODAL"}
 
+    def release(self, context):
+        # print("close")
+        if self.label_handler:
+            bpy.types.SpaceView3D.draw_handler_remove(self.label_handler, "WINDOW")
+            self.label_handler = None
+            context.area.tag_redraw()
+
+    def draw_label(self, context):
+        _UtilBlf.draw_msg(0, "Clicking the button while holding down the Shift-key does not close this pie menu.",
+                          self._init_mouse_pos.x, self._init_mouse_pos.y - 70, "center")
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
 # --------------------------------------------------------------------------------
@@ -142,7 +164,10 @@ def Placeholder(pie, context, text):
 # c.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
 # --------------------------------------------------------------------------------
 
+
 last_mode = ""
+
+
 def mode_change_handler(scene):
     global last_mode
     if last_mode == bpy.context.mode:
@@ -221,7 +246,7 @@ class MPM_Prop(bpy.types.PropertyGroup):
 # --------------------------------------------------------------------------------
 classes = (
     VIEW3D_MT_my_pie_menu,
-    MPM_OT_OpenPieMenu,
+    MPM_OT_OpenPieMenuModal,
     MPM_Prop,
 )
 modules = [

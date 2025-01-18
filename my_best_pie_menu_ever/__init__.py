@@ -3,7 +3,7 @@ from . import g
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
-    "version": (1, 5, 0),
+    "version": (1, 6, 0),
     "blender": (4, 2, 3),
     "location": "3D View",
     "description": "Quick access to the brushes, functions you need",
