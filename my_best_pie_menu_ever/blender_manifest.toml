@@ -8,7 +8,7 @@ maintainer = "emptybraces <motose6@gmail.com>"
 type = "add-on"
 
 # Optional link to documentation, support, source files, etc
-website = "https://github.com/emptybraces/Blender-MyBestPieMenuEver"
+website = "https://emptybraces.github.io"
 
 # Optional list defined by Blender and server, see:
 # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
@@ -29,6 +29,7 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # 1.6.0 
+# - [パイメニュー]Blender v4.3に対応
 # - [パイメニュー]シフトキーを押しながらボタンクリックでパイメニューを閉じないようにした。
 # - [ビューポート]ユーティリティペインにアニメフレームリセットを追加。
 # - [ビューポート]ユーティリティペインにシェーディングモード、カラーを追加。
@@ -38,7 +39,8 @@ files = "Import/export FBX from/to disk"
 # - [EditMesh]AlignViewToEdgeNormalSideを追加。
 # - [EditMesh]表示、非表示ショートカットを追加。
 # - [Utility]ビューポートカメラTransformの保存／復元のアップデート、アニメ機能追加。
-# - [Sculpt]ブラシアイコン表示。
+# - [Sculpt]ブラシアイコン表示。(v4.2)
+# - [Sculpt]選択頂点によるFaceSet設定オペレータを追加。
 # - [Mode]スカルプトモードへ移行と同時に選択頂点を面セットに設定するボタンを追加。
 # - [修正]頂点グループ選択処理が遅い不具合を修正。
 # - [修正]頂点グループ選択処理時に辺・面モードだと選択されない不具合を修正。

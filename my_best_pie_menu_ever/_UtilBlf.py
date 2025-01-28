@@ -100,3 +100,5 @@ def draw_msg(fid, text, x, y, align = "left"):
     blf.position(fid, xx, yy, 0)
     blf.color(fid, *COLOR_MSG)
     blf.draw(fid, text)
+    blf.disable(fid, blf.SHADOW)
+

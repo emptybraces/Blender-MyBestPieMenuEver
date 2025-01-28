@@ -21,7 +21,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         name="Ctrl+LMB Behaviour")
     imagePaintLimitRowCount: IntProperty(
         name="Limit Row Count", default=13, min=5, description="Specify the line count for displaying brushes")
-    sculptLimitRowCount: IntProperty(name="Limit Row Count", default=13,
+    sculptLimitRowCount: IntProperty(name="Limit Row Count", default=21,
                                      min=5, description="Specify the line count for displaying brushes")
     sculptBrushFilterByName: StringProperty(
         name="Filter by brush name", description="Enter the name of the brush you want to display or select from the drop-down list")
