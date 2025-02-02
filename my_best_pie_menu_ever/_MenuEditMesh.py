@@ -144,8 +144,12 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, "mesh.normals_make_consistent", icon="NORMALS_FACE").inside = False
     # マージ
     rr = c.row(align=True)
-    rr.operator_menu_enum("mesh.merge", "type")
-    _Util.layout_operator(rr, "mesh.remove_doubles", icon="X")
+    rr.label(text = "Merge")
+    _Util.layout_operator(rr, "mesh.merge", "Center").type = "CENTER"
+    _Util.layout_operator(rr, "mesh.merge", "Collapse").type = "COLLAPSE"
+    _Util.layout_operator(rr, "mesh.merge", "Cursor").type = "CURSOR"
+    _Util.layout_operator(rr, "mesh.remove_doubles", "Distance")
+
     _Util.layout_operator(c, "mesh.delete_loose", icon="X")
 
 # --------------------------------------------------------------------------------

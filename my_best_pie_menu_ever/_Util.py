@@ -130,7 +130,7 @@ class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
         if depress is None:
             cur_value = getattr(targetObj, propName, None)
             depress = cur_value == value
-            print(cur_value, value, depress)
+            # print(cur_value, value, depress)
         MPM_OT_SetterBase.operator(layout, MPM_OT_SetString.bl_idname, text, targetObj, propName, value, icon, depress, isActive)
 
 
