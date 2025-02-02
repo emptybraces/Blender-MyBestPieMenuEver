@@ -193,7 +193,7 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
 
 class MPM_OT_SelectFromVertexGroupPanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_select_vertex_group_panel"
-    bl_label = "Select from wVertex Groups"
+    bl_label = "Select from Vertex Groups"
     vg_counts = []
     init_verts = []
     limit_rows = 50
