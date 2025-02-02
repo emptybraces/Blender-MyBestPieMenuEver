@@ -46,7 +46,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_shift_brush)
 
     def __get_blend_names(self, context):
-        return [(i.lower(), i.lower(), "") for i in _Util.enum_values(bpy.context.tool_settings.image_paint.brush, 'blend')]
+        return [(i.lower(), i.lower(), "") for i in _Util.enum_values(bpy.types.Brush, "blend")]
 
     def __select_dropdown_blend_names(self, value):
         value = self.__get_blend_names(None)[value][1]
@@ -189,6 +189,7 @@ class Accessor():
     def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
     # @staticmethod
     # def get_is_debug(): return Accessor.get_ref().isDebug
+
 
 classes = (
     MT_AddonPreferences,
