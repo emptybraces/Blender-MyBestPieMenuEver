@@ -20,15 +20,17 @@ def MenuPrimary(pie, context):
     r = b.row(align=True)
     bb = r.box()
     bb.label(text="Brush")
-    rr = bb.row(align=True)
     limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
     brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_brush_exclude().lower().split(',')]
     tool = context.tool_settings.image_paint
     current_brush = tool.brush
 
+    rr = bb.row(align=True)
     # v4.2までブラシがアセットじゃない
     if bpy.app.version < (4, 2, 9):
-        cc = rr.column(align=True)
+        bb = rr.box()
+        bb.label(text="Essentials")
+        cc = bb.column(align=False)
         for i in bpy.data.brushes:
             if i.use_paint_image and i.name.lower() not in brush_exclude_list:
                 is_use = current_brush.name == i.name
@@ -56,7 +58,7 @@ def MenuPrimary(pie, context):
             is_depress = not active_tool.use_brushes and active_tool.idname == tool_id
             _Util.MPM_OT_CallbackOperator.operator(layout, label_name, "_MenuTexturePaint.select_tool." + tool_id,
                                                    _select_tool, (context, tool_id), depress=is_depress)
-        # Esential
+        # Essential
         for i in BRUSH_INFO:
             if i[0] == "-":
                 bb = rr.box()

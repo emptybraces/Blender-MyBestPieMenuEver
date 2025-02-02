@@ -67,7 +67,7 @@ def MenuPrimary(pie, context):
         # data_to.brushes = data_from.brushes
     # 逐一選択されたブラシをロードしたいけど、libraryをロードせずにブラシ名を取得する方法が分からない
     else:
-        active_tool = bpy.context.workspace.tools.from_space_view3d_mode(mode=bpy.context.mode)
+        active_tool = context.workspace.tools.from_space_view3d_mode(mode=bpy.context.mode)
 
         def _callback_operator_select_brush(context, layout, brush_name):
             def _select_brush(context, lib_type, lib_id, asset_id):
@@ -123,8 +123,12 @@ def MenuPrimary(pie, context):
     rr = box.row(align=True)
     cc = rr.column(align=True)
     for i in _Util.enum_values(current_brush, "stroke_method"):
-        is_use = active_tool.use_brushes and current_brush.stroke_method == i
-        _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=active_tool.use_brushes, depress=is_use)
+        if bpy.app.version < (4, 2, 9):
+            is_use = current_brush.stroke_method == i
+            _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=i != current_brush, depress=is_use)
+        else:
+            is_use = active_tool.use_brushes and current_brush.stroke_method == i
+            _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=active_tool.use_brushes, depress=is_use)
         cnt += 1
         if cnt % limit_rows == 0:
             cc = rr.column(align=True)

@@ -1,9 +1,9 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "1.6.0"
+version = "2.0.0"
 name = "My Best Pie Menu Ever"
-tagline = "Quick access to the brushes, functions you need"
+tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
 type = "add-on"
 
@@ -28,7 +28,7 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
-# 1.6.0 
+# 2.0.0 
 # - [パイメニュー]Blender v4.3に対応
 # - [パイメニュー]シフトキーを押しながらボタンクリックでパイメニューを閉じないようにした。
 # - [ビューポート]ユーティリティペインにアニメフレームリセットを追加。
