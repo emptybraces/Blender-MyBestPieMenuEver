@@ -81,32 +81,31 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 #
 OBJECT Mode
 
-![image](https://github.com/user-attachments/assets/acea4516-b15b-49a6-b364-5a352640bf74)
+![image](https://github.com/user-attachments/assets/c86a1cfa-7417-4494-92f9-ec427cd57ea9)
 
 #
 Edit Mode
 
-![image](https://github.com/user-attachments/assets/49e3e287-184d-4387-af58-861c1928df97)
+![image](https://github.com/user-attachments/assets/21530485-0316-437d-8445-4e5123040a1e)
 
 #
 PAINT_TEXTURE Mode
 
-![image](https://github.com/user-attachments/assets/c7f1c3c8-d9c8-4340-b53d-ba4f8d293927)
+![image](https://github.com/user-attachments/assets/55b486ea-204a-4c19-a806-02feea50e3ee)
 
 #
 PAINT_WEIGHT Mode
 
-![image](https://github.com/user-attachments/assets/b1850f89-30fe-4372-b602-9c272d0e4c0a)
+![image](https://github.com/user-attachments/assets/c83f6405-e14e-4ac9-aa47-772ee7ab42d7)
 
 #
 SCULPT Mode
 
-![image](https://github.com/user-attachments/assets/791002f1-98c8-44bd-9b42-0291655a93a2)
+![image](https://github.com/user-attachments/assets/3412ce99-9b6c-4a89-815d-6db6a7d728cb)
 
 #
 POSE Mode
 
-![image](https://github.com/emptybraces/Blender-MyBestPieMenuEver/assets/1441835/31f41f57-0778-40e7-84db-2799eaaa2f00)
 
 #
 UVEditor & ImageEditor
