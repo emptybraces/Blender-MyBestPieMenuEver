@@ -1,21 +1,21 @@
 ﻿if "bpy" in locals():
-    import imp
-    imp.reload(_Util)
-    imp.reload(_UtilInput)
-    imp.reload(_UtilBlf)
-    imp.reload(_AddonPreferences)
-    imp.reload(_MenuMode)
-    imp.reload(_MenuUtility)
-    imp.reload(_MenuObject)
-    imp.reload(_MenuEditMesh)
-    imp.reload(_MenuWeightPaint)
-    imp.reload(_MenuTexturePaint)
-    imp.reload(_MenuSculpt)
-    imp.reload(_MenuSculptCurve)
-    imp.reload(_MenuPose)
-    imp.reload(_MenuUVEditor)
-    imp.reload(_MenuImageEditor)
-    imp.reload(_PanelSelectionHistory)
+    import importlib
+    importlib.reload(_Util)
+    importlib.reload(_UtilInput)
+    importlib.reload(_UtilBlf)
+    importlib.reload(_AddonPreferences)
+    importlib.reload(_MenuMode)
+    importlib.reload(_MenuUtility)
+    importlib.reload(_MenuObject)
+    importlib.reload(_MenuEditMesh)
+    importlib.reload(_MenuWeightPaint)
+    importlib.reload(_MenuTexturePaint)
+    importlib.reload(_MenuSculpt)
+    importlib.reload(_MenuSculptCurve)
+    importlib.reload(_MenuPose)
+    importlib.reload(_MenuUVEditor)
+    importlib.reload(_MenuImageEditor)
+    importlib.reload(_PanelSelectionHistory)
 else:
     from . import _Util
     from . import _UtilInput
@@ -84,7 +84,7 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
             return {"CANCELLED"}
         else:
             d = math.dist(self._init_mouse_pos, Vector((event.mouse_x, event.mouse_y)))
-            if 700 < d:
+            if 900 < d:
                 context.window.screen = context.window.screen
                 self.release(context)
                 return {"CANCELLED"}

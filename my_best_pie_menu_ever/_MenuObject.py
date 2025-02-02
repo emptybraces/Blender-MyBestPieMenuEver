@@ -1,7 +1,14 @@
+if "bpy" in locals():
+    import importlib
+    from . import _MenuPose
+    from . import _MenuWeightPaint
+    importlib.reload(_MenuPose)
+    importlib.reload(_MenuWeightPaint)
+else:
+    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_RemoveUnusedVertexGroup
+    from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
 import bpy
 from . import _Util
-from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_RemoveUnusedVertexGroup
-from ._MenuPose import MPM_OT_ARP_SnapIKFK
 
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
@@ -30,7 +37,7 @@ def MenuPrimary(pie, context):
         box.label(text="3rd Party Tool")
         _Util.layout_operator(box, "wiggle.reset", "Wiggle2: ResetPhysics")
     if any("auto_rig_pro" in i for i in enabled_addons):
-        _Util.layout_operator(box, MPM_OT_ARP_SnapIKFK.bl_idname)
+        _Util.layout_operator(box, MPM_OT_Pose_ARP_SnapIKFK.bl_idname)
 
 # --------------------------------------------------------------------------------
 

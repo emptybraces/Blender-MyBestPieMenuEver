@@ -1,3 +1,8 @@
+if "bpy" in locals():
+    import importlib
+    from . import _MenuPose
+    importlib.reload(_MenuPose)
+from ._MenuPose import MPM_OT_Pose_ResetBoneTransform, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame
 import os
 import subprocess
 import bpy
@@ -5,7 +10,6 @@ import bmesh
 import math
 from . import _Util
 from . import _AddonPreferences
-from ._MenuPose import MPM_OT_ResetBoneTransform
 from . import g
 from time import time
 from mathutils import Vector, Quaternion
@@ -133,12 +137,13 @@ def DrawView3D(layout, context):
     armature = _Util.get_armature(context.active_object)
     _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
     _Util.layout_prop(c, context.active_object, "show_wire")
-    
+
     r = c.row(align=True)
     r.label(text="Display Type")
     icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
     for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
-        _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier, icons[i], context.active_object.display_type == item.identifier)
+        _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier,
+                                        icons[i], context.active_object.display_type == item.identifier)
     if armature != None:
         _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
     # UV
@@ -151,7 +156,9 @@ def DrawView3D(layout, context):
     c.label(text="________________________________________")
     r = c.row(align=True)
     r.label(text="Armature")
-    _Util.layout_operator(r, MPM_OT_ResetBoneTransform.bl_idname, isActive=_Util.is_armature_in_selected())
+    _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransform.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
+
     # コピー
     r = c.row(align=True)
     r.active = context.active_object is not None and 1 < len(context.selected_objects)
@@ -170,10 +177,15 @@ def DrawView3D(layout, context):
     c = box.column(align=True)
 
     r = c.row(align=True)
+    _Util.layout_prop(r, context.scene, "frame_start")
+    r = r.row(align=True)
+    _Util.layout_prop(r, context.scene, "frame_end")
+    _Util.layout_operator(r, MPM_OT_Utility_AnimationEndFrameSyncCurrentAction.bl_idname, icon="FILE_REFRESH")
+    r = c.row(align=True)
     _Util.layout_prop(r, context.scene, "frame_current", isActive=False)
-    _Util.layout_operator(r, MPM_OT_Utility_AnimationFrameReset.bl_idname)
-
-    _Util.layout_prop(c, context.scene, "sync_mode", text="sync_mode")
+    _Util.MPM_OT_CallbackOperator.operator(r, "Reset", __name__+".animation_frame_reset",
+                                           lambda c: c.scene.frame_set(c.scene.frame_start), (context,), "FRAME_PREV")
+    _Util.layout_prop(c, context.scene, "sync_mode")
 
     # その他
     box = col.box()
@@ -247,7 +259,7 @@ class MPM_OT_Utility_CopyPRSBase():
 
 
 class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
-    bl_idname = "mpm.copy_position"
+    bl_idname = "mpm.util_copy_position"
     bl_label = "Position"
     bl_description = "Position copy from active_object to selections."
     bl_options = {"REGISTER", "UNDO"}
@@ -255,7 +267,7 @@ class MPM_OT_Utility_CopyPosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator
 
 
 class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
-    bl_idname = "mpm.copy_rosition"
+    bl_idname = "mpm.util_copy_rosition"
     bl_label = "Rotation"
     bl_description = "Rotation copy from active_object to selections."
     bl_options = {"REGISTER", "UNDO"}
@@ -263,7 +275,7 @@ class MPM_OT_Utility_CopyRosition(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator
 
 
 class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
-    bl_idname = "mpm.copy_scale"
+    bl_idname = "mpm.util_copy_scale"
     bl_label = "Scale"
     bl_description = "Scale copy from active_object to selections."
     bl_options = {"REGISTER", "UNDO"}
@@ -272,7 +284,7 @@ class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
 
 
 class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
-    bl_idname = "mpm.change_language"
+    bl_idname = "mpm.util_change_language"
     bl_label = "Change Language"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -286,7 +298,7 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
 
 
 class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
-    bl_idname = "mpm.pivot_orientation_set_reset"
+    bl_idname = "mpm.util_pivot_orientation_set_reset"
     bl_label = ""
     bl_description = "Pivit=Origin, Orientation=Global"
     bl_options = {"REGISTER", "UNDO"}
@@ -298,7 +310,7 @@ class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
 
 
 class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
-    bl_idname = "mpm.pivot_orientation_set_cursor"
+    bl_idname = "mpm.util_pivot_orientation_set_cursor"
     bl_label = ""
     bl_description = "Pivit=Cursor, Orientation=Cursor"
     bl_options = {"REGISTER", "UNDO"}
@@ -311,7 +323,7 @@ class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
-    bl_idname = "mpm.pivot_viewport_shading_set_solid"
+    bl_idname = "mpm.util_pivot_viewport_shading_set_solid"
     bl_label = ""
     bl_description = "Overlay=True, Shading=SOLID"
     bl_options = {"REGISTER", "UNDO"}
@@ -324,7 +336,7 @@ class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
-    bl_idname = "mpm.pivot_viewport_shading_set_material"
+    bl_idname = "mpm.util_pivot_viewport_shading_set_material"
     bl_label = ""
     bl_description = "Overlay=False, Shading=MATERIAL"
     bl_options = {"REGISTER", "UNDO"}
@@ -338,7 +350,7 @@ class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
 
 
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
-    bl_idname = "mpm.open_file"
+    bl_idname = "mpm.util_open_file"
     bl_label = "Open Path"
     path: bpy.props.StringProperty()
 
@@ -350,7 +362,7 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
-    bl_idname = "mpm.arp_export_panel"
+    bl_idname = "mpm.util_arp_export_panel"
     bl_label = "Export with ARP"
 
     @classmethod
@@ -379,7 +391,7 @@ class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
-    bl_idname = "mpm.arp_export_all"
+    bl_idname = "mpm.util_arp_export_all"
     bl_label = "Export with all meshes tied current armature"
 
     @classmethod
@@ -411,7 +423,7 @@ class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
-    bl_idname = "mpm.arp_export_single"
+    bl_idname = "mpm.util_arp_export_single"
     bl_label = "Export with selected mesh"
 
     @classmethod
@@ -439,7 +451,7 @@ class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
 
 
 class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
-    bl_idname = "mpm.snap_cursor_to_selected_ex"
+    bl_idname = "mpm.util_snap_cursor_to_selected_ex"
     bl_label = "Snap 3DCursor to selected EX"
     bl_description = "Snap 3DCursor to selected EX"
     bl_options = {"REGISTER", "UNDO"}
@@ -491,7 +503,7 @@ class MPM_OT_Utility_Snap3DCursorToSelectedEx(bpy.types.Operator):
 
 
 class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
-    bl_idname = "mpm.snap_cursor_on_view_plane"
+    bl_idname = "mpm.util_snap_cursor_on_view_plane"
     bl_label = ""
     bl_description = "Move 3DCursor on View Plane"
     bl_options = {"REGISTER", "UNDO"}
@@ -546,8 +558,38 @@ class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
+class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
+    bl_idname = "mpm.util_animation_end_frame_sync_current_action"
+    bl_label = ""
+    bl_description = "Synchronize start/end frame from selected object's action"
+
+    @classmethod
+    def poll(cls, context):
+        for obj in context.selected_objects:
+            if obj.animation_data and obj.animation_data.action:
+                return True
+        return False
+
+    def execute(self, context):
+        MAX = 99999
+        frame_start = MAX
+        frame_end = -MAX
+        for obj in context.selected_objects:
+            if obj.animation_data and (action := obj.animation_data.action):
+                for fcurve in action.fcurves:
+                    keyframe_points = fcurve.keyframe_points
+                    if keyframe_points:
+                        frame_start = min(frame_start, keyframe_points[0].co.x)
+                        frame_end = max(frame_end, keyframe_points[-1].co.x)
+        if frame_start != MAX and frame_end != -MAX:
+            context.scene.frame_start = int(frame_start)
+            context.scene.frame_end = int(frame_end)
+            return {"FINISHED"}
+# --------------------------------------------------------------------------------
+
+
 class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
-    bl_idname = "mpm.viewport_camera_transform_save"
+    bl_idname = "mpm.util_viewport_camera_transform_save"
     bl_label = "Save"
     bl_description = "Save the current viewport camera transform"
 
@@ -561,7 +603,7 @@ class MPM_OT_Utility_ViewportCameraTransformSave(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
-    bl_idname = "mpm.viewport_camera_transform_restore_panel"
+    bl_idname = "mpm.util_viewport_camera_transform_restore_panel"
     bl_label = "Restore"
     bl_description = "Restore the saved viewport camera transform"
     bl_options = {"REGISTER", "UNDO"}
@@ -679,7 +721,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestoreModal(bpy.types.Operator):
-    bl_idname = "mpm.viewport_camera_transform_restore_modal"
+    bl_idname = "mpm.util_viewport_camera_transform_restore_modal"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     target_pos: bpy.props.FloatVectorProperty(size=3)
@@ -716,7 +758,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestoreModal(bpy.types.Operator):
 
 
 class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
-    bl_idname = "mpm.open_directory"
+    bl_idname = "mpm.util_open_directory"
     bl_label = "Open the directory location of the currently opened blend file"
 
     def execute(self, context):
@@ -737,16 +779,6 @@ class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
             return {"CANCELLED"}
         return {"FINISHED"}
 
-
-# --------------------------------------------------------------------------------
-
-class MPM_OT_Utility_AnimationFrameReset(bpy.types.Operator):
-    bl_idname = "mpm.animation_frame_reset"
-    bl_label = "Reset"
-
-    def execute(self, context):
-        bpy.context.scene.frame_set(1)
-        return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
 
@@ -771,7 +803,7 @@ classes = (
     MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
     MPM_OT_Utility_OpenDirectory,
-    MPM_OT_Utility_AnimationFrameReset,
+    MPM_OT_Utility_AnimationEndFrameSyncCurrentAction,
 )
 
 

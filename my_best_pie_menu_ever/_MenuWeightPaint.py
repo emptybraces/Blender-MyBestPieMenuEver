@@ -58,7 +58,6 @@ def MenuPrimary(pie, context):
             break
     if smooth_brush:
         r = c.row(align=True)
-        r.label(icon="BRUSH_BLUR")
         _Util.layout_prop(r, smooth_brush, "strength", "Blur Brush: Strength")
         r = r.row(align=True)
         r.scale_x = 0.8
@@ -73,32 +72,26 @@ def MenuPrimary(pie, context):
     cc = box.column(align=True)
     MirrorVertexGroup(cc)
     _Util.layout_operator(cc, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_prop(cc, context.space_data.overlay, "weight_paint_mode_opacity")
+    _Util.layout_prop(cc, context.scene.tool_settings, "vertex_group_user")
+    _Util.layout_prop(cc, context.space_data.overlay, "show_paint_wire")
 
 
-# --------------------------------------------------------------------------------
-
-
-def MenuSecondary(pie, context):
-    box = pie.split().box()
-    box.label(text="WeightPaint Secondary")
 # --------------------------------------------------------------------------------
 
 
 def MirrorVertexGroup(layout):
     r = layout.row(align=True)
     r.label(text="Create VGroup Mirror")
-    _Util.layout_operator(r, MPM_OT_MirrorVGFromSelectedListItem.bl_idname)
-    _Util.layout_operator(r, MPM_OT_MirrorVGFromSelectedBone.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromActive.bl_idname, "Active")
+    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromActiveTopology.bl_idname, "", icon="MOD_MIRROR")
+    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromSelectedBone.bl_idname, "Selected Bones")
+    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromSelectedBoneTopology.bl_idname, "", icon="MOD_MIRROR")
 
 
 # --------------------------------------------------------------------------------
 
-
-class MPM_OT_MirrorVGFromSelectedBone(bpy.types.Operator):
-    bl_idname = "mpm.mirror_vg_from_bone"
-    bl_label = "Selected Bones"
-    bl_options = {"REGISTER", "UNDO"}
-
+class MPM_OT_Weight_MirrorVGFromSelectedBoneBase():
     @classmethod
     def poll(cls, context):
         for obj in bpy.context.selected_objects:
@@ -109,47 +102,74 @@ class MPM_OT_MirrorVGFromSelectedBone(bpy.types.Operator):
     def get_selected_bone_names(self, obj):
         if obj and obj.type == "ARMATURE":
             armature = obj.data
-            active_bone = armature.bones.active
             selected_bones = [bone for bone in armature.bones if bone.select]
             selected_bone_names = [bone.name for bone in selected_bones]
             return selected_bone_names
         return None
 
-    def execute(self, context):
+    def execute(self, context, use_topology):
         msg = ""
         selected_objects = context.selected_objects
         names = []
-        g.g.force_cancel_piemenu_modal(context)
+        g.force_cancel_piemenu_modal(context)
         for obj in selected_objects:
             names = self.get_selected_bone_names(obj)
             if names != None and context.active_object.type == "MESH":
                 for name in names:
-                    new_name, actural_name, is_replace = mirror_vgroup(context.active_object, name)
-                    # 逐次起動ができないため、おかしくなる
-                    # if is_replace:
-                    #     bpy.ops.mpm.mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=name, overwrite_name=new_name)
-                    # else:
+                    new_name, actural_name, is_replace = mirror_vgroup(context.active_object, name, use_topology)
                     msg += f"{name} -> {actural_name}\n"
         _Util.show_msgbox(msg if msg else "Invalid Selection!", "Mirror VGroup from selected bones")
         return {"FINISHED"}
 
 
-class MPM_OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
-    bl_idname = "mpm.mirror_vg_from_list"
-    bl_label = "Active"
+class MPM_OT_Weight_MirrorVGFromSelectedBoneTopology(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromSelectedBoneBase):
+    bl_idname = "mpm.weight_mirror_vg_from_bone_topology"
+    bl_label = "Create VertexGroup mirror from selected bones with Topology"
+    bl_description = "Create VertexGroup mirror from selected bones with Topology"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context):
-        return context.active_object != None and any(context.active_object.vertex_groups)
+        super().poll(cls, context)
 
     def execute(self, context):
+        return super().execute(context, True)
+
+
+class MPM_OT_Weight_MirrorVGFromSelectedBone(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromSelectedBoneBase):
+    bl_idname = "mpm.weight_mirror_vg_from_bone"
+    bl_label = "Create VertexGroup mirror from selected bones"
+    bl_description = "Create mirror VertexGroup from selected bones"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return super().poll(cls, context)
+
+    def execute(self, context):
+        return super().execute(context, False)
+
+
+class MPM_OT_Weight_MirrorVGFromActiveBase():
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
+    def get_selected_bone_names(self, obj):
+        if obj and obj.type == "ARMATURE":
+            armature = obj.data
+            selected_bones = [bone for bone in armature.bones if bone.select]
+            selected_bone_names = [bone.name for bone in selected_bones]
+            return selected_bone_names
+        return None
+
+    def execute(self, context, use_topology):
         current_mode = context.active_object.mode
         if current_mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
         obj = context.active_object
         target_name = obj.vertex_groups.active.name
-        new_name, actural_name, is_replace = mirror_vgroup(obj, target_name)
+        new_name, actural_name, is_replace = mirror_vgroup(obj, target_name, use_topology)
         g.force_cancel_piemenu_modal(context)
         if is_replace:
             bpy.ops.mpm.mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
@@ -160,6 +180,34 @@ class MPM_OT_MirrorVGFromSelectedListItem(bpy.types.Operator):
             bpy.ops.object.mode_set(mode=current_mode)
         # bpy.app.timers.register(__popup, first_interval=0)
         return {"FINISHED"}
+class MPM_OT_Weight_MirrorVGFromActive(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
+    bl_idname = "mpm.weight_mirror_vg_from_active"
+    bl_label = "Create VertexGroup mirror from active"
+    bl_description = "Create VertexGroup mirror from active"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
+
+    def execute(self, context):
+        return super().execute(context, False)
+class MPM_OT_Weight_MirrorVGFromActiveTopology(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
+    bl_idname = "mpm.weight_mirror_vg_from_active_topology"
+    bl_label = "Create VertexGroup mirror from active with topology"
+    bl_description = "Create VertexGroup mirror from active with topology"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
+
+    def execute(self, context):
+        return super().execute(context, True)
+
+
 
 
 class MPM_OT_MirrorVGOverwriteConfirm(bpy.types.Operator):
@@ -190,7 +238,7 @@ class MPM_OT_MirrorVGOverwriteConfirm(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-def mirror_vgroup(obj, name):
+def mirror_vgroup(obj, name, use_topology):
     new_name = name
     # 中間のリプレース
     if ".L." in new_name:
@@ -217,7 +265,7 @@ def mirror_vgroup(obj, name):
 
     bpy.ops.object.vertex_group_set_active(group=name)
     bpy.ops.object.vertex_group_copy()
-    bpy.ops.object.vertex_group_mirror(use_topology=False)
+    bpy.ops.object.vertex_group_mirror(use_topology=use_topology)
     is_duplicate = new_name in obj.vertex_groups
     obj.vertex_groups.active.name = new_name
     return new_name, obj.vertex_groups.active.name, is_duplicate
@@ -272,8 +320,10 @@ class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
 
 
 classes = (
-    MPM_OT_MirrorVGFromSelectedBone,
-    MPM_OT_MirrorVGFromSelectedListItem,
+    MPM_OT_Weight_MirrorVGFromSelectedBone,
+    MPM_OT_Weight_MirrorVGFromSelectedBoneTopology,
+    MPM_OT_Weight_MirrorVGFromActive,
+    MPM_OT_Weight_MirrorVGFromActiveTopology,
     MPM_OT_MirrorVGOverwriteConfirm,
     MPM_OT_RemoveUnusedVertexGroup,
 )

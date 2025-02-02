@@ -96,15 +96,18 @@ def DrawOperatorPoseMode(layout, context):
 
 
 def DrawOperatorWeightPaintMode(layout, context):
-    object_mode = "OBJECT" if context.active_object is None else context.mode
-    active_type_is_mesh = context.active_object != None and context.active_object.type == "MESH"
+    active_obj = context.active_object
+    object_mode = "OBJECT" if active_obj is None else context.mode
+    active_type_is_mesh = active_obj != None and active_obj.type == "MESH"
+    armature = _Util.get_armature(active_obj)
 
     r = layout.row(align=True)
-    r.enabled = object_mode != "PAINT_WEIGHT" and active_type_is_mesh
-    op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, "Weight Paint", icon="WPAINT_HLT", depress=object_mode == "PAINT_WEIGHT")
+    op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, "Weight Paint", icon="WPAINT_HLT",
+                               isActive=object_mode != "PAINT_WEIGHT" and active_type_is_mesh, depress=object_mode == "PAINT_WEIGHT")
     if active_type_is_mesh:
         op.mode = "WEIGHT_PAINT"
-        _Util.layout_operator(r, MPM_OT_ChangeModeWithArmature.bl_idname, "", icon="BONE_DATA").mode = "WEIGHT_PAINT"
+        _Util.layout_operator(r, MPM_OT_ChangeModeWithArmature.bl_idname, "",
+                              isActive=armature != None and armature not in context.selected_objects, icon="BONE_DATA").mode = "WEIGHT_PAINT"
 
 
 def DrawOperatorTexturePaintMode(layout, context):
