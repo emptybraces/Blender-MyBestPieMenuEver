@@ -1,8 +1,10 @@
 # Blender MyBestPieMenuEver
 
+This addon arranges things close together to make it easier to get at those that are far away.
+
 Pressing the W key opens a pie menu that consolidates shortcuts for favorite brushes, their parameters, and frequently used functions. The lower section contains utility functions, while the upper section is organized by mode. Working on my project and updating this addon as needed.
 
-Stable Blender version: v4.2.3
+Stable Blender version: v4.3.2
 
 https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
@@ -20,7 +22,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Oneshot changes to Pivot and Transform Orientation.
 - Move 3DCursor on ViewPlane.
 - Quickly switch the UVMap of the active object.
-- Reset all bone transform of selected object.
+- Reset all bone transform of selected object, and simultaneously resets the animation frame.
 - World transform can be copy/paste to selected objects.
 - Viewport camera's current transform can be saved/restored stackability, and animation feature.
 - (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
@@ -41,11 +43,11 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
 ### [PAINT_TEXTURE mode]
 
-- Quickly switchable to Brushs, Strokes, Blends, parameters.
+- Quickly switchable to Brushes, Strokes, Blends, Colors, and other properties.
 - Quickly switchable Ctrl+LMB behaviour to Sub Color <-> Erase Alpha.
 - Customizable switch brush by Shift+LMB.(Setting in preference, default is Soften.)
 - Filterable brushes and blend modes to displayed.
-- Shortcut button "Save All Images".
+- And shortcuts various functions.
   
 ### [PAINT_WEIGHT mode]
 

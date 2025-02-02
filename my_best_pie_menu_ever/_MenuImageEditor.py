@@ -22,7 +22,7 @@ def MenuPrimary(pie, context):
 
     # Apply
     box = box.box()
-    box.label(text="Apply", icon="MODIFIER")
+    box.label(text="Apply", icon="CHECKMARK")
 
     c = box.column(align=True)
     _Util.layout_operator(c, MPM_OT_SeparateTextureChannelPanel.bl_idname)

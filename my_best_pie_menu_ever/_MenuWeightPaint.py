@@ -23,18 +23,18 @@ def MenuPrimary(pie, context):
     # brushes
     box = row.box()
     box.label(text="Brush Property", icon="BRUSH_DATA")
-    c = box.column(align=True)
-    r = c.row()
+    cc = box.column(align=True)
+    r = cc.row()
     unified_paint_settings = context.tool_settings.unified_paint_settings
     brush = context.tool_settings.weight_paint.brush
-    r = c.row()
+    r = cc.row()
     _Util.layout_prop(r, unified_paint_settings, "weight")
     r = r.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "0.0", unified_paint_settings, "weight", 0.0)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", unified_paint_settings, "weight", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", unified_paint_settings, "weight", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", unified_paint_settings, "weight", 1.0)
-    r = c.row()
+    r = cc.row()
     _Util.layout_prop(r, brush, "strength")
     r = r.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
@@ -42,14 +42,14 @@ def MenuPrimary(pie, context):
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush, "strength", 1.0)
     # Blends
-    r = c.row(align=True)
+    r = cc.row(align=True)
     target_blends = ["mix", "add", "sub"]
     for i in _Util.enum_values(brush, "blend"):
         if i.lower() in target_blends:
             is_use = brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
     # 蓄積
-    _Util.layout_prop(c, brush, "use_accumulate")
+    _Util.layout_prop(cc, brush, "use_accumulate")
     # ぼかしブラシの強さ
     smooth_brush = None
     for brush in bpy.data.brushes:
@@ -57,7 +57,7 @@ def MenuPrimary(pie, context):
             smooth_brush = brush
             break
     if smooth_brush:
-        r = c.row(align=True)
+        r = cc.row(align=True)
         _Util.layout_prop(r, smooth_brush, "strength", "Blur Brush: Strength")
         r = r.row(align=True)
         r.scale_x = 0.8
@@ -67,15 +67,22 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
 
     # util
-    box = row.box()
+    c = row.column()
+    box = c.box()
     box.label(text="Utility", icon="MODIFIER")
+    cc = box.column(align=True)
+    _Util.layout_prop(cc, context.space_data.overlay, "weight_paint_mode_opacity")
+    r = cc.row(align=True)
+    r.label(text="Zero Weights")
+    _Util.layout_prop(r, context.scene.tool_settings, "vertex_group_user", expand=True)
+    _Util.layout_prop(cc, context.space_data.overlay, "show_paint_wire")
+
+    # apply
+    box = c.box()
+    box.label(text="Apply", icon="CHECKMARK")
     cc = box.column(align=True)
     MirrorVertexGroup(cc)
     _Util.layout_operator(cc, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
-    _Util.layout_prop(cc, context.space_data.overlay, "weight_paint_mode_opacity")
-    _Util.layout_prop(cc, context.scene.tool_settings, "vertex_group_user")
-    _Util.layout_prop(cc, context.space_data.overlay, "show_paint_wire")
-
 
 # --------------------------------------------------------------------------------
 
@@ -130,7 +137,7 @@ class MPM_OT_Weight_MirrorVGFromSelectedBoneTopology(bpy.types.Operator, MPM_OT_
 
     @classmethod
     def poll(cls, context):
-        super().poll(cls, context)
+        super().poll(context)
 
     def execute(self, context):
         return super().execute(context, True)
@@ -144,7 +151,7 @@ class MPM_OT_Weight_MirrorVGFromSelectedBone(bpy.types.Operator, MPM_OT_Weight_M
 
     @classmethod
     def poll(cls, context):
-        return super().poll(cls, context)
+        return super().poll(context)
 
     def execute(self, context):
         return super().execute(context, False)
@@ -180,6 +187,8 @@ class MPM_OT_Weight_MirrorVGFromActiveBase():
             bpy.ops.object.mode_set(mode=current_mode)
         # bpy.app.timers.register(__popup, first_interval=0)
         return {"FINISHED"}
+
+
 class MPM_OT_Weight_MirrorVGFromActive(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
     bl_idname = "mpm.weight_mirror_vg_from_active"
     bl_label = "Create VertexGroup mirror from active"
@@ -188,11 +197,12 @@ class MPM_OT_Weight_MirrorVGFromActive(bpy.types.Operator, MPM_OT_Weight_MirrorV
 
     @classmethod
     def poll(cls, context):
-        return context.active_object != None and any(context.active_object.vertex_groups)
-
+        return super().poll(context)
 
     def execute(self, context):
         return super().execute(context, False)
+
+
 class MPM_OT_Weight_MirrorVGFromActiveTopology(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
     bl_idname = "mpm.weight_mirror_vg_from_active_topology"
     bl_label = "Create VertexGroup mirror from active with topology"
@@ -201,13 +211,10 @@ class MPM_OT_Weight_MirrorVGFromActiveTopology(bpy.types.Operator, MPM_OT_Weight
 
     @classmethod
     def poll(cls, context):
-        return context.active_object != None and any(context.active_object.vertex_groups)
-
+        return super().poll(context)
 
     def execute(self, context):
         return super().execute(context, True)
-
-
 
 
 class MPM_OT_MirrorVGOverwriteConfirm(bpy.types.Operator):

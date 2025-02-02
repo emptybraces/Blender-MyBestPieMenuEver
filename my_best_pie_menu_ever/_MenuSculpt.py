@@ -1,10 +1,9 @@
 import bpy
+import bmesh
 from . import _Util
 from . import _AddonPreferences
 from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
-
-import bmesh
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
 # 'use_paint_antialiasing', 'use_paint_grease_pencil', 'use_paint_image', 'use_paint_sculpt', 'use_paint_sculpt_curves', 'use_paint_uv_sculpt', 'use_paint_vertex', 'use_paint_weight'
@@ -86,94 +85,8 @@ def MenuPrimary(pie, context):
             is_depress = not active_tool.use_brushes and active_tool.idname == tool_id
             _Util.MPM_OT_CallbackOperator.operator(layout, label_name, "_MenuSculpt.select_tool." + tool_id,
                                                    _select_tool, (context, tool_id), depress=is_depress)
-        brush_info = [
-            "-Add & Subtract",
-            "Blob",
-            "Clay Strips",
-            "Clay Thumb",
-            "Crease Polish",
-            "Crease Sharp",
-            "Draw",
-            "Draw Sharp",
-            "Inflate/Deflate",
-            "Layer",
-            "-Contrast",
-            "Fill/Deepen",
-            "Flatten/Contrast",
-            "Plateau",
-            "Scrape Multiplane",
-            "Scrape/Fill",
-            "Smooth",
-            "Trim",
-            "-Transform",
-            "Boundary",
-            "Elastic Grab",
-            "Elastic Snake Hook",
-            "Grab",
-            "Grab 2D",
-            "Grab Silhouette",
-            "Nudge",
-            "Pinch/Magnify",
-            "Pose",
-            "Pull",
-            "Relax Pinch",
-            "Relax Slide",
-            "Snake Hook",
-            "Thumb",
-            "Twist",
-            "-Utilities",
-            "Density",
-            "Erase Multires Displacement",
-            "Face Set Paint",
-            "Mask",
-            "Smear Multires Displacement",
-            "-Paint",
-            "Airbrush",
-            "Blend Hard",
-            "Blend Soft",
-            "Blend Square",
-            "Paint Blend",
-            "Paint Hard",
-            "Paint Hard Pressure",
-            "Paint Soft",
-            "Paint Soft Pressure",
-            "Paint Square",
-            "Sharpen",
-            "Smear",
-            "-Simulation",
-            "Bend Boundary Cloth",
-            "Bend/Twist Cloth",
-            "Drag Cloth",
-            "Expand/Contract Cloth",
-            "Grab Cloth",
-            "Grab Planar Cloth ",
-            "Grab Random Cloth",
-            "Inflate Cloth",
-            "Pinch Folds Cloth",
-            "Pinch Point Cloth",
-            "Push Cloth",
-            "Stretch/Move Cloth",
-            "Twist Boundary Cloth",
-        ]
-        tool_info = [
-            "-Tools",
-            "builtin.box_mask",
-            "builtin.box_hide",
-            "builtin.box_trim",
-            "builtin.line_project",
-            "builtin.mesh_filter",
-            "builtin.cloth_filter",
-            "builtin.color_filter",
-            "builtin.face_set_edit",
-            "builtin.mask_by_color",
-            "builtin.move",
-            "builtin.rotate",
-            "builtin.scale",
-            "builtin.trasform",
-            "builtin.annotate",
-        ]
         # Tools
-        for i in tool_info:
+        for i in TOOL_INFO:
             if i[0] == "-":
                 box = rr.box()
                 box.label(text=i[1:])
@@ -182,7 +95,7 @@ def MenuPrimary(pie, context):
             if _is_in_filter(i):
                 _callback_operator_select_tool(context, ccc, ' '.join(word.capitalize() for word in i[8:].split('_')), i)
         # Essential
-        for i in brush_info:
+        for i in BRUSH_INFO:
             if i[0] == "-":
                 box = rr.box()
                 box.label(text=i[1:])
@@ -196,7 +109,7 @@ def MenuPrimary(pie, context):
         rrr = box.row(align=True)
         ccc = rrr.column(align=False)
         for i in bpy.data.brushes:
-            if i.use_paint_sculpt and i.name not in brush_info and _is_in_filter(i):
+            if i.use_paint_sculpt and i.name not in BRUSH_INFO and _is_in_filter(i):
                 rrrr = ccc.row(align=False)
                 _Util.MPM_OT_SetPointer.operator(rrrr, i.name, tool, "brush", i, depress=current_brush == i)
                 cnt += 1
@@ -243,7 +156,7 @@ def MenuPrimary(pie, context):
 
     # Applyメニュー
     box = c.box()
-    box.label(text="Apply", icon="MODIFIER")
+    box.label(text="Apply", icon="CHECKMARK")
     # mask
     c = box.column(align=True)
     r = c.row(align=True)
@@ -364,3 +277,91 @@ def register():
 
 def unregister():
     _Util.unregister_classes(classes)
+
+
+BRUSH_INFO = [
+    "-Add & Subtract",
+    "Blob",
+    "Clay Strips",
+    "Clay Thumb",
+    "Crease Polish",
+    "Crease Sharp",
+    "Draw",
+    "Draw Sharp",
+    "Inflate/Deflate",
+    "Layer",
+    "-Contrast",
+    "Fill/Deepen",
+    "Flatten/Contrast",
+    "Plateau",
+    "Scrape Multiplane",
+    "Scrape/Fill",
+    "Smooth",
+    "Trim",
+    "-Transform",
+    "Boundary",
+    "Elastic Grab",
+    "Elastic Snake Hook",
+    "Grab",
+    "Grab 2D",
+    "Grab Silhouette",
+    "Nudge",
+    "Pinch/Magnify",
+    "Pose",
+    "Pull",
+    "Relax Pinch",
+    "Relax Slide",
+    "Snake Hook",
+    "Thumb",
+    "Twist",
+    "-Utilities",
+    "Density",
+    "Erase Multires Displacement",
+    "Face Set Paint",
+    "Mask",
+    "Smear Multires Displacement",
+    "-Paint",
+    "Airbrush",
+    "Blend Hard",
+    "Blend Soft",
+    "Blend Square",
+    "Paint Blend",
+    "Paint Hard",
+    "Paint Hard Pressure",
+    "Paint Soft",
+    "Paint Soft Pressure",
+    "Paint Square",
+    "Sharpen",
+    "Smear",
+    "-Simulation",
+    "Bend Boundary Cloth",
+    "Bend/Twist Cloth",
+    "Drag Cloth",
+    "Expand/Contract Cloth",
+    "Grab Cloth",
+    "Grab Planar Cloth ",
+    "Grab Random Cloth",
+    "Inflate Cloth",
+    "Pinch Folds Cloth",
+    "Pinch Point Cloth",
+    "Push Cloth",
+    "Stretch/Move Cloth",
+    "Twist Boundary Cloth",
+]
+TOOL_INFO = [
+    "-Tools",
+    "builtin.box_mask",
+    "builtin.box_hide",
+    "builtin.box_trim",
+    "builtin.line_project",
+    "builtin.mesh_filter",
+    "builtin.cloth_filter",
+    "builtin.color_filter",
+    "builtin.face_set_edit",
+    "builtin.mask_by_color",
+    "builtin.move",
+    "builtin.rotate",
+    "builtin.scale",
+    "builtin.trasform",
+    "builtin.annotate",
+]

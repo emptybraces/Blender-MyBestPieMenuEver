@@ -97,9 +97,9 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         # print(self._init_mouse_pos)
         safe_margin_min = (500, 450)
         safe_margin_max_y = 250
+        # 左下が0,0
         self._init_mouse_pos.x = max(self._init_mouse_pos.x, safe_margin_min[0])
-        
-        self._init_mouse_pos.y = min(max(self._init_mouse_pos.y, safe_margin_min[1]), context.window.height - safe_margin_max_y)
+        self._init_mouse_pos.y = _Util.clamp(self._init_mouse_pos.y, safe_margin_min[1], context.window.height - safe_margin_max_y)
         context.scene.mpm_prop.init()
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")

@@ -45,7 +45,6 @@ def MenuPrimary(pie, context):
     for elem in tool_settings.snap_elements:
         icon = snap_items[elem].icon
         break
-    del snap_items
     rr.popover(panel="VIEW3D_PT_snapping", icon=icon, text="",)
 
     r = box.row(align=True)
@@ -129,7 +128,7 @@ def MenuPrimary(pie, context):
 
     # Applyメニュー
     box = c3.box()
-    box.label(text="Apply", icon="MODIFIER")
+    box.label(text="Apply", icon="CHECKMARK")
     c = box.column(align=True)
     rr = c.row(align=False)
     rr.label(text="Symmetrize", icon="MOD_MIRROR")
