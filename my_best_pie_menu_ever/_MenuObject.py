@@ -5,7 +5,7 @@ if "bpy" in locals():
     importlib.reload(_MenuPose)
     importlib.reload(_MenuWeightPaint)
 else:
-    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_RemoveUnusedVertexGroup
+    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
     from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
 import bpy
 from . import _Util
@@ -27,7 +27,7 @@ def MenuPrimary(pie, context):
     c = r.column(align=True)
 
     MirrorVertexGroup(c)
-    _Util.layout_operator(c, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
     # if imported
     c = r.column(align=True)

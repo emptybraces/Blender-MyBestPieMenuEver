@@ -129,43 +129,43 @@ def DrawView3D(layout, context):
     # オブジェクトメニュー
     box = col.box()
     box.label(text="Active Object")
-    c = box.column(align=True)
+    # アクティブオブジェクトがなければ空欄
+    if context.active_object:
+        c = box.column(align=True)
+        r = c.row(align=True)
+        _Util.layout_prop(r, context.active_object, "show_in_front")
+        armature = _Util.get_armature(context.active_object)
+        _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
+        _Util.layout_prop(c, context.active_object, "show_wire")
 
-    c.enabled = context.active_object != None
-    r = c.row(align=True)
-    _Util.layout_prop(r, context.active_object, "show_in_front")
-    armature = _Util.get_armature(context.active_object)
-    _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
-    _Util.layout_prop(c, context.active_object, "show_wire")
+        r = c.row(align=True)
+        r.label(text="Display Type")
+        icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
+        for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
+            _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier,
+                                            icons[i], context.active_object.display_type == item.identifier)
+        if armature != None:
+            _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
+        # UV
+        c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+        # ビューポートオブジェクトカラー
+        r = c.row(align=True)
+        r.scale_x = 0.5
+        _Util.layout_prop(r, context.active_object, "color", isActive=shading.color_type == "OBJECT")
+        # ポーズ
+        c.label(text="________________________________________")
+        r = c.row(align=True)
+        r.label(text="Armature")
+        _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransform.bl_idname)
+        _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
 
-    r = c.row(align=True)
-    r.label(text="Display Type")
-    icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
-    for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
-        _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier,
-                                        icons[i], context.active_object.display_type == item.identifier)
-    if armature != None:
-        _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
-    # UV
-    c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
-    # ビューポートオブジェクトカラー
-    r = c.row(align=True)
-    r.scale_x = 0.5
-    _Util.layout_prop(r, context.active_object, "color", isActive=shading.color_type == "OBJECT")
-    # ポーズ
-    c.label(text="________________________________________")
-    r = c.row(align=True)
-    r.label(text="Armature")
-    _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransform.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
-
-    # コピー
-    r = c.row(align=True)
-    r.active = context.active_object is not None and 1 < len(context.selected_objects)
-    r.label(text="Copy")
-    _Util.layout_operator(r, MPM_OT_Utility_CopyPosition.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
+        # コピー
+        r = c.row(align=True)
+        r.active = context.active_object is not None and 1 < len(context.selected_objects)
+        r.label(text="Copy")
+        _Util.layout_operator(r, MPM_OT_Utility_CopyPosition.bl_idname)
+        _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
+        _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
 
     # -------------------------------
     # 次の列

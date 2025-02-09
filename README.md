@@ -24,7 +24,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Quickly switch the UVMap of the active object.
 - Reset all bone transform of selected object, and simultaneously resets the animation frame.
 - World transform can be copy/paste to selected objects.
-- Viewport camera's current transform can be saved/restored stackability, and animation feature.
+- Viewport camera's current transform can be saved/restored stackability, plus animation feature.
 - (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
 - (If installed) Shortcut call 3rdparty functions.(Wiggle2, AutoRigPRO)
 
@@ -38,7 +38,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Show/hide advanced shortcuts.
 - Mirror duplication.
 - Generate bones along selected edges.
-- Align view to edge normal side.
+- Align camera view to edge normal side.
 - And shortcuts various functions.
 
 ### [PAINT_TEXTURE mode]
@@ -51,13 +51,12 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
   
 ### [PAINT_WEIGHT mode]
 
-- Quickly switching blur brush strength.
+- Quickly tweak blur brush strength.
 - Shortcut PaintMask switch.
 - Copy the mirrored Vertex Group. Also possible from selected bones.
 
 ### [SCULPT mode]
 
-- Quickly switching smooth brush strength.
 - Quickly switchable to any Brushs, Strokes.
 - Quickly tweak the Smooth brush strength.
 - Filterable brushes to displayed.

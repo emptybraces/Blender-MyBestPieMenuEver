@@ -81,8 +81,11 @@ def MenuPrimary(pie, context):
     box = c.box()
     box.label(text="Apply", icon="CHECKMARK")
     cc = box.column(align=True)
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname).is_mask = False
+    _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
     MirrorVertexGroup(cc)
-    _Util.layout_operator(cc, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
 # --------------------------------------------------------------------------------
 
@@ -217,8 +220,33 @@ class MPM_OT_Weight_MirrorVGFromActiveTopology(bpy.types.Operator, MPM_OT_Weight
         return super().execute(context, True)
 
 
-class MPM_OT_MirrorVGOverwriteConfirm(bpy.types.Operator):
-    bl_idname = "mpm.mirror_vg_overrite_confirm"
+class MPM_OT_Weight_MirrorVGOverwriteConfirm(bpy.types.Operator):
+    bl_idname = "mpm.weight_mirror_vg_overrite_confirm"
+    bl_label = ""
+    target_name: bpy.props.StringProperty()
+    overwrite_name: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=400)
+
+    def draw(self, context):
+        self.layout.label(text=f"Already exist mirrored name '{self.overwrite_name}' Are you overwrite?")
+
+    def cancel(self, context):
+        pass
+
+    def execute(self, context):
+        obj = context.active_object
+        active_name = obj.vertex_groups.active.name
+        bpy.ops.object.vertex_group_set_active(group=self.overwrite_name)
+        bpy.ops.object.vertex_group_remove()
+        bpy.ops.object.vertex_group_set_active(group=active_name)
+        obj.vertex_groups.active.name = self.overwrite_name
+        _Util.show_msgbox(f"{self.target_name} -> {self.overwrite_name}\n", "Mirror VGroup from selected vgroup")
+        return {"FINISHED"}
+
+class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
+    bl_idname = "mpm.weight_mirror_vg_overrite_confirm"
     bl_label = ""
     target_name: bpy.props.StringProperty()
     overwrite_name: bpy.props.StringProperty()
@@ -279,7 +307,7 @@ def mirror_vgroup(obj, name, use_topology):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
+class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
     bl_idname = "mpm.remove_unused_vgroup"
     bl_label = "Remove Unused VGroup"
     bl_options = {"REGISTER", "UNDO"}
@@ -324,6 +352,26 @@ class MPM_OT_RemoveUnusedVertexGroup(bpy.types.Operator):
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
+class MPM_OT_Weight_SetWeight(bpy.types.Operator):
+    bl_idname = "mpm.weight_set"
+    bl_label = "Set Weight"
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Weights set. Option1: mask only"
+    is_mask: bpy.props.BoolProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
+    def execute(self, context):
+        if self.is_mask:
+            bpy.context.object.data.use_paint_mask_vertex = True
+        bpy.ops.paint.weight_set()
+        if self.is_mask:
+            bpy.context.object.data.use_paint_mask_vertex = False
+        return {"FINISHED"}
+
+# --------------------------------------------------------------------------------
 
 
 classes = (
@@ -331,8 +379,9 @@ classes = (
     MPM_OT_Weight_MirrorVGFromSelectedBoneTopology,
     MPM_OT_Weight_MirrorVGFromActive,
     MPM_OT_Weight_MirrorVGFromActiveTopology,
-    MPM_OT_MirrorVGOverwriteConfirm,
-    MPM_OT_RemoveUnusedVertexGroup,
+    MPM_OT_Weight_MirrorVGOverwriteConfirm,
+    MPM_OT_Weight_RemoveUnusedVertexGroup,
+    MPM_OT_Weight_SetWeight,
 )
 
 

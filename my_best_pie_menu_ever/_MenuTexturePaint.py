@@ -69,7 +69,7 @@ def MenuPrimary(pie, context):
                 _callback_operator_select_brush(context, cc, i)
         # Custom
         bb = rr.box()
-        bb.label(text="User/Custom")
+        bb.label(text="User")
         rrr = bb.row(align=True)
         cc = rrr.column(align=False)
         for i in bpy.data.brushes:

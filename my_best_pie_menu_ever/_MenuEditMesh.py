@@ -11,7 +11,7 @@ from . import _UtilInput
 from . import _UtilBlf
 from . import g
 from ._MenuObject import LayoutSwitchSelectionOperator
-from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_RemoveUnusedVertexGroup
+from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
 from mathutils import Vector, Matrix
 import time
 import math
@@ -105,7 +105,7 @@ def MenuPrimary(pie, context):
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
     MirrorVertexGroup(cc)
-    _Util.layout_operator(cc, MPM_OT_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
     # Edgeメニュー
     c3 = r.column()
