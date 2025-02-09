@@ -197,7 +197,10 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
     def execute(self, context):
         active = context.active_object
         if self.mode == "WEIGHT_PAINT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+            bpy.ops.object.select_all(action="DESELECT")
             _Util.get_armature(active).select_set(True)
+            _Util.select_active(active)
         elif self.mode == "EDIT":
             _Util.select_active(_Util.get_armature(active))
         context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp

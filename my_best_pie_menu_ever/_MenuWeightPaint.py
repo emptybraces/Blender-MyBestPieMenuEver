@@ -1,10 +1,10 @@
 import bpy
+import os
 from . import _Util
 from . import g
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
-
 
 def MenuPrimary(pie, context):
     box = pie.split().box()
@@ -25,47 +25,69 @@ def MenuPrimary(pie, context):
     box.label(text="Brush Property", icon="BRUSH_DATA")
     cc = box.column(align=True)
     r = cc.row()
+    current_brush = context.tool_settings.weight_paint.brush
     unified_paint_settings = context.tool_settings.unified_paint_settings
-    brush = context.tool_settings.weight_paint.brush
+
+    # weight
+    brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_weight else current_brush
     r = cc.row()
-    _Util.layout_prop(r, unified_paint_settings, "weight")
+    _Util.layout_prop(r, brush_property_target, "weight")
     r = r.row(align=True)
-    _Util.MPM_OT_SetSingle.operator(r, "0.0", unified_paint_settings, "weight", 0.0)
-    _Util.MPM_OT_SetSingle.operator(r, "0.1", unified_paint_settings, "weight", 0.1)
-    _Util.MPM_OT_SetSingle.operator(r, "0.5", unified_paint_settings, "weight", 0.5)
-    _Util.MPM_OT_SetSingle.operator(r, "1.0", unified_paint_settings, "weight", 1.0)
+    _Util.MPM_OT_SetSingle.operator(r, "0.0", brush_property_target, "weight", 0.0)
+    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "weight", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "weight", 0.5)
+    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "weight", 1.0)
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_weight")
+    
+    # size
+    brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
     r = cc.row()
-    _Util.layout_prop(r, brush, "strength")
+    _Util.layout_prop(r, brush_property_target, "size")
     r = r.row(align=True)
-    _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", brush.strength / 2)
-    _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", brush.strength * 2)
-    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush, "strength", 0.1)
-    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush, "strength", 1.0)
+    _Util.MPM_OT_SetInt.operator(r, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
+    _Util.MPM_OT_SetInt.operator(r, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
+    _Util.MPM_OT_SetInt.operator(r, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
+    _Util.MPM_OT_SetInt.operator(r, "200%", brush_property_target, "size", int(brush_property_target.size * 2.0))
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_size")
+
+    brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_strength else current_brush
+    r = cc.row()
+    _Util.layout_prop(r, brush_property_target, "strength")
+    r = r.row(align=True)
+    _Util.MPM_OT_SetSingle.operator(r, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(r, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
+    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "strength", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "strength", 1.0)
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
     # Blends
     r = cc.row(align=True)
     target_blends = ["mix", "add", "sub"]
-    for i in _Util.enum_values(brush, "blend"):
+    for i in _Util.enum_values(current_brush, "blend"):
         if i.lower() in target_blends:
-            is_use = brush.blend == i
-            _Util.MPM_OT_SetString.operator(r, i, brush, "blend", i, depress=is_use)
+            is_use = current_brush.blend == i
+            _Util.MPM_OT_SetString.operator(r, i, current_brush, "blend", i, depress=is_use)
     # 蓄積
-    _Util.layout_prop(cc, brush, "use_accumulate")
+    _Util.layout_prop(cc, current_brush, "use_accumulate")
     # ぼかしブラシの強さ
-    smooth_brush = None
-    for brush in bpy.data.brushes:
-        if brush.use_paint_weight and brush.name.lower() == "blur":
-            smooth_brush = brush
-            break
-    if smooth_brush:
+    blur_brush = None
+    if bpy.app.version < (4, 2, 9):
+        for current_brush in bpy.data.brushes:
+            if current_brush.use_paint_weight and current_brush.name.lower() == "blur":
+                blur_brush = current_brush
+                break
+    else:
+        blender_install_dir = os.path.dirname(bpy.app.binary_path)
+        blur_brush = bpy.data.brushes["Blur", blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_weight.blend"]
+    if blur_brush:
         r = cc.row(align=True)
-        _Util.layout_prop(r, smooth_brush, "strength", "Blur Brush: Strength")
+        r.enabled = not unified_paint_settings.use_unified_strength
+        _Util.layout_prop(r, blur_brush, "strength", "Blur Brush: Strength")
         r = r.row(align=True)
         r.scale_x = 0.8
-        _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", max(0, brush.strength * 0.5))
-        _Util.MPM_OT_SetSingle.operator(r, "75%", brush, "strength", max(0, brush.strength * 0.75))
-        _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", min(1, brush.strength * 1.5))
-        _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
-
+        _Util.MPM_OT_SetSingle.operator(r, "50%", blur_brush, "strength", max(0, blur_brush.strength * 0.5))
+        _Util.MPM_OT_SetSingle.operator(r, "75%", blur_brush, "strength", max(0, blur_brush.strength * 0.75))
+        _Util.MPM_OT_SetSingle.operator(r, "150%", blur_brush, "strength", min(1, blur_brush.strength * 1.5))
+        _Util.MPM_OT_SetSingle.operator(r, "200%", blur_brush, "strength", min(1, blur_brush.strength * 2))
     # util
     c = row.column()
     box = c.box()

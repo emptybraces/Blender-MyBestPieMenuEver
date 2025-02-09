@@ -1,3 +1,4 @@
+import os
 import bpy
 import bmesh
 from . import _Util
@@ -139,10 +140,14 @@ def MenuPrimary(pie, context):
     # Smoothブラシの強さ
     rr = c.row()
     smooth_brush = None
-    for brush in bpy.data.brushes:
-        if brush.use_paint_sculpt and brush.name.lower() == "smooth":
-            smooth_brush = brush
-            break
+    if bpy.app.version < (4, 2, 9):
+        for brush in bpy.data.brushes:
+            if brush.use_paint_sculpt and brush.name.lower() == "smooth":
+                smooth_brush = brush
+                break
+    else:
+        blender_install_dir = os.path.dirname(bpy.app.binary_path)
+        smooth_brush = bpy.data.brushes["Smooth", blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_sculpt.blend"]
     if smooth_brush:
         c = rr.column(align=True)
         r = c.row(align=True)
@@ -153,10 +158,10 @@ def MenuPrimary(pie, context):
             _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength")
         r = r.row(align=True)
         r.scale_x = 0.8
-        _Util.MPM_OT_SetSingle.operator(r, "50%", brush, "strength", max(0, brush.strength * 0.5))
-        _Util.MPM_OT_SetSingle.operator(r, "75%", brush, "strength", max(0, brush.strength * 0.75))
-        _Util.MPM_OT_SetSingle.operator(r, "150%", brush, "strength", min(1, brush.strength * 1.5))
-        _Util.MPM_OT_SetSingle.operator(r, "200%", brush, "strength", min(1, brush.strength * 2))
+        _Util.MPM_OT_SetSingle.operator(r, "50%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.5))
+        _Util.MPM_OT_SetSingle.operator(r, "75%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.75))
+        _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
+        _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
 
     # Applyメニュー
     box = c.box()
