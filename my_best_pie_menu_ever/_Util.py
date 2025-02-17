@@ -150,8 +150,9 @@ class MPM_OT_CallbackOperator(bpy.types.Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def operator(layout, text, unique_id, func, args, icon="NONE", isActive=True, depress=False):
+    def operator(layout, text, unique_id, func, args, icon="NONE", isActive=None, depress=False):
         if isActive != None:
+            print(unique_id)
             layout = layout.row(align=True)
             layout.enabled = isActive
         op = layout.operator(MPM_OT_CallbackOperator.bl_idname, text=text, icon=icon, depress=depress)

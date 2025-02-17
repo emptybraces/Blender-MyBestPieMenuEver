@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "2.0.1"
+version = "2.1.0"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -28,8 +28,9 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
-# 2.0.1
+# 2.1.0
 # - [Weight]拡張ウェイト設定ボタンを追加。
+# - [修正] スカルプトスムーズブラシが読み込めずエラー。
 # - [修正] アクティブオブジェクトがないときにパイメニューを開くとエラー。
 # - [修正] ウェイトペイントモードからウェイトペイント+アーマチュア選択ボタンが機能していなかった。
 # - [修正] ウェイトペイントブラシのパラメータ設定が機能していなかった。

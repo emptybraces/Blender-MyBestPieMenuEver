@@ -1,4 +1,6 @@
 import os
+import sys
+import time
 import bpy
 import bmesh
 from . import _Util
@@ -7,22 +9,40 @@ from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
-# 'use_paint_antialiasing', 'use_paint_grease_pencil', 'use_paint_image', 'use_paint_sculpt', 'use_paint_sculpt_curves', 'use_paint_uv_sculpt', 'use_paint_vertex', 'use_paint_weight'
 # --------------------------------------------------------------------------------
+g_is_filter_mode = False
+g_is_filter_mode_enter = False
+g_filter_mode_enter_lasttime = 0
 
 
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text="Sculpt Primary")
 
-    c = box.column()
+    c = box.column(align=True)
     _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
-
-    r = c.row(align=True)  # Brush, Stroke
-
+    # フィルターモード
+    def __switch_filter_mode():
+        global g_is_filter_mode
+        g_is_filter_mode = not g_is_filter_mode
+    def __switch_filter_setting_mode():
+        global g_is_filter_mode_enter, g_filter_mode_enter_lasttime
+        g_is_filter_mode_enter = not g_is_filter_mode_enter
+        g_filter_mode_enter_lasttime = time.time()
+    r = c.row(align=True)
+    r.alignment = "RIGHT"
+    _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode" , __name__ + ".g_is_filter_mode",
+                                        __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
+    _Util.MPM_OT_CallbackOperator.operator(r, "Enter Filter Setting" if g_is_filter_mode_enter else "Exit Filter Setting" , __name__ + ".g_is_filter_mode_enter",
+                                        __switch_filter_setting_mode, None, "TOOL_SETTINGS",  depress=g_is_filter_mode_enter)
+    global g_filter_mode_enter_lasttime
+    print((time.time() - g_filter_mode_enter_lasttime) < 0.1)
+    # ブラシ
+    r = c.row(align=True)
     box = r.box()
     box.label(text="Tools & Brushes", icon="BRUSH_DATA")
     rr = box.row(align=True)
+    rr.scale_x = 0.9
     cc = rr.column(align=True)
     cnt = 0
     tool = context.tool_settings.sculpt
@@ -147,7 +167,13 @@ def MenuPrimary(pie, context):
                 break
     else:
         blender_install_dir = os.path.dirname(bpy.app.binary_path)
-        smooth_brush = bpy.data.brushes["Smooth", blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_sculpt.blend"]
+        if bpy.data.brushes.get("Smooth") == None:
+            with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_sculpt.blend", link=True, assets_only=True) as (data_from, data_to):
+                for i in data_from.brushes:
+                    if i == "Smooth":
+                        data_to.brushes = [i] # これでひとつだけロードしたことになる
+                        break
+        smooth_brush = bpy.data.brushes["Smooth"]
     if smooth_brush:
         c = rr.column(align=True)
         r = c.row(align=True)

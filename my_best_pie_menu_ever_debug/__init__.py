@@ -44,7 +44,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
             bpy.ops.preferences.addon_remove(module=addon_name)
             bpy.ops.preferences.addon_refresh()
         # インストール
-        bpy.ops.preferences.addon_install(filepath="C:/user/gdrive/blender/plugin/MyBestPieMenuEver/my_best_pie_menu_ever.zip")
+        bpy.ops.preferences.addon_install(filepath="C:/user/projects/github_blender_MyBestPieMenuEver/my_best_pie_menu_ever.zip")
         bpy.ops.preferences.addon_refresh()
 
         # 再度検索

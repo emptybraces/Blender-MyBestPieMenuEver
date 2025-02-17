@@ -33,6 +33,7 @@ def MenuPrimary(pie, context):
     r = cc.row()
     _Util.layout_prop(r, brush_property_target, "weight")
     r = r.row(align=True)
+    r.scale_x = 0.8
     _Util.MPM_OT_SetSingle.operator(r, "0.0", brush_property_target, "weight", 0.0)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "weight", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "weight", 0.5)
@@ -44,6 +45,7 @@ def MenuPrimary(pie, context):
     r = cc.row()
     _Util.layout_prop(r, brush_property_target, "size")
     r = r.row(align=True)
+    r.scale_x = 0.8
     _Util.MPM_OT_SetInt.operator(r, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
     _Util.MPM_OT_SetInt.operator(r, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
     _Util.MPM_OT_SetInt.operator(r, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
@@ -54,10 +56,12 @@ def MenuPrimary(pie, context):
     r = cc.row()
     _Util.layout_prop(r, brush_property_target, "strength")
     r = r.row(align=True)
+    r.scale_x = 0.8
+    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "strength", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "strength", 0.5)
+    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "strength", 1.0)
     _Util.MPM_OT_SetSingle.operator(r, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
-    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "strength", 0.1)
-    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "strength", 1.0)
     _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
     # Blends
     r = cc.row(align=True)
