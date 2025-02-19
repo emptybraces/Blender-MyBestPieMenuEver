@@ -1,5 +1,9 @@
+if "bpy" in locals():
+    import importlib
+    importlib.reload(_Util)
+else:
+    from . import _Util
 import bpy
-from . import _Util
 # --------------------------------------------------------------------------------
 # ポーズメニュー
 # --------------------------------------------------------------------------------

@@ -1,8 +1,9 @@
 if "bpy" in locals():
     import importlib
     importlib.reload(g)
-import bpy
-from . import g
+else:
+    from . import g
+
 bl_info = {
     "name": "MyBestPieMenuEVER",
     "author": "emptybraces",
@@ -16,16 +17,16 @@ bl_info = {
 }
 g.ver = bl_info["version"]
 
-if "_Util" in locals():
-    import imp
-    imp.reload(_Util)
-    imp.reload(_AddonPreferences)
-    imp.reload(_PieMenu)
+if "bpy" in locals():
+    import importlib
+    importlib.reload(_Util)
+    importlib.reload(_AddonPreferences)
+    importlib.reload(_PieMenu)
 else:
     from . import _Util
     from . import _AddonPreferences
     from . import _PieMenu
-
+import bpy
 classes = (
     _AddonPreferences,
     _PieMenu,

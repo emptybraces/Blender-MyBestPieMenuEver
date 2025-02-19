@@ -1,16 +1,20 @@
 if "bpy" in locals():
     import importlib
+    importlib.reload(_Util)
+    importlib.reload(_AddonPreferences)
+    importlib.reload(g)
     from . import _MenuPose
     importlib.reload(_MenuPose)
-from ._MenuPose import MPM_OT_Pose_ResetBoneTransform, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame
+else:
+    from . import _Util
+    from . import _AddonPreferences
+    from . import g
+    from ._MenuPose import MPM_OT_Pose_ResetBoneTransform, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame
 import os
 import subprocess
 import bpy
 import bmesh
 import math
-from . import _Util
-from . import _AddonPreferences
-from . import g
 from time import time
 from mathutils import Vector, Quaternion
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d

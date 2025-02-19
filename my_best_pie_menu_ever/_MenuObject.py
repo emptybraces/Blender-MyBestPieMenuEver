@@ -4,11 +4,11 @@ if "bpy" in locals():
     from . import _MenuWeightPaint
     importlib.reload(_MenuPose)
     importlib.reload(_MenuWeightPaint)
-else:
-    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
-    from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
-import bpy
+    importlib.reload(_Util)
+from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
+from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
 from . import _Util
+import bpy
 
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー

@@ -4,16 +4,19 @@ if "bpy" in locals():
     importlib.reload(_UtilInput)
     importlib.reload(_UtilBlf)
     importlib.reload(g)
+    from . import _MenuObject
+    from . import _MenuWeightPaint
     importlib.reload(_MenuObject)
     importlib.reload(_MenuWeightPaint)
+else:
+    from . import _Util
+    from . import _UtilInput
+    from . import _UtilBlf
+    from . import g
+    from ._MenuObject import LayoutSwitchSelectionOperator
+    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
 import bpy
 import bmesh
-from . import _Util
-from . import _UtilInput
-from . import _UtilBlf
-from . import g
-from ._MenuObject import LayoutSwitchSelectionOperator
-from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
 from mathutils import Vector, Matrix
 import time
 import math

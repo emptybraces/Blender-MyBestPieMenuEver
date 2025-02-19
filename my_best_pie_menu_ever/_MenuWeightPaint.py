@@ -2,10 +2,11 @@ if "bpy" in locals():
     import importlib
     importlib.reload(_Util)
     importlib.reload(g)
+else:
+    from . import _Util
+    from . import g
 import bpy
 import os
-from . import _Util
-from . import g
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------

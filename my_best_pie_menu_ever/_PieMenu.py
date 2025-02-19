@@ -16,6 +16,7 @@
     importlib.reload(_MenuUVEditor)
     importlib.reload(_MenuImageEditor)
     importlib.reload(_PanelSelectionHistory)
+    importlib.reload(g)
 else:
     from . import _Util
     from . import _UtilInput

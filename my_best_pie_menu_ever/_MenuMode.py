@@ -1,6 +1,10 @@
-﻿import bpy
+﻿if "bpy" in locals():
+    import importlib
+    importlib.reload(_Util)
+else:
+    from . import _Util
+import bpy
 import bmesh
-from . import _Util
 from bpy.app.translations import (
     pgettext_iface as iface_,
 )
