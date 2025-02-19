@@ -1,7 +1,9 @@
 if "bpy" in locals():
     import importlib
-    from . import _MenuObject
-    from . import _MenuWeightPaint
+    importlib.reload(_Util)
+    importlib.reload(_UtilInput)
+    importlib.reload(_UtilBlf)
+    importlib.reload(g)
     importlib.reload(_MenuObject)
     importlib.reload(_MenuWeightPaint)
 import bpy

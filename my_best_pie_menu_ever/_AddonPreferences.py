@@ -1,9 +1,13 @@
-﻿import bpy
+﻿if "bpy" in locals():
+    import importlib
+    importlib.reload(_Util)
+    importlib.reload(g)
+import bpy
 import rna_keymap_ui
 from bpy.props import IntProperty, StringProperty, BoolProperty
 from . import _Util
+from . import g
 addon_keymaps = []
-
 
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
@@ -55,8 +59,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         if self.imagePaintBlendInclude:
             self.imagePaintBlendInclude += ', '
         self.imagePaintBlendInclude += value
-    imagePaintBlendDropDown: bpy.props.EnumProperty(
-        name="", items=__get_blend_names, set=__select_dropdown_blend_names)
+    imagePaintBlendDropDown: bpy.props.EnumProperty(name="", items=__get_blend_names, set=__select_dropdown_blend_names)
 
     def __get_sculpt_brush_names(self, context):
         return [(i.name.lower(), i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_sculpt]
@@ -89,8 +92,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         sub_row(self, box, "imagePaintBrushExclude",
                 "imagePaintBrushNameDropDown")
         sub_row(self, box, "imagePaintBlendInclude", "imagePaintBlendDropDown")
-        sub_row(self, box, "imagePaintShiftBrushName",
-                "imagePaintShiftBrushNameDropDown")
+        sub_row(self, box, "imagePaintShiftBrushName", "imagePaintShiftBrushNameDropDown")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         row = box.row(align=True)
         row.label(text="Ctrl+LMB Behaviour:")
@@ -101,8 +103,10 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
         box = layout.box()
         box.label(text='Sculpt')
-        sub_row(self, box, "sculptBrushFilterByName",
-                "sculptBrushNameDropDown")
+        if g.is_v4_3_later():
+            box.prop(self, "sculptBrushFilterByName")
+        else:
+            sub_row(self, box, "sculptBrushFilterByName", "sculptBrushNameDropDown")
         box.prop(self, "sculptLimitRowCount")
 
         box = layout.box()
@@ -162,19 +166,15 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
 class Accessor():
     @staticmethod
-    def get_ref(
-    ): return bpy.context.preferences.addons[__package__].preferences if __package__ in bpy.context.preferences.addons else None
+    def get_ref(): return bpy.context.preferences.addons[__package__].preferences if __package__ in bpy.context.preferences.addons else None
     @staticmethod
     def get_second_language(): return Accessor.get_ref().secondLanguage
     @staticmethod
-    def get_image_paint_ctrl_behaviour(): return Accessor.get_ref(
-    ).image_paint_is_ctrl_behaviour_invert_or_erasealpha
+    def get_image_paint_ctrl_behaviour(): return Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha
     @staticmethod
-    def set_image_paint_ctrl_behaviour(v): Accessor.get_ref(
-    ).image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
+    def set_image_paint_ctrl_behaviour(v): Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
     @staticmethod
-    def get_image_paint_shift_brush_name(
-    ): return Accessor.get_ref().imagePaintShiftBrushName
+    def get_image_paint_shift_brush_name(): return Accessor.get_ref().imagePaintShiftBrushName
     @staticmethod
     def get_image_paint_limit_row(): return Accessor.get_ref().imagePaintLimitRowCount
     @staticmethod
@@ -185,6 +185,7 @@ class Accessor():
     def get_sculpt_limit_row_count(): return Accessor.get_ref().sculptLimitRowCount
     @staticmethod
     def get_sculpt_brush_filter_by_name(): return Accessor.get_ref().sculptBrushFilterByName
+    @staticmethod
     @staticmethod
     def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
     # @staticmethod

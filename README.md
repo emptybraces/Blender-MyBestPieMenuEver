@@ -35,7 +35,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 ### [EDIT mode]
 - Quick access to Edge/Vertex crease.
 - Quick access to Vertex groups.
-- Show/hide advanced shortcuts.
+- Advanced Show/hide shortcuts.
 - Mirror duplication.
 - Generate bones along selected edges.
 - Align camera view to edge normal side.
@@ -51,9 +51,10 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
   
 ### [PAINT_WEIGHT mode]
 
-- Quickly tweak blur brush strength.
-- Shortcut PaintMask switch.
+- Quickly tweak brush proeprties.
+- Advanced Weights set shortcuts.
 - Copy the mirrored Vertex Group. Also possible from selected bones.
+- And shortcuts various functions.
 
 ### [SCULPT mode]
 

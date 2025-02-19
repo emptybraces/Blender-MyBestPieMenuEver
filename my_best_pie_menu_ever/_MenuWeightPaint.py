@@ -1,3 +1,7 @@
+if "bpy" in locals():
+    import importlib
+    importlib.reload(_Util)
+    importlib.reload(g)
 import bpy
 import os
 from . import _Util
@@ -5,6 +9,7 @@ from . import g
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
+
 
 def MenuPrimary(pie, context):
     box = pie.split().box()
@@ -39,7 +44,7 @@ def MenuPrimary(pie, context):
     _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "weight", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "weight", 1.0)
     _Util.layout_prop(r, unified_paint_settings, "use_unified_weight")
-    
+
     # size
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
     r = cc.row()
@@ -74,14 +79,20 @@ def MenuPrimary(pie, context):
     _Util.layout_prop(cc, current_brush, "use_accumulate")
     # ぼかしブラシの強さ
     blur_brush = None
-    if bpy.app.version < (4, 2, 9):
+    if g.is_v4_3_later():
+        blender_install_dir = os.path.dirname(bpy.app.binary_path)
+        if bpy.data.brushes.get("Blur") == None:
+            with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_weight.blend", link=True, assets_only=True) as (data_from, data_to):
+                for i in data_from.brushes:
+                    if i == "Blur":
+                        data_to.brushes = [i] # これでひとつだけロードしたことになる
+                        break
+        blur_brush = bpy.data.brushes["Blur"]
+    else:
         for current_brush in bpy.data.brushes:
             if current_brush.use_paint_weight and current_brush.name.lower() == "blur":
                 blur_brush = current_brush
                 break
-    else:
-        blender_install_dir = os.path.dirname(bpy.app.binary_path)
-        blur_brush = bpy.data.brushes["Blur", blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_weight.blend"]
     if blur_brush:
         r = cc.row(align=True)
         r.enabled = not unified_paint_settings.use_unified_strength
@@ -271,6 +282,7 @@ class MPM_OT_Weight_MirrorVGOverwriteConfirm(bpy.types.Operator):
         _Util.show_msgbox(f"{self.target_name} -> {self.overwrite_name}\n", "Mirror VGroup from selected vgroup")
         return {"FINISHED"}
 
+
 class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
     bl_idname = "mpm.weight_mirror_vg_overrite_confirm"
     bl_label = ""
@@ -378,6 +390,8 @@ class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
+
+
 class MPM_OT_Weight_SetWeight(bpy.types.Operator):
     bl_idname = "mpm.weight_set"
     bl_label = "Set Weight"

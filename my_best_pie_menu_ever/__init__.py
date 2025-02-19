@@ -1,3 +1,6 @@
+if "bpy" in locals():
+    import importlib
+    importlib.reload(g)
 import bpy
 from . import g
 bl_info = {
