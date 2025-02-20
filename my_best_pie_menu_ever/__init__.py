@@ -3,12 +3,10 @@ if "bpy" in locals():
     importlib.reload(g)
     importlib.reload(_Util)
     importlib.reload(_AddonPreferences)
-    importlib.reload(_PieMenu)
 else:
     from . import g
     from . import _Util
     from . import _AddonPreferences
-    from . import _PieMenu
 import bpy
 bl_info = {
     "name": "My Best Pie Menu Ever",
@@ -21,14 +19,19 @@ bl_info = {
     "doc_url": "",
     "category": "3D View",
 }
+# フォーマッタの都合上インポートを後にしてる
+g.ver = bl_info["version"]
+if "_PieMenu" in locals():
+    import importlib
+    importlib.reload(_PieMenu)
+else:
+    from . import _PieMenu
+
 classes = [
     _AddonPreferences,
     _PieMenu,
     _Util,
 ]
-g.ver = bl_info["version"]
-
-
 cat_3dview = "3D View"
 cat_image = "Image"
 addon_opid = _PieMenu.MPM_OT_OpenPieMenuModal.bl_idname

@@ -9,14 +9,15 @@ from . import _Util
 from . import g
 addon_keymaps = []
 
+
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
     secondLanguage: StringProperty(name="Second Language", default="ja_JP",
                                    description="Set the second language for the language switch button")
     openFilePathList: StringProperty(name="Open File or Explorer Path List",
                                      description="Specify the absolute path you want to execute. You can also show multiple separated by comma.")
-    imagePaintBrushExclude: StringProperty(
-        name="Brush Exclude", default="", description="Enter the name of the brush you want to EXCLUDE, or select it from the drop-down list")
+    imagePaintBrushFilterByName: StringProperty(
+        name="ImagePaint Brush Filter", default="", description="Enter the name of the brush you want to display")
     imagePaintBlendInclude: StringProperty(name="Blend Include", default="mix,screen,overlay,erase_alpha",
                                            description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
     imagePaintShiftBrushName: StringProperty(name="ShiftBrushName", default="Soften",
@@ -28,20 +29,20 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=21,
                                      min=5, description="Specify the line count for displaying brushes")
     sculptBrushFilterByName: StringProperty(
-        name="Filter by brush name", description="Enter the name of the brush you want to display or select from the drop-down list")
+        name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
 
-    def __select_dropdown_imagepaint_filter(self, value):
-        value = self.__get_imagepaint_brush_names(None)[value][1]
-        if value in self.imagePaintBrushExclude:
-            return
-        if self.imagePaintBrushExclude:
-            self.imagePaintBrushExclude += ', '
-        self.imagePaintBrushExclude += value
-    imagePaintBrushNameDropDown: bpy.props.EnumProperty(
-        name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_filter)
+    # def __select_dropdown_imagepaint_filter(self, value):
+    #     value = self.__get_imagepaint_brush_names(None)[value][1]
+    #     if value in self.imagePaintBrushExclude:
+    #         return
+    #     if self.imagePaintBrushExclude:
+    #         self.imagePaintBrushExclude += ', '
+    #     self.imagePaintBrushExclude += value
+    # imagePaintBrushNameDropDown: bpy.props.EnumProperty(
+    #     name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_filter)
 
     def __select_dropdown_imagepaint_shift_brush(self, value):
         value = self.__get_imagepaint_brush_names(None)[value][0]
@@ -89,8 +90,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
         box = layout.box()
         box.label(text='Image Paint')
-        sub_row(self, box, "imagePaintBrushExclude",
-                "imagePaintBrushNameDropDown")
+        box.prop(self, "imagePaintBrushFilterByName")
         sub_row(self, box, "imagePaintBlendInclude", "imagePaintBlendDropDown")
         sub_row(self, box, "imagePaintShiftBrushName", "imagePaintShiftBrushNameDropDown")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
@@ -131,7 +131,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             "secondLanguage": self.secondLanguage,
             "openFilePathList": self.openFilePathList,
             # "isDebug": getattr(self, "isDebug", False),
-            "imagePaintBrushExclude": self.imagePaintBrushExclude,
+            "imagePaintBrushFilterByName": self.imagePaintBrushFilterByName,
             "imagePaintBlendInclude": self.imagePaintBlendInclude,
             "imagePaintShiftBrushName": self.imagePaintShiftBrushName,
             "imagePaintLimitRowCount": self.imagePaintLimitRowCount,
@@ -178,7 +178,9 @@ class Accessor():
     @staticmethod
     def get_image_paint_limit_row(): return Accessor.get_ref().imagePaintLimitRowCount
     @staticmethod
-    def get_image_paint_brush_exclude(): return Accessor.get_ref().imagePaintBrushExclude
+    def get_image_paint_brush_filter_by_name(): return Accessor.get_ref().imagePaintBrushFilterByName
+    @staticmethod
+    def set_image_paint_brush_filter_by_name(v): Accessor.get_ref().imagePaintBrushFilterByName = v
     @staticmethod
     def get_image_paint_blend_include(): return Accessor.get_ref().imagePaintBlendInclude
     @staticmethod
@@ -186,6 +188,7 @@ class Accessor():
     @staticmethod
     def get_sculpt_brush_filter_by_name(): return Accessor.get_ref().sculptBrushFilterByName
     @staticmethod
+    def set_sculpt_brush_filter_by_name(v): Accessor.get_ref().sculptBrushFilterByName = v
     @staticmethod
     def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
     # @staticmethod

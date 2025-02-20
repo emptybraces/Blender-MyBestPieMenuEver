@@ -158,6 +158,7 @@ class MPM_OT_CallbackOperator(bpy.types.Operator):
         op = layout.operator(MPM_OT_CallbackOperator.bl_idname, text=text, icon=icon, depress=depress)
         op.key = unique_id + "." + func.__name__
         MPM_OT_CallbackOperator.func_dict[op.key] = (func, args)
+        return op
 
     @classmethod
     def clear(cls):
