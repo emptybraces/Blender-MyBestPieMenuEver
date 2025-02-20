@@ -33,7 +33,7 @@ def MenuPrimary(pie, context):
     # フィルターモード
     global g_is_filter_mode, g_is_filter_set_mode_enter, g_filter_mode_enter_lasttime
     g_is_filter_set_mode_enter = g_is_filter_set_mode_enter and (time.time() - g_filter_mode_enter_lasttime) < 0.1
-
+    g.on_closed.pop("warn_open_filter_set", None)
     def __switch_filter_mode():
         global g_is_filter_mode
         g_is_filter_mode = not g_is_filter_mode
@@ -42,6 +42,8 @@ def MenuPrimary(pie, context):
         global g_is_filter_set_mode_enter, g_filter_mode_enter_lasttime
         g_is_filter_set_mode_enter = not g_is_filter_set_mode_enter
         g_filter_mode_enter_lasttime = time.time()
+        if g_is_filter_set_mode_enter: # モードに入るときだけ警告を表示
+            g.on_closed["warn_open_filter_set"] = lambda: _Util.show_msgbox("Please hold down the shift key to click.", "Error", "ERROR")
     r = c.row(align=True)
     r.alignment = "RIGHT"
     _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",

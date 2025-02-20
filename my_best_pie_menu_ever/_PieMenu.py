@@ -79,6 +79,8 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
                 context.window.cursor_warp(event.mouse_x, event.mouse_y)
                 return {"RUNNING_MODAL"}
             self.release(context)
+            for i in g.on_closed.values():
+                i()
             return {"FINISHED"}
         elif event.type in {"RIGHTMOUSE", "ESC"}:
             self.release(context)
@@ -94,6 +96,7 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
 
     def invoke(self, context, event):
         g.is_force_cancelled_piemenu_modal = False
+        g.on_closed.clear()
         self._init_mouse_pos = Vector((event.mouse_x, event.mouse_y))
         # print(self._init_mouse_pos)
         safe_margin_min = (500, 450)

@@ -1,42 +1,37 @@
 if "bpy" in locals():
     import importlib
     importlib.reload(g)
-else:
-    from . import g
-
-bl_info = {
-    "name": "MyBestPieMenuEVER",
-    "author": "emptybraces",
-    "version": (2, 1, 0),
-    "blender": (4, 2, 0),
-    "location": "3D View",
-    "description": "Quick access to the brushes, functions you need",
-    "warning": "",
-    "doc_url": "",
-    "category": "3D View",
-}
-g.ver = bl_info["version"]
-
-if "bpy" in locals():
-    import importlib
     importlib.reload(_Util)
     importlib.reload(_AddonPreferences)
     importlib.reload(_PieMenu)
 else:
+    from . import g
     from . import _Util
     from . import _AddonPreferences
     from . import _PieMenu
 import bpy
-classes = (
+bl_info = {
+    "name": "My Best Pie Menu Ever",
+    "author": "emptybraces",
+    "version": (2, 1, 0),
+    "blender": (4, 2, 0),
+    "location": "3D View",
+    "description": "Quick access to the functions you need",
+    "warning": "",
+    "doc_url": "",
+    "category": "3D View",
+}
+classes = [
     _AddonPreferences,
     _PieMenu,
     _Util,
-)
+]
+g.ver = bl_info["version"]
 
 
 cat_3dview = "3D View"
 cat_image = "Image"
-addon_opid = "mpm.open_pie_menu"
+addon_opid = _PieMenu.MPM_OT_OpenPieMenuModal.bl_idname
 
 
 def find_keymap(keymapName, itemName):
