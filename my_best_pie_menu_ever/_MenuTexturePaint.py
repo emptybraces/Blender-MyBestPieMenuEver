@@ -8,6 +8,7 @@ else:
     from . import _AddonPreferences
     from . import g
 import bpy
+import os
 import time
 import mathutils
 from bl_ui.properties_paint_common import UnifiedPaintPanel, brush_basic_texpaint_settings
@@ -49,7 +50,7 @@ def MenuPrimary(pie, context):
     r.alignment = "RIGHT"
     if not g_is_filter_set_mode_enter:
         _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
-                                            __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
+                                               __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
     _Util.MPM_OT_CallbackOperator.operator(r, "Exit Filter Setting" if g_is_filter_set_mode_enter else "Enter Filter Setting", __name__ + ".g_is_filter_mode_enter",
                                            __switch_filter_setting_mode, None, "TOOL_SETTINGS",  depress=g_is_filter_set_mode_enter)
     # Brush, Stroke, Blend...
@@ -342,7 +343,7 @@ g_lastBrushName = ""
 
 class MPM_OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
     bl_idname = "mpm.texpaint_switch_ctrl_behaviour"
-    bl_label = "Switch Ctrl Behaviour"
+    bl_label = "Switch Ctrl Behaviour(MyBestPieMenuEver)"
 
     @classmethod
     def poll(cls, context):
@@ -372,7 +373,29 @@ class MPM_OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
 
 class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
     bl_idname = "mpm.texpaint_change_soften"
-    bl_label = "Change Soften"
+    bl_label = "Switch Shift Behaviour(MyBestPieMenuEver)"
+
+    def execute(self, context):
+        global g_lastBrushName
+        g_lastBrushName = context.tool_settings.image_paint.brush.name
+        name = _AddonPreferences.Accessor.get_image_paint_shift_brush_name()
+        if g.is_v4_3_later():
+            if bpy.data.brushes.get(name) == None:
+                blender_install_dir = os.path.dirname(bpy.app.binary_path)
+                with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_texture.blend", link=True, assets_only=True) as (data_from, data_to):
+                    for i in data_from.brushes:
+                        if i == name:
+                            data_to.brushes = [i]  # これでひとつだけロードしたことになる
+                            break
+        brush = bpy.data.brushes.get(name)
+        if brush:
+            context.tool_settings.image_paint.brush = brush
+            self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
+            context.window_manager.modal_handler_add(self)
+            return {"RUNNING_MODAL"}
+        else:
+            _Util.show_msgbox("Set a valid brush name in the preferences.", icon="ERROR")
+            return {"CANCELLED"}
 
     def modal(self, context, event):
         context.area.tag_redraw()
@@ -386,18 +409,6 @@ class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
         context.window_manager.event_timer_remove(self._timer)
         return {"FINISHED"}
 
-    def execute(self, context):
-        global g_lastBrushName
-        g_lastBrushName = context.tool_settings.image_paint.brush.name
-        name = _AddonPreferences.Accessor.get_image_paint_shift_brush_name()
-        if name in bpy.data.brushes:
-            context.tool_settings.image_paint.brush = bpy.data.brushes[name]
-            self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
-            context.window_manager.modal_handler_add(self)
-            return {"RUNNING_MODAL"}
-        else:
-            _Util.show_msgbox("Set a valid brush name in the preferences.", icon="ERROR")
-            return {"CANCELLED"}
 # --------------------------------------------------------------------------------
 
 
@@ -437,25 +448,29 @@ def register():
     key_keydown_ctrl.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_keydown_ctrl))
 
+    # ctrl押しながらクリックで必要
     km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
     key_ctrl_lmb_erasealpha = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", ctrl=True)
     key_ctrl_lmb_erasealpha.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_ctrl_lmb_erasealpha))
 
+    # ctrl押しながらクリックで必要
     km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
     key_ctrl_lmb_invert = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", ctrl=True)
     key_ctrl_lmb_invert.active = not _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     key_ctrl_lmb_invert.properties.mode = "INVERT"
     addon_keymaps.append((km, key_ctrl_lmb_invert))
 
-    # km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
-    # kmi = km.keymap_items.new(MPM_OT_TexPaint_ChangeSoften.bl_idname, "LEFT_SHIFT", "PRESS")
-    # addon_keymaps.append((km, kmi))
+    km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    key_keydown_shift = km.keymap_items.new(MPM_OT_TexPaint_ChangeSoften.bl_idname, "LEFT_SHIFT", "PRESS")
+    key_keydown_shift.active = True
+    addon_keymaps.append((km, key_keydown_shift))
 
-    # km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
-    # kmi = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", shift=True)
-    # kmi.properties.mode = "SMOOTH"
-    # addon_keymaps.append((km, kmi))
+    # シフト押しながらクリックで必要
+    km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    key_shift_lmb = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", shift=True)
+    key_shift_lmb.active = True
+    addon_keymaps.append((km, key_shift_lmb))
 
 
 def unregister():
@@ -525,22 +540,23 @@ def MenuPrimary_v4_2(pie, context):
             ccc = rrr.column(align=True)
 
     # Blends
-    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_filter_by_name().lower().split(",")]
+    default_blends = ["mix", "screen", "overlay", "erase_alpha"]
+    blend_filter_names = [i for i in map(str.strip, _AddonPreferences.Accessor.get_image_paint_blend_filter_by_name().split(',')) if i]
     cnt = 0
     bb = cc.box()
     bb.label(text="Blend")
     rrr = bb.row(align=True)
     ccc = rrr.column(align=True)
     for i in _Util.enum_values(current_brush, "blend"):
-        if i.lower() in blend_include_list:
-            is_use = current_brush.blend == i
-            # c2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i
-            _Util.MPM_OT_SetterBase.operator(ccc, _Util.MPM_OT_SetString.bl_idname, i,
-                                             current_brush, "blend", i, depress=is_use)
-            # current_brush.blend = self.methodName
-            cnt += 1
-            if cnt % limit_rows == 0:
-                ccc = rrr.column(align=True)
+        if blend_filter_names and i.lower() not in blend_filter_names:
+            continue
+        if not blend_filter_names and i.lower() not in default_blends:
+            continue
+        is_use = current_brush.blend == i
+        _Util.MPM_OT_SetterBase.operator(ccc, _Util.MPM_OT_SetString.bl_idname, i,
+                                            current_brush, "blend", i, depress=is_use)
+        if (cnt:=cnt+1) % limit_rows == 0:
+            ccc = rrr.column(align=True)
 
     # brush proeprty
     cc = rr.column(align=True)

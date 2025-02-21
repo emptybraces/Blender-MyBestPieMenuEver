@@ -19,9 +19,9 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                                      description="Specify the absolute path you want to execute. You can also show multiple separated by comma.")
     imagePaintBrushFilterByName: StringProperty(
         name="ImagePaint Brush Filter", default="", description="Enter the name of the brush you want to display")
-    imagePaintBlendFilterByName: StringProperty(name="ImagePaint Brush Blend Filter", default="mix,screen,overlay,erase_alpha",
+    imagePaintBlendFilterByName: StringProperty(name="ImagePaint Brush Blend Filter", default="",
                                            description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
-    imagePaintShiftBrushName: StringProperty(name="Shift-key Brush", default="Soften",
+    imagePaintShiftBrushName: StringProperty(name="Shift-key Brush", default="Blur",
                                              description="Enter the name of the brush you want to switch to while holding down the Shift key")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(
         name="Ctrl+LMB Behaviour")
@@ -120,11 +120,14 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         # →newするときにheadオプションを使えば先頭に持ってこれるっぽい。https://docs.blender.org/api/current/bpy.types.KeyMapItems.html#bpy.types.KeyMapItems.new
         kc = bpy.context.window_manager.keyconfigs.user
         for km in kc.keymaps:
-            for kmi in km.keymap_items:
-                if "My Best Pie Menu Ever" in kmi.name:
-                    box.context_pointer_set("keymap", kmi)
-                    rna_keymap_ui.draw_kmi([], kc, km, kmi, box, 0)
-                    break
+            if km.name in ["3D View", "Image"]:
+                b = box.box()
+                b.label(text=km.name)
+                for kmi in km.keymap_items:
+                    if "My Best Pie Menu Ever" in kmi.name:
+                        box.context_pointer_set("keymap", kmi)
+                        rna_keymap_ui.draw_kmi([], kc, km, kmi, box, 0)
+                        break
         # box.operator(MPM_OT_RevertKeymap.bl_idname)
 
     def dict(self):
