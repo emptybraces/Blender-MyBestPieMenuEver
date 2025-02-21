@@ -49,8 +49,9 @@ def MenuPrimary(pie, context):
             g.on_closed["warn_open_filter_set_sculpt"] = lambda: _Util.show_msgbox("Please hold down the shift key to click.", "Error", "ERROR")
     r = c.row(align=True)
     r.alignment = "RIGHT"
-    _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
-                                           __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
+    if not g_is_filter_set_mode_enter:
+        _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
+                                            __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
     _Util.MPM_OT_CallbackOperator.operator(r, "Exit Filter Setting" if g_is_filter_set_mode_enter else "Enter Filter Setting", __name__ + ".g_is_filter_mode_enter",
                                            __switch_filter_setting_mode, None, "TOOL_SETTINGS",  depress=g_is_filter_set_mode_enter)
     # ブラシ
@@ -95,19 +96,19 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_CallbackOperator.operator(layout, label_name, "_MenuSculpt.select_tool." + tool_id,
                                                _select_tool, (context, tool_id), depress=is_depress)
 
-    def _filter_operator(context, layout, label_name, tool_id):
-        def _set(context, tool_id):
+    def _brush_filter_operator(context, layout, label_name, tool_id, in_filter):
+        def _set(context, tool_id, in_filter):
             filter = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name()
             tool_id = tool_id.lower()
-            if _is_in_filter(tool_id):
+            if in_filter:
                 filter = filter.replace(tool_id, "")
             else:
                 filter += "," + tool_id
             _AddonPreferences.Accessor.set_sculpt_brush_filter_by_name(",".join(s.strip() for s in filter.split(",") if 0 < len(s.strip())))
             global g_filter_mode_enter_lasttime
             g_filter_mode_enter_lasttime = time.time()
-        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_filter." + tool_id,
-                                               _set, (context, tool_id), depress=_is_in_filter(tool_id))
+        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_brush_filter." + tool_id,
+                                               _set, (context, tool_id, in_filter), depress=in_filter)
     # Tools
     for i in TOOL_INFO:
         if g_is_filter_set_mode_enter or not g_is_filter_mode:
@@ -117,7 +118,7 @@ def MenuPrimary(pie, context):
                 cc = box.column(align=False)
                 continue
             if g_is_filter_set_mode_enter:
-                _filter_operator(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i)
+                _brush_filter_operator(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i, _is_in_filter(i))
             else:
                 _callback_operator_select_tool(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i)
         # フィルターモード
@@ -136,7 +137,7 @@ def MenuPrimary(pie, context):
                 cc = box.column(align=False)
                 continue
             if g_is_filter_set_mode_enter:
-                _filter_operator(context, cc, i, i)
+                _brush_filter_operator(context, cc, i, i, _is_in_filter(i))
             else:
                 _callback_operator_select_brush(context, cc, i)
         # フィルターモード
@@ -154,7 +155,7 @@ def MenuPrimary(pie, context):
         cc = rrr.column(align=False)
         for i in [i for i in bpy.data.brushes if i.use_paint_sculpt and i.name not in BRUSH_INFO]:
             if g_is_filter_set_mode_enter:
-                _filter_operator(context, cc, i.name, i.name)
+                _brush_filter_operator(context, cc, i.name, i.name, _is_in_filter(i.name))
             else:
                 _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
             if (cnt := cnt+1) % limit_rows == 0:
@@ -421,8 +422,6 @@ TOOL_INFO = [
 
 
 def MenuPrimary_v4_2(pie, context):
-    if not g.is_v4_3_later():
-        return MenuPrimary_v4_2()
     box = pie.split().box()
     box.label(text="Sculpt Primary")
 

@@ -47,8 +47,9 @@ def MenuPrimary(pie, context):
             g.on_closed["warn_open_filter_set_texpaint"] = lambda: _Util.show_msgbox("Please hold down the shift key to click.", "Error", "ERROR")
     r = c.row(align=True)
     r.alignment = "RIGHT"
-    _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
-                                           __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
+    if not g_is_filter_set_mode_enter:
+        _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
+                                            __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
     _Util.MPM_OT_CallbackOperator.operator(r, "Exit Filter Setting" if g_is_filter_set_mode_enter else "Enter Filter Setting", __name__ + ".g_is_filter_mode_enter",
                                            __switch_filter_setting_mode, None, "TOOL_SETTINGS",  depress=g_is_filter_set_mode_enter)
     # Brush, Stroke, Blend...
@@ -56,7 +57,7 @@ def MenuPrimary(pie, context):
     tool = context.tool_settings.image_paint
     current_brush = tool.brush
     limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
-    filter_names = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_brush_filter_by_name().lower().split(',')]
+    brush_filter_names = [i for i in map(str.strip, _AddonPreferences.Accessor.get_image_paint_brush_filter_by_name().lower().split(',')) if i]
     r = c.row(align=True)
     box = r.box()
     box.label(text="Brushes(Filtered)" if g_is_filter_mode else "Brushes", icon="BRUSH_DATA")
@@ -67,7 +68,7 @@ def MenuPrimary(pie, context):
     active_tool = bpy.context.workspace.tools.from_space_view3d_mode(mode=bpy.context.mode)
 
     def _is_in_filter(id):
-        for filter_name in filter_names:
+        for filter_name in brush_filter_names:
             if filter_name.strip().lower() == id.lower():
                 return True
         return False
@@ -82,26 +83,19 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_CallbackOperator.operator(layout, brush_name, "_MenuTexturePaint.select_brush." + brush_name,
                                                _select_brush, (context, "ESSENTIALS", "", "brushes\\essentials_brushes-mesh_texture.blend\\Brush\\" + brush_name), depress=is_depress)
 
-    def _callback_operator_select_tool(context, layout, label_name, tool_id):
-        def _select_tool(context, tool_name):
-            bpy.ops.wm.tool_set_by_id(name=tool_name)
-        is_depress = not active_tool.use_brushes and active_tool.idname == tool_id
-        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, "_MenuTexturePaint.select_tool." + tool_id,
-                                               _select_tool, (context, tool_id), depress=is_depress)
-
-    def _filter_operator(context, layout, label_name, tool_id):
-        def _set(context, tool_id):
+    def _brush_filter_operator(context, layout, label_name, tool_id, in_filter):
+        def _set(context, tool_id, in_filter):
             filter = _AddonPreferences.Accessor.get_image_paint_brush_filter_by_name()
             tool_id = tool_id.lower()
-            if _is_in_filter(tool_id):
+            if in_filter:
                 filter = filter.replace(tool_id, "")
             else:
                 filter += "," + tool_id
-            _AddonPreferences.Accessor.set_image_paint_brush_filter_by_name(",".join(s.strip() for s in filter.split(",") if 0 < len(s.strip())))
+            _AddonPreferences.Accessor.set_image_paint_brush_filter_by_name(",".join([i for i in map(str.strip, filter.lower().split(',')) if i]))
             global g_filter_mode_enter_lasttime
             g_filter_mode_enter_lasttime = time.time()
-        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_filter." + tool_id,
-                                               _set, (context, tool_id), depress=_is_in_filter(tool_id))
+        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_brush_filter." + tool_id,
+                                               _set, (context, tool_id, in_filter), depress=in_filter)
 
     # Essential
     for i in BRUSH_INFO:
@@ -112,12 +106,12 @@ def MenuPrimary(pie, context):
                 cc = box.column(align=False)
                 continue
             if g_is_filter_set_mode_enter:
-                _filter_operator(context, cc, i, i)
+                _brush_filter_operator(context, cc, i, i, i.lower() in brush_filter_names)
             else:
                 _callback_operator_select_brush(context, cc, i)
         # フィルターモード
         else:
-            if not _is_in_filter(i):
+            if i.lower() not in brush_filter_names:
                 continue  # 表示しない
             _callback_operator_select_brush(context, cc, i)
             if (cnt := cnt+1) % limit_rows == 0:
@@ -131,7 +125,7 @@ def MenuPrimary(pie, context):
         cc = rrr.column(align=False)
         for i in [i for i in bpy.data.brushes if i.use_paint_image and i.name not in BRUSH_INFO]:
             if g_is_filter_set_mode_enter:
-                _filter_operator(context, cc, i.name, i.name)
+                _brush_filter_operator(context, cc, i.name, i.name, i.name.lower() in brush_filter_names)
             else:
                 _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
                 if (cnt := cnt+1) % limit_rows == 0:
@@ -139,7 +133,7 @@ def MenuPrimary(pie, context):
     # フィルターモード
     else:
         for i in [i for i in bpy.data.brushes if i.use_paint_image and i.name not in BRUSH_INFO]:
-            if not _is_in_filter(i.name):
+            if i.name.lower() not in brush_filter_names:
                 continue  # 表示しない
             _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
             if (cnt := cnt+1) % limit_rows == 0:
@@ -153,22 +147,49 @@ def MenuPrimary(pie, context):
         cc = box.column(align=True)
         for i in _Util.enum_values(current_brush, "stroke_method"):
             is_use = current_brush.stroke_method == i
-            _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i,
-                                             current_brush, "stroke_method", i, depress=is_use)
+            _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i, current_brush, "stroke_method", i, depress=is_use)
 
     # Blends
+    def _blend_filter_operator(context, layout, label_name, tool_id, in_filter):
+        def _set(context, tool_id, in_filter):
+            filter = _AddonPreferences.Accessor.get_image_paint_blend_filter_by_name()
+            tool_id = tool_id.lower()
+            if in_filter:
+                filter = filter.replace(tool_id, "")
+            else:
+                filter += "," + tool_id
+            _AddonPreferences.Accessor.set_image_paint_blend_filter_by_name(",".join([i for i in map(str.strip, filter.lower().split(',')) if i]))
+            global g_filter_mode_enter_lasttime
+            g_filter_mode_enter_lasttime = time.time()
+        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_blend_filter." + tool_id,
+                                               _set, (context, tool_id, in_filter), depress=in_filter)
+
     cnt = 0
     box = r.box()
-    box.label(text="Blend(Filtered)" if g_is_filter_mode else "Blend")
+    blend_filter_names = [i for i in map(str.strip, _AddonPreferences.Accessor.get_image_paint_blend_filter_by_name().split(',')) if i]
+    box.label(text="Blend(Filtered)" if g_is_filter_mode and blend_filter_names else "Blend(Default)")
     cc = box.column(align=True)
-    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_include().lower().split(',')]
-    for i in _Util.enum_values(current_brush, "blend"):
-        if i.lower() in blend_include_list:
-            is_use = current_brush.blend == i
-            _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i,
-                                             current_brush, "blend", i, depress=is_use)
-            # if (cnt:=cnt+1) % limit_rows == 0:
-            #     cc = rr.column(align=True)
+    default_blends = ["mix", "screen", "overlay", "erase_alpha"]
+    if g_is_filter_set_mode_enter or not g_is_filter_mode:
+        for i in _Util.enum_values(current_brush, "blend"):
+            if g_is_filter_set_mode_enter:
+                _blend_filter_operator(context, cc, i, i, i.lower() in blend_filter_names)
+            else:
+                # 全部は多いのでデフォルトのブレンドを表示
+                if i.lower() in default_blends:
+                    _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i, current_brush,
+                                                     "blend", i, depress=current_brush.blend == i)
+    # フィルターモード
+    else:
+        for i in _Util.enum_values(current_brush, "blend"):
+            if blend_filter_names:
+                if i.lower() not in blend_filter_names:
+                    continue  # 表示しない
+            elif i.lower() not in default_blends:
+                continue
+            _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i, current_brush, "blend", i, depress=current_brush.blend == i)
+            if (cnt := cnt+1) % limit_rows == 0:
+                cc = rr.column(align=True)
 
     if g_is_filter_set_mode_enter:
         return
@@ -183,10 +204,10 @@ def MenuPrimary(pie, context):
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_color else current_brush
     rr = cc.row(align=True)
     rr.label(text="Color")
-    rrrr = rr.row(align=True)
-    rrrr.scale_x = 0.5
-    UnifiedPaintPanel.prop_unified_color(rrrr, context, brush_property_target, "color", text="")
-    UnifiedPaintPanel.prop_unified_color(rrrr, context, brush_property_target, "secondary_color", text="")
+    rrr = rr.row(align=True)
+    rrr.scale_x = 0.5
+    UnifiedPaintPanel.prop_unified_color(rrr, context, brush_property_target, "color", text="")
+    UnifiedPaintPanel.prop_unified_color(rrr, context, brush_property_target, "secondary_color", text="")
 
     _Util.MPM_OT_CallbackOperator.operator(rr, "", "_MenuTexturePaint.swap_color",
                                            SwapBrushColor, (context, brush_property_target,), icon="ARROW_LEFTRIGHT")
@@ -201,22 +222,22 @@ def MenuPrimary(pie, context):
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
     rr = cc.row()
     _Util.layout_prop(rr, brush_property_target, "size")
-    rrrr = rr.row(align=True)
-    _Util.MPM_OT_SetInt.operator(rrrr, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
-    _Util.MPM_OT_SetInt.operator(rrrr, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
-    _Util.MPM_OT_SetInt.operator(rrrr, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
-    _Util.MPM_OT_SetInt.operator(rrrr, "200%", brush_property_target, "size", int(brush_property_target.size * 2.0))
-    _Util.layout_prop(rrrr, unified_paint_settings, "use_unified_size")
+    rrr = rr.row(align=True)
+    _Util.MPM_OT_SetInt.operator(rrr, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
+    _Util.MPM_OT_SetInt.operator(rrr, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
+    _Util.MPM_OT_SetInt.operator(rrr, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
+    _Util.MPM_OT_SetInt.operator(rrr, "200%", brush_property_target, "size", int(brush_property_target.size * 2.0))
+    _Util.layout_prop(rrr, unified_paint_settings, "use_unified_size")
     # strength
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_strength else current_brush
     rr = cc.row()
     _Util.layout_prop(rr, brush_property_target, "strength")
-    rrrr = rr.row(align=True)
-    _Util.MPM_OT_SetSingle.operator(rrrr, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
-    _Util.MPM_OT_SetSingle.operator(rrrr, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
-    _Util.MPM_OT_SetSingle.operator(rrrr, "0.1", brush_property_target, "strength", 0.1)
-    _Util.MPM_OT_SetSingle.operator(rrrr, "1.0", brush_property_target, "strength", 1.0)
-    _Util.layout_prop(rrrr, unified_paint_settings, "use_unified_strength")
+    rrr = rr.row(align=True)
+    _Util.MPM_OT_SetSingle.operator(rrr, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(rrr, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
+    _Util.MPM_OT_SetSingle.operator(rrr, "0.1", brush_property_target, "strength", 0.1)
+    _Util.MPM_OT_SetSingle.operator(rrr, "1.0", brush_property_target, "strength", 1.0)
+    _Util.layout_prop(rrr, unified_paint_settings, "use_unified_strength")
 
     # Etc
     rr = cc.row()
@@ -268,40 +289,40 @@ def SwapBrushColor(context, brush_property_target):
 class MPM_OT_TexPaint_SwapColor(bpy.types.Operator):
     bl_idname = "mpm.texpaint_swap_color"
     bl_label = ""
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         brush = context.tool_settings.image_paint.brush
         color = brush.color.copy()
         brush.color = brush.secondary_color.copy()
         brush.secondary_color = color
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class MPM_OT_TexPaint_SetBlack(bpy.types.Operator):
     bl_idname = "mpm.texpaint_set_black"
     bl_label = "Set Black"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         context.tool_settings.image_paint.brush.color = mathutils.Color((0.0, 0.0, 0.0))
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class MPM_OT_TexPaint_SetWhite(bpy.types.Operator):
     bl_idname = "mpm.texpaint_set_white"
     bl_label = "Set White"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         context.tool_settings.image_paint.brush.color = mathutils.Color((1.0, 1.0, 1.0))
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class MPM_OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
     bl_idname = "mpm.texpaint_toggle_ctrl_behaviour"
     bl_label = "Toggle Ctrl Behaviour"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         new_value = not _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
@@ -312,7 +333,7 @@ class MPM_OT_TexPaint_ToggleCtrlBehaviour(bpy.types.Operator):
         key_ctrl_lmb_erasealpha.active = new_value
         key_keydown_ctrl.active = new_value
         key_ctrl_lmb_invert.active = not new_value
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 g_lastBlend = ""
@@ -330,23 +351,23 @@ class MPM_OT_TexPaint_SwitchCtrlBehaviour(bpy.types.Operator):
     def modal(self, context, event):
         context.area.tag_redraw()
         if event.ctrl:
-            return {'PASS_THROUGH'}
+            return {"PASS_THROUGH"}
         global g_lastBlend
         if g_lastBlend != "":
             context.tool_settings.image_paint.brush.blend = g_lastBlend
             g_lastBlend = ""
         context.window_manager.event_timer_remove(self._timer)
-        return {'FINISHED'}
+        return {"FINISHED"}
 
     def execute(self, context):
         global g_lastBlend
         g_lastBlend = context.tool_settings.image_paint.brush.blend
-        if g_lastBlend == 'ERASE_ALPHA':
-            g_lastBlend = 'MIX'
-        context.tool_settings.image_paint.brush.blend = 'ERASE_ALPHA'
+        if g_lastBlend == "ERASE_ALPHA":
+            g_lastBlend = "MIX"
+        context.tool_settings.image_paint.brush.blend = "ERASE_ALPHA"
         self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
         context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
+        return {"RUNNING_MODAL"}
 
 
 class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
@@ -356,14 +377,14 @@ class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
     def modal(self, context, event):
         context.area.tag_redraw()
         if event.shift:
-            return {'PASS_THROUGH'}
+            return {"PASS_THROUGH"}
         global g_lastBrushName
         if g_lastBrushName != "":
             if g_lastBrushName in bpy.data.brushes:
                 context.tool_settings.image_paint.brush = bpy.data.brushes[g_lastBrushName]
             g_lastBrushName = ""
         context.window_manager.event_timer_remove(self._timer)
-        return {'FINISHED'}
+        return {"FINISHED"}
 
     def execute(self, context):
         global g_lastBrushName
@@ -373,10 +394,10 @@ class MPM_OT_TexPaint_ChangeSoften(bpy.types.Operator):
             context.tool_settings.image_paint.brush = bpy.data.brushes[name]
             self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
             context.window_manager.modal_handler_add(self)
-            return {'RUNNING_MODAL'}
+            return {"RUNNING_MODAL"}
         else:
-            _Util.show_msgbox("Set a valid brush name in the preferences.", icon='ERROR')
-            return {'CANCELLED'}
+            _Util.show_msgbox("Set a valid brush name in the preferences.", icon="ERROR")
+            return {"CANCELLED"}
 # --------------------------------------------------------------------------------
 
 
@@ -411,30 +432,30 @@ def register():
     global key_ctrl_lmb_invert
     global key_keydown_ctrl
     wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    key_keydown_ctrl = km.keymap_items.new(MPM_OT_TexPaint_SwitchCtrlBehaviour.bl_idname, 'LEFT_CTRL', 'PRESS')
+    km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    key_keydown_ctrl = km.keymap_items.new(MPM_OT_TexPaint_SwitchCtrlBehaviour.bl_idname, "LEFT_CTRL", "PRESS")
     key_keydown_ctrl.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_keydown_ctrl))
 
-    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    key_ctrl_lmb_erasealpha = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE', 'PRESS', ctrl=True)
+    km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    key_ctrl_lmb_erasealpha = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", ctrl=True)
     key_ctrl_lmb_erasealpha.active = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
     addon_keymaps.append((km, key_ctrl_lmb_erasealpha))
 
-    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    key_ctrl_lmb_invert = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE', 'PRESS', ctrl=True)
+    km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    key_ctrl_lmb_invert = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", ctrl=True)
     key_ctrl_lmb_invert.active = not _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
-    key_ctrl_lmb_invert.properties.mode = 'INVERT'
+    key_ctrl_lmb_invert.properties.mode = "INVERT"
     addon_keymaps.append((km, key_ctrl_lmb_invert))
 
-    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    kmi = km.keymap_items.new(MPM_OT_TexPaint_ChangeSoften.bl_idname, 'LEFT_SHIFT', 'PRESS')
-    addon_keymaps.append((km, kmi))
+    # km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    # kmi = km.keymap_items.new(MPM_OT_TexPaint_ChangeSoften.bl_idname, "LEFT_SHIFT", "PRESS")
+    # addon_keymaps.append((km, kmi))
 
-    km = wm.keyconfigs.addon.keymaps.new(name='Image Paint', space_type='EMPTY')
-    kmi = km.keymap_items.new("paint.image_paint", 'LEFTMOUSE', 'PRESS', shift=True)
-    kmi.properties.mode = 'SMOOTH'
-    addon_keymaps.append((km, kmi))
+    # km = wm.keyconfigs.addon.keymaps.new(name="Image Paint", space_type="EMPTY")
+    # kmi = km.keymap_items.new("paint.image_paint", "LEFTMOUSE", "PRESS", shift=True)
+    # kmi.properties.mode = "SMOOTH"
+    # addon_keymaps.append((km, kmi))
 
 
 def unregister():
@@ -465,14 +486,14 @@ BRUSH_INFO = [
 def MenuPrimary_v4_2(pie, context):
     cnt = 0
     b = pie.split().box()
-    b.label(text='TexturePaint Primary')
+    b.label(text="TexturePaint Primary")
 
     # Brush, Stroke, Blend...
     r = b.row(align=True)
     bb = r.box()
     bb.label(text="Brush")
     limit_rows = _AddonPreferences.Accessor.get_image_paint_limit_row()
-    brush_exclude_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_brush_exclude().lower().split(',')]
+    filter_names = [item for item in _AddonPreferences.Accessor.get_image_paint_brush_filter_by_name().lower().split(",") if item]
     tool = context.tool_settings.image_paint
     current_brush = tool.brush
 
@@ -482,7 +503,7 @@ def MenuPrimary_v4_2(pie, context):
     bb.label(text="Essentials")
     cc = bb.column(align=False)
     for i in bpy.data.brushes:
-        if i.use_paint_image and i.name.lower() not in brush_exclude_list:
+        if i.use_paint_image and (len(filter_names) == 0 or i.name.lower() in filter_names):
             is_use = current_brush.name == i.name
             _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=is_use, icon_value=cc.icon(i))
             if (cnt := cnt+1) % limit_rows == 0:
@@ -495,7 +516,7 @@ def MenuPrimary_v4_2(pie, context):
     bb.label(text="Stroke")
     rrr = bb.row(align=True)
     ccc = rrr.column(align=True)
-    for i in _Util.enum_values(current_brush, 'stroke_method'):
+    for i in _Util.enum_values(current_brush, "stroke_method"):
         is_use = current_brush.stroke_method == i
         _Util.MPM_OT_SetterBase.operator(ccc, _Util.MPM_OT_SetString.bl_idname, i,
                                          current_brush, "stroke_method", i, depress=is_use)
@@ -504,13 +525,13 @@ def MenuPrimary_v4_2(pie, context):
             ccc = rrr.column(align=True)
 
     # Blends
-    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_include().lower().split(',')]
+    blend_include_list = [item.strip() for item in _AddonPreferences.Accessor.get_image_paint_blend_filter_by_name().lower().split(",")]
     cnt = 0
     bb = cc.box()
     bb.label(text="Blend")
     rrr = bb.row(align=True)
     ccc = rrr.column(align=True)
-    for i in _Util.enum_values(current_brush, 'blend'):
+    for i in _Util.enum_values(current_brush, "blend"):
         if i.lower() in blend_include_list:
             is_use = current_brush.blend == i
             # c2.operator(OT_TexPaint_Blend.bl_idname, text=i, depress=is_use).methodName = i

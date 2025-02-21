@@ -2,11 +2,12 @@
     import importlib
     importlib.reload(_Util)
     importlib.reload(g)
+else:
+    from . import _Util
+    from . import g
 import bpy
 import rna_keymap_ui
 from bpy.props import IntProperty, StringProperty, BoolProperty
-from . import _Util
-from . import g
 addon_keymaps = []
 
 
@@ -18,9 +19,9 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                                      description="Specify the absolute path you want to execute. You can also show multiple separated by comma.")
     imagePaintBrushFilterByName: StringProperty(
         name="ImagePaint Brush Filter", default="", description="Enter the name of the brush you want to display")
-    imagePaintBlendInclude: StringProperty(name="Blend Include", default="mix,screen,overlay,erase_alpha",
+    imagePaintBlendFilterByName: StringProperty(name="ImagePaint Brush Blend Filter", default="mix,screen,overlay,erase_alpha",
                                            description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
-    imagePaintShiftBrushName: StringProperty(name="ShiftBrushName", default="Soften",
+    imagePaintShiftBrushName: StringProperty(name="Shift-key Brush", default="Soften",
                                              description="Enter the name of the brush you want to switch to while holding down the Shift key")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(
         name="Ctrl+LMB Behaviour")
@@ -55,11 +56,11 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
     def __select_dropdown_blend_names(self, value):
         value = self.__get_blend_names(None)[value][1]
-        if value in self.imagePaintBlendInclude:
+        if value in self.imagePaintBlendFilterByName:
             return
-        if self.imagePaintBlendInclude:
-            self.imagePaintBlendInclude += ', '
-        self.imagePaintBlendInclude += value
+        if self.imagePaintBlendFilterByName:
+            self.imagePaintBlendFilterByName += ', '
+        self.imagePaintBlendFilterByName += value
     imagePaintBlendDropDown: bpy.props.EnumProperty(name="", items=__get_blend_names, set=__select_dropdown_blend_names)
 
     def __get_sculpt_brush_names(self, context):
@@ -91,8 +92,8 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         box = layout.box()
         box.label(text='Image Paint')
         box.prop(self, "imagePaintBrushFilterByName")
-        sub_row(self, box, "imagePaintBlendInclude", "imagePaintBlendDropDown")
-        sub_row(self, box, "imagePaintShiftBrushName", "imagePaintShiftBrushNameDropDown")
+        sub_row(self, box, "imagePaintBlendFilterByName", "imagePaintBlendDropDown")
+        box.prop(self, "imagePaintShiftBrushName")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         row = box.row(align=True)
         row.label(text="Ctrl+LMB Behaviour:")
@@ -132,7 +133,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             "openFilePathList": self.openFilePathList,
             # "isDebug": getattr(self, "isDebug", False),
             "imagePaintBrushFilterByName": self.imagePaintBrushFilterByName,
-            "imagePaintBlendInclude": self.imagePaintBlendInclude,
+            "imagePaintBlendFilterByName": self.imagePaintBlendFilterByName,
             "imagePaintShiftBrushName": self.imagePaintShiftBrushName,
             "imagePaintLimitRowCount": self.imagePaintLimitRowCount,
             "image_paint_is_ctrl_behaviour_invert_or_erasealpha": self.image_paint_is_ctrl_behaviour_invert_or_erasealpha,
@@ -182,7 +183,9 @@ class Accessor():
     @staticmethod
     def set_image_paint_brush_filter_by_name(v): Accessor.get_ref().imagePaintBrushFilterByName = v
     @staticmethod
-    def get_image_paint_blend_include(): return Accessor.get_ref().imagePaintBlendInclude
+    def get_image_paint_blend_filter_by_name(): return Accessor.get_ref().imagePaintBlendFilterByName
+    @staticmethod
+    def set_image_paint_blend_filter_by_name(v): Accessor.get_ref().imagePaintBlendFilterByName = v
     @staticmethod
     def get_sculpt_limit_row_count(): return Accessor.get_ref().sculptLimitRowCount
     @staticmethod

@@ -122,6 +122,8 @@ def MenuPrimary(pie, context):
     rr = cc.row(align=True)
     _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname).is_mask = False
     _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
+    _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname).is_mask = False
+    _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
     MirrorVertexGroup(cc)
     _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
@@ -411,6 +413,24 @@ class MPM_OT_Weight_SetWeight(bpy.types.Operator):
         if self.is_mask:
             bpy.context.object.data.use_paint_mask_vertex = False
         return {"FINISHED"}
+class MPM_OT_Weight_RemoveWeight(bpy.types.Operator):
+    bl_idname = "mpm.weight_remove"
+    bl_label = "Delete Weight"
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Weights remove. Option1: mask only"
+    is_mask: bpy.props.BoolProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object != None and any(context.active_object.vertex_groups)
+
+    def execute(self, context):
+        vg = context.active_object.vertex_groups.active
+        if self.is_mask:
+            vg.remove([v.index for v in context.active_object.data.vertices if v.select])
+        else:
+            vg.remove([v.index for v in context.active_object.data.vertices])
+        return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
 
@@ -423,6 +443,7 @@ classes = (
     MPM_OT_Weight_MirrorVGOverwriteConfirm,
     MPM_OT_Weight_RemoveUnusedVertexGroup,
     MPM_OT_Weight_SetWeight,
+    MPM_OT_Weight_RemoveWeight,
 )
 
 
