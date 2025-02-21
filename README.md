@@ -52,7 +52,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 ### [PAINT_WEIGHT mode]
 
 - Quickly tweak brush proeprties.
-- Advanced Weights set shortcuts.
+- Advanced Weights set/remove shortcuts.
 - Copy the mirrored Vertex Group. Also possible from selected bones.
 - And shortcuts various functions.
 
