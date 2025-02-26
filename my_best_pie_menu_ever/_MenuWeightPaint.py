@@ -144,9 +144,10 @@ def MirrorVertexGroup(layout):
 class MPM_OT_Weight_MirrorVGFromSelectedBoneBase():
     @classmethod
     def poll(cls, context):
-        for obj in bpy.context.selected_objects:
-            if obj.type == "ARMATURE" and 0 < len([bone for bone in obj.data.bones if bone.select]):
-                return True
+        if context.active_object.type == "MESH":
+            for obj in bpy.context.selected_objects:
+                if obj.type == "ARMATURE" and 0 < len([bone for bone in obj.data.bones if bone.select]):
+                    return True
         return False
 
     def get_selected_bone_names(self, obj):
@@ -164,10 +165,13 @@ class MPM_OT_Weight_MirrorVGFromSelectedBoneBase():
         g.force_cancel_piemenu_modal(context)
         for obj in selected_objects:
             names = self.get_selected_bone_names(obj)
-            if names != None and context.active_object.type == "MESH":
+            if names != None:
                 for name in names:
-                    new_name, actural_name, is_replace = mirror_vgroup(context.active_object, name, use_topology)
-                    msg += f"{name} -> {actural_name}\n"
+                    if name in obj.vertex_groups:
+                        new_name, actural_name, is_replace = mirror_vgroup(context.active_object, name, use_topology)
+                        msg += f"{name} -> {actural_name}\n"
+                    else:
+                        msg += f"VertexGroup '{name}' not found.\n"
         _Util.show_msgbox(msg if msg else "Invalid Selection!", "Mirror VGroup from selected bones")
         return {"FINISHED"}
 
@@ -222,7 +226,8 @@ class MPM_OT_Weight_MirrorVGFromActiveBase():
         new_name, actural_name, is_replace = mirror_vgroup(obj, target_name, use_topology)
         g.force_cancel_piemenu_modal(context)
         if is_replace:
-            bpy.ops.mpm.mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
+            print(1)
+            bpy.ops.mpm.weight_mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
         else:
             msg = f"{target_name} -> {actural_name}\n"
             _Util.show_msgbox(msg if msg else "Invalid selection!", "Mirror VGroup from selected vgroup")

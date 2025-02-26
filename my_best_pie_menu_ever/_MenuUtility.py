@@ -668,7 +668,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
 
     def cancel(self, context):
         _Util.MPM_OT_CallbackOperator.clear()
-        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
+        bpy.ops.mpm.util_viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
                                                             target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
 
     def on_click_moveup(self, context, idx):
@@ -686,13 +686,13 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
         data = context.scene.mpm_prop.ViewportCameraTransforms[idx]
         self.is_skip = False
         _Util.callbacks["on_finish"] = lambda: self._on_finish(context, idx)
-        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
+        bpy.ops.mpm.util_viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
                                                             target_pos=data["pos"], target_rot=data["rot"], target_distance=data["distance"])
 
     def on_click_play(self, context):
         _Util.callbacks["on_finish"] = lambda: self._on_finish(context, -1)
         # _Util.callbacks["on_update_factor"] = lambda x: setattr(self, "transition_factor", x)
-        bpy.ops.mpm.viewport_camera_transform_restore_modal("INVOKE_DEFAULT", anim_whole=True, anim_duration=self.transition_span)
+        bpy.ops.mpm.util_viewport_camera_transform_restore_modal("INVOKE_DEFAULT", anim_whole=True, anim_duration=self.transition_span)
 
     def _on_transition_update(self, context):
         if MPM_OT_Utility_ViewportCameraTransformRestorePanel.is_skip:

@@ -230,7 +230,7 @@ def MenuPrimary(pie, context):
 
 
 class MPM_OT_MakeFaceSetWithSelectedVert(bpy.types.Operator):
-    bl_idname = "mpm.make_faceset_with_selected_vert"
+    bl_idname = "mpm.sculpt_make_faceset_with_selected_vert"
     bl_label = "Fill faceset with selected verts"
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty(options={"HIDDEN"})
@@ -259,7 +259,7 @@ class MPM_OT_MakeFaceSetWithSelectedVert(bpy.types.Operator):
 
 
 class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
-    bl_idname = "mpm.make_mask_with_selected_vert"
+    bl_idname = "mpm.sculpt_make_mask_with_selected_vert"
     bl_label = "Fill mask with selected verts"
     bl_options = {"REGISTER", "UNDO"}
     is_overwrite: bpy.props.BoolProperty(name="Overwrite", options={"HIDDEN"})
@@ -296,7 +296,7 @@ class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
 
 
 class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
-    bl_idname = "mpm.auto_wireframe_enable"
+    bl_idname = "mpm.sculpt_auto_wireframe_enable"
     bl_label = "Auto Show Wireframe"
     bl_options = {"REGISTER", "UNDO"}
 

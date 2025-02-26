@@ -148,7 +148,7 @@ def DrawImageEditor(layout, context):
 
 
 class MPM_OT_ChangeUITypeUV(bpy.types.Operator):
-    bl_idname = "mpm.change_ui_type_uv"
+    bl_idname = "mpm.mode_change_ui_type_uv"
     bl_label = "UV Editor"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -162,7 +162,7 @@ class MPM_OT_ChangeUITypeUV(bpy.types.Operator):
 
 
 class MPM_OT_ChangeUITypeImage(bpy.types.Operator):
-    bl_idname = "mpm.change_ui_type_image"
+    bl_idname = "mpm.mode_change_ui_type_image"
     bl_label = "Image Editor"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -176,7 +176,7 @@ class MPM_OT_ChangeUITypeImage(bpy.types.Operator):
 
 
 class MPM_OT_ChangeMode(bpy.types.Operator):
-    bl_idname = "mpm.change_mode"
+    bl_idname = "mpm.mode_change_mode"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty()
@@ -188,7 +188,7 @@ class MPM_OT_ChangeMode(bpy.types.Operator):
 
 
 class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
-    bl_idname = "mpm.change_mode_with_armature"
+    bl_idname = "mpm.mode_change_with_armature"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty()
@@ -213,7 +213,7 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
 
 
 class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
-    bl_idname = "mpm.change_sculpt_mode_with_mask"
+    bl_idname = "mpm.mode_change_sculptmode_with_mask"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     bl_description = "Switches to sculpt mode with the selected vertices as masks"
@@ -229,14 +229,14 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
         if mod:
             is_vp = mod.show_viewport
             mod.show_viewport = False
-        bpy.ops.mpm.make_mask_with_selected_vert(is_invert=True)
+        bpy.ops.mpm.sculpt_make_mask_with_selected_vert(is_invert=True)
         if mod:
             mod.show_viewport = is_vp
         return {"FINISHED"}
 
 
 class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
-    bl_idname = "mpm.change_sculpt_mode_with_facesets"
+    bl_idname = "mpm.mode_change_sculptmode_with_facesets"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     bl_description = "Switches to sculpt mode with the selected vertices as facesets"
@@ -252,7 +252,7 @@ class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
         if mod:
             is_vp = mod.show_viewport
             mod.show_viewport = False
-        bpy.ops.mpm.make_mask_with_selected_vert(is_invert=True)
+        bpy.ops.mpm.sculpt_make_mask_with_selected_vert(is_invert=True)
         bpy.ops.sculpt.face_sets_create(mode="MASKED")
         if mod:
             mod.show_viewport = is_vp
@@ -260,7 +260,7 @@ class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
 
 
 class MPM_OT_ChangeModePose(bpy.types.Operator):
-    bl_idname = "mpm.change_mode_pose"
+    bl_idname = "mpm.mode_change_posemode"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
 
