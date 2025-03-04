@@ -11,7 +11,7 @@ import bpy
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",
-    "version": (2, 1, 1),
+    "version": (2, 1, 2),
     "blender": (4, 2, 0),
     "location": "3D View",
     "description": "Quick access to the functions you need",
@@ -37,15 +37,8 @@ cat_image = "Image"
 addon_opid = _PieMenu.MPM_OT_OpenPieMenuModal.bl_idname
 
 
-def find_keymap(keymapName, itemName):
-    kc = bpy.context.window_manager.keyconfigs.addon
-    km = kc.keymaps.get(keymapName)
-    kmi = km.keymap_items.get(itemName) if km != None else None
-    return (km, kmi)
-
-
 def register_keymap(is_force, cate, spaceType):
-    kmkmi = find_keymap(cate, addon_opid) if not is_force else (None, None)
+    kmkmi = _Util.find_keymap(cate, addon_opid) if not is_force else (None, None)
     if kmkmi[1] == None:
         kc = bpy.context.window_manager.keyconfigs.addon
         if kc == None:
@@ -72,10 +65,10 @@ def register_keymap(is_force, cate, spaceType):
 
 
 def unregister_keymap():
-    kmkmi = find_keymap(cat_3dview, addon_opid)
+    kmkmi = _Util.find_keymap(cat_3dview, addon_opid)
     if kmkmi[1] is not None:
         kmkmi[0].keymap_items.remove(kmkmi[1])
-    kmkmi = find_keymap(cat_image, addon_opid)
+    kmkmi = _Util.find_keymap(cat_image, addon_opid)
     if kmkmi[1] is not None:
         kmkmi[0].keymap_items.remove(kmkmi[1])
 

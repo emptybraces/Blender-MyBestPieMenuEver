@@ -86,7 +86,7 @@ def MenuPrimary(pie, context):
             with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_weight.blend", link=True, assets_only=True) as (data_from, data_to):
                 for i in data_from.brushes:
                     if i == "Blur":
-                        data_to.brushes = [i] # これでひとつだけロードしたことになる
+                        data_to.brushes = [i]  # これでひとつだけロードしたことになる
                         break
         blur_brush = bpy.data.brushes["Blur"]
     else:
@@ -144,7 +144,7 @@ def MirrorVertexGroup(layout):
 class MPM_OT_Weight_MirrorVGFromSelectedBoneBase():
     @classmethod
     def poll(cls, context):
-        if context.active_object.type == "MESH":
+        if context.active_object and context.active_object.type == "MESH":
             for obj in bpy.context.selected_objects:
                 if obj.type == "ARMATURE" and 0 < len([bone for bone in obj.data.bones if bone.select]):
                     return True
@@ -239,7 +239,7 @@ class MPM_OT_Weight_MirrorVGFromActiveBase():
 
 class MPM_OT_Weight_MirrorVGFromActive(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
     bl_idname = "mpm.weight_mirror_vg_from_active"
-    bl_label = "Create VertexGroup mirror from active"
+    bl_label = "Active"
     bl_description = "Create VertexGroup mirror from active"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -418,6 +418,8 @@ class MPM_OT_Weight_SetWeight(bpy.types.Operator):
         if self.is_mask:
             bpy.context.object.data.use_paint_mask_vertex = False
         return {"FINISHED"}
+
+
 class MPM_OT_Weight_RemoveWeight(bpy.types.Operator):
     bl_idname = "mpm.weight_remove"
     bl_label = "Delete Weight"

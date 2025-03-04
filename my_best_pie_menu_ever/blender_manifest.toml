@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "2.1.1"
+version = "2.1.2"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -28,9 +28,12 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
+# v2.1.2
+# - [修正] Editメニューの配置を整理
+# - [修正] 
 # v2.1.1
 # - [修正] ビューポートカメラ復元時にエラー。
-# - [修正] ボーン選択頂点グループミラー時にエラー。
+#ｊ - [修正] ボーン選択頂点グループミラー時にエラー。
 # v2.1.0
 # - [ImagePaint] ブラシ、ブレンドフィルターモードを追加。
 # - [Sculpt] ブラシフィルターモードを追加。

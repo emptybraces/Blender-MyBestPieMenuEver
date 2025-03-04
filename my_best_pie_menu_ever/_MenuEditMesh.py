@@ -94,7 +94,6 @@ def MenuPrimary(pie, context):
     box.label(text="Vertex", icon="VERTEXSEL")
     cc = box.column(align=True)
     _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
-    _Util.layout_operator(cc, MPM_OT_SelectFromVertexGroupPanel.bl_idname)
 
     # 非表示
     rr = cc.row(align=True)
@@ -104,20 +103,22 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
     _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
 
-    # VertexGroupメニュー
+    # Edgeメニュー
     box = c2.box()
+    box.label(text="Edge", icon="EDGESEL")
+    c = box.column(align=True)
+    rr = c.row(align=True)
+    
+    # VertexGroupメニュー
+    c3 = r.column()
+    box = c3.box()
     box.label(text="Vertex Group", icon="GROUP_VERTEX")
     cc = box.column(align=True)
+    _Util.layout_operator(cc, MPM_OT_SelectFromVertexGroupPanel.bl_idname)
     _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
     MirrorVertexGroup(cc)
     _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
-    # Edgeメニュー
-    c3 = r.column()
-    box = c3.box()
-    box.label(text="Edge", icon="EDGESEL")
-    c = box.column(align=True)
-    rr = c.row(align=True)
     # シャープ
     _Util.layout_operator(rr, "mesh.mark_sharp").clear = False
     _Util.layout_operator(rr, "mesh.mark_sharp", "", icon="REMOVE").clear = True

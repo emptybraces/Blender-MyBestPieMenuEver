@@ -164,6 +164,7 @@ class MPM_OT_CallbackOperator(bpy.types.Operator):
     def clear(cls):
         cls.func_dict.clear()
 
+
 class MPM_OT_CallPanel(bpy.types.Operator):
     bl_idname = "mpm.call_panel"
     bl_label = "call panel"
@@ -412,6 +413,13 @@ def callback_try(key, *args):
 def callback_remove(key):
     if key in callbacks:
         del callbacks[key]
+
+
+def find_keymap(keymapName, itemName):
+    kc = bpy.context.window_manager.keyconfigs.addon
+    km = kc.keymaps.get(keymapName)
+    kmi = km.keymap_items.get(itemName) if km != None else None
+    return (km, kmi)
 
 
 # --------------------------------------------------------------------------------
