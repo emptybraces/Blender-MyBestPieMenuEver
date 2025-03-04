@@ -34,8 +34,6 @@ def MenuPrimary(pie, context):
 
     # 上部メニュー
     c = box.column(align=True)
-    if not g_is_filter_set_mode_enter:
-        _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
 
     def __switch_filter_mode():
         global g_is_filter_mode
@@ -51,7 +49,7 @@ def MenuPrimary(pie, context):
     r.alignment = "RIGHT"
     if not g_is_filter_set_mode_enter:
         _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
-                                            __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
+                                               __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
     _Util.MPM_OT_CallbackOperator.operator(r, "Exit Filter Setting" if g_is_filter_set_mode_enter else "Enter Filter Setting", __name__ + ".g_is_filter_mode_enter",
                                            __switch_filter_setting_mode, None, "TOOL_SETTINGS",  depress=g_is_filter_set_mode_enter)
     # ブラシ
@@ -186,19 +184,24 @@ def MenuPrimary(pie, context):
             _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=active_tool.use_brushes, depress=is_use)
         if (cnt := cnt+1) % limit_rows == 0:
             cc = rr.column(align=True)
-    # その他のブラシプロパティ
+
+    # Utilityメニュー
+
     # Smoothブラシの強さ
-    rr = c.row()
-    if bpy.data.brushes.get("Smooth") == None:
+    rr = c.row(align=True)
+    box = rr.box()
+    box.label(text="Utility")
+    c = box.column(align=True)
+    smooth_brush = bpy.data.brushes.get("Smooth")
+    if smooth_brush == None:
         blender_install_dir = os.path.dirname(bpy.app.binary_path)
         with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_sculpt.blend", link=True, assets_only=True) as (data_from, data_to):
             for i in data_from.brushes:
                 if i == "Smooth":
                     data_to.brushes = [i]  # これでひとつだけロードしたことになる
                     break
-    else:
-        smooth_brush = bpy.data.brushes["Smooth"]
-        c = rr.column(align=True)
+        smooth_brush = bpy.data.brushes.get("Smooth")
+    if smooth_brush != None:
         r = c.row(align=True)
         _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength")
         r = r.row(align=True)
@@ -207,9 +210,11 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetSingle.operator(r, "75%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.75))
         _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
+    # オートワイヤーフレーム
+    _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
 
     # Applyメニュー
-    box = c.box()
+    box = rr.box()
     box.label(text="Apply", icon="CHECKMARK")
     # mask
     c = box.column(align=True)

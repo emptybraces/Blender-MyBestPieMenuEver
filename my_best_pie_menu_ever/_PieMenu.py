@@ -132,10 +132,10 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
             return
         _UtilBlf.draw_label(0, "Holding Shift while clicking keeps this PIE open for sequential button presses!",
                             self._init_mouse_pos.x, self._init_mouse_pos.y - 70, "center")
-        if bpy.context.active_object:
-            for i, vg in enumerate(bpy.context.active_object.vertex_groups):
-                _UtilBlf.draw_label_click_handler(0, vg.name, self._init_mouse_pos.x + 400, self._init_mouse_pos.y +
-                                                  200 - 20 * i, self._init_mouse_pos, self._mouse_pos)
+        # if bpy.context.active_object:
+        #     for i, vg in enumerate(bpy.context.active_object.vertex_groups):
+        #         _UtilBlf.draw_label_click_handler(0, vg.name, self._init_mouse_pos.x + 400, self._init_mouse_pos.y +
+        #                                           200 - 20 * i, self._init_mouse_pos, self._mouse_pos)
 
 
 class MPM_OT_OpenPieMenuModalMonitor(bpy.types.Operator):

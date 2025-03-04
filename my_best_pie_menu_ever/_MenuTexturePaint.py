@@ -168,13 +168,16 @@ def MenuPrimary(pie, context):
     cnt = 0
     box = r.box()
     blend_filter_names = [i for i in map(str.strip, _AddonPreferences.Accessor.get_image_paint_blend_filter_by_name().split(',')) if i]
-    box.label(text="Blend(Filtered)" if g_is_filter_mode and blend_filter_names else "Blend(Default)")
-    cc = box.column(align=True)
+    box.label(text="Blend(All)" if g_is_filter_set_mode_enter else "Blend(Filtered)" if g_is_filter_mode and blend_filter_names else "Blend(Default)")
+    rrr = box.row(align=True)
+    cc = rrr.column(align=True)
     default_blends = ["mix", "screen", "overlay", "erase_alpha"]
     if g_is_filter_set_mode_enter or not g_is_filter_mode:
         for i in _Util.enum_values(current_brush, "blend"):
             if g_is_filter_set_mode_enter:
                 _blend_filter_operator(context, cc, i, i, i.lower() in blend_filter_names)
+                if (cnt := cnt+1) % 12 == 0:
+                    cc = rrr.column(align=True)
             else:
                 # 全部は多いのでデフォルトのブレンドを表示
                 if i.lower() in default_blends:
@@ -190,7 +193,7 @@ def MenuPrimary(pie, context):
                 continue
             _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i, current_brush, "blend", i, depress=current_brush.blend == i)
             if (cnt := cnt+1) % limit_rows == 0:
-                cc = rr.column(align=True)
+                cc = rrr.column(align=True)
 
     if g_is_filter_set_mode_enter:
         return
@@ -554,8 +557,8 @@ def MenuPrimary_v4_2(pie, context):
             continue
         is_use = current_brush.blend == i
         _Util.MPM_OT_SetterBase.operator(ccc, _Util.MPM_OT_SetString.bl_idname, i,
-                                            current_brush, "blend", i, depress=is_use)
-        if (cnt:=cnt+1) % limit_rows == 0:
+                                         current_brush, "blend", i, depress=is_use)
+        if (cnt := cnt+1) % limit_rows == 0:
             ccc = rrr.column(align=True)
 
     # brush proeprty
