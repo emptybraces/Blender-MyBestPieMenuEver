@@ -108,16 +108,6 @@ def MenuPrimary(pie, context):
     box.label(text="Edge", icon="EDGESEL")
     c = box.column(align=True)
     rr = c.row(align=True)
-    
-    # VertexGroupメニュー
-    c3 = r.column()
-    box = c3.box()
-    box.label(text="Vertex Group", icon="GROUP_VERTEX")
-    cc = box.column(align=True)
-    _Util.layout_operator(cc, MPM_OT_SelectFromVertexGroupPanel.bl_idname)
-    _Util.layout_operator(cc, MPM_OT_AddVertexGroupPanel.bl_idname)
-    MirrorVertexGroup(cc)
-    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
     # シャープ
     _Util.layout_operator(rr, "mesh.mark_sharp").clear = False
@@ -132,8 +122,21 @@ def MenuPrimary(pie, context):
     # 法線サイドへビューポートカメラを移動
     _Util.layout_operator(c, MPM_OT_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
 
+    # VertexGroupメニュー
+    c = r.column()
+    box = c.box()
+    box.label(text="Vertex Group", icon="GROUP_VERTEX")
+    cc = box.column(align=True)
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, MPM_OT_VertexGroupSelectPanel.bl_idname)
+    _Util.layout_operator(rr, MPM_OT_VertexGroupNewPanel.bl_idname)
+    _Util.layout_operator(rr, MPM_OT_VertexGroupAdd.bl_idname)
+    _Util.layout_operator(rr, MPM_OT_VertexGroupRemove.bl_idname)
+    MirrorVertexGroup(cc)
+    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+
     # Applyメニュー
-    box = c3.box()
+    box = c.box()
     box.label(text="Apply", icon="CHECKMARK")
     c = box.column(align=True)
     rr = c.row(align=False)
@@ -150,7 +153,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, "mesh.normals_make_consistent", icon="NORMALS_FACE").inside = False
     # マージ
     rr = c.row(align=True)
-    rr.label(text = "Merge")
+    rr.label(text="Merge")
     _Util.layout_operator(rr, "mesh.merge", "Center").type = "CENTER"
     _Util.layout_operator(rr, "mesh.merge", "Collapse").type = "COLLAPSE"
     _Util.layout_operator(rr, "mesh.merge", "Cursor").type = "CURSOR"
@@ -161,9 +164,9 @@ def MenuPrimary(pie, context):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_add_vertex_group_panel"
-    bl_label = "Add Vertex Group"
+class MPM_OT_VertexGroupNewPanel(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_ertex_group_new_panel"
+    bl_label = "New"
     bl_options = {"REGISTER", "UNDO"}
     vgroup_name: bpy.props.StringProperty(name="Name", default="Group", description="Vertex group name")
     weight: bpy.props.FloatProperty(name="Weight", default=1.0, min=0.0, max=1.0)
@@ -172,34 +175,64 @@ class MPM_OT_AddVertexGroupPanel(bpy.types.Operator):
     def poll(self, context):
         return _Util.is_selected_verts(context)
 
-    def execute(self, context):
-        obj = context.object
-        if obj:
-            bpy.ops.object.mode_set(mode="OBJECT")
-            obj.vertex_groups.new(name=self.vgroup_name)
-            group = obj.vertex_groups[-1]
-            obj.vertex_groups.active_index = group.index
-            # bmesh.from_edit_mesh(obj.data).verts:
-            for v in obj.data.vertices:
-                if v.select:
-                    group.add([v.index], self.weight, "REPLACE")
-            self.report({"INFO"}, f"Added vertex group '{self.name}' with weight {self.weight} to selected vertices")
-            bpy.ops.object.mode_set(mode="EDIT")
-            return {"FINISHED"}
-        else:
-            self.report({"ERROR"}, "No active object")
-            return {"CANCELLED"}
-        return {"FINISHED"}
-
     def invoke(self, context, event):
         g.force_cancel_piemenu_modal(context)
         return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        obj = context.object
+        bpy.ops.object.mode_set(mode="OBJECT")
+        obj.vertex_groups.new(name=self.vgroup_name)
+        group = obj.vertex_groups[-1]
+        obj.vertex_groups.active_index = group.index
+        group.add([v.index for v in obj.data.vertices if v.select], self.weight, "REPLACE")
+        bpy.ops.object.mode_set(mode="EDIT")
+        return {"FINISHED"}
+
+
+class MPM_OT_VertexGroupAdd(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_ertex_group_add"
+    bl_label = "Add"
+    bl_description = "Add the selected vertices to the active vertex group"
+    bl_options = {"REGISTER", "UNDO"}
+    weight: bpy.props.FloatProperty(name="Weight", default=1.0, min=0.0, max=1.0)
+
+    @classmethod
+    def poll(self, context):
+        return _Util.is_selected_verts(context) and _Util.has_active_vgroup(context)
+
+    def execute(self, context):
+        obj = context.object
+        bpy.ops.object.mode_set(mode="OBJECT")
+        group = obj.vertex_groups.active
+        group.add([v.index for v in obj.data.vertices if v.select], self.weight, "REPLACE")
+        bpy.ops.object.mode_set(mode="EDIT")
+        return {"FINISHED"}
+
+
+class MPM_OT_VertexGroupRemove(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_vertex_group_remove"
+    bl_label = "Remove"
+    bl_description = "Remove the selected vertices to the active vertex group"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(self, context):
+        return _Util.is_selected_verts(context) and _Util.has_active_vgroup(context)
+
+    def execute(self, context):
+        obj = context.object
+        bpy.ops.object.mode_set(mode="OBJECT")
+        group = obj.vertex_groups.active
+        group.remove([v.index for v in obj.data.vertices if v.select])
+        bpy.ops.object.mode_set(mode="EDIT")
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_SelectFromVertexGroupPanel(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_select_vertex_group_panel"
-    bl_label = "Select from Vertex Groups"
+class MPM_OT_VertexGroupSelectPanel(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_vertex_group_select_panel"
+    bl_label = "Select"
     vg_counts = []
     init_verts = []
     limit_rows = 50
@@ -225,7 +258,7 @@ class MPM_OT_SelectFromVertexGroupPanel(bpy.types.Operator):
                 self.vg_counts[i] += 1
         g.force_cancel_piemenu_modal(context)
         column_cnt = int(1 + int(len(obj.vertex_groups) / self.limit_rows))
-        return context.window_manager.invoke_props_dialog(self, width=self.single_width * column_cnt)
+        return context.window_manager.invoke_props_dialog(self, width=max(200, self.single_width * column_cnt))
 
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
@@ -936,8 +969,10 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 classes = (
     MPM_OT_MirrorSeam,
     MPM_OT_MirrorSharp,
-    MPM_OT_AddVertexGroupPanel,
-    MPM_OT_SelectFromVertexGroupPanel,
+    MPM_OT_VertexGroupNewPanel,
+    MPM_OT_VertexGroupSelectPanel,
+    MPM_OT_VertexGroupAdd,
+    MPM_OT_VertexGroupRemove,
     MPM_OT_VertCreasePanel,
     MPM_OT_EdgeCreasePanel,
     MPM_OT_HideVerts,

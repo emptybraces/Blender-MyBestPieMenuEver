@@ -198,6 +198,11 @@ def is_selected_verts(context):
         return obj and obj.type == "MESH" and any(v.select for v in obj.data.vertices)
 
 
+def has_active_vgroup(context):
+    obj = context.object
+    return obj and obj.type == "MESH" and obj.vertex_groups.active != None
+
+
 def is_selected_edges(obj):
     return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 

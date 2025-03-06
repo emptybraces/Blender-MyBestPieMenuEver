@@ -11,7 +11,7 @@ import bpy
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",
-    "version": (2, 1, 2),
+    "version": (2, 2, 0),
     "blender": (4, 2, 0),
     "location": "3D View",
     "description": "Quick access to the functions you need",
