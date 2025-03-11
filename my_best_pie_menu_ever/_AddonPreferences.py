@@ -17,20 +17,17 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                                    description="Set the second language for the language switch button")
     openFilePathList: StringProperty(name="Open File or Explorer Path List",
                                      description="Specify the absolute path you want to execute. You can also show multiple separated by comma.")
-    imagePaintBrushFilterByName: StringProperty(
-        name="ImagePaint Brush Filter", default="", description="Enter the name of the brush you want to display")
+    imagePaintBrushFilterByName: StringProperty(name="ImagePaint Brush Filter", default="",
+                                                description="Enter the name of the brush you want to display")
     imagePaintBlendFilterByName: StringProperty(name="ImagePaint Brush Blend Filter", default="",
                                                 description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
     imagePaintShiftBrushName: StringProperty(name="Shift-key Brush", default="Blur",
                                              description="Enter the name of the brush you want to switch to while holding down the Shift key")
-    image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(
-        name="Ctrl+LMB Behaviour")
-    imagePaintLimitRowCount: IntProperty(
-        name="Limit Row Count", default=13, min=5, description="Specify the line count for displaying brushes")
-    sculptLimitRowCount: IntProperty(name="Limit Row Count", default=21,
-                                     min=5, description="Specify the line count for displaying brushes")
-    sculptBrushFilterByName: StringProperty(
-        name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
+    image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(name="Ctrl+LMB Behaviour")
+    imagePaintLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5, description="Specify the line count for displaying brushes")
+    sculptLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5,
+                                     description="Specify the line count for displaying brushes")
+    sculptBrushFilterByName: StringProperty(name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]

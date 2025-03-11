@@ -211,7 +211,7 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
     # オートワイヤーフレーム
-    _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
+    _Util.layout_operator(c, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
 
     # Applyメニュー
     box = rr.box()
@@ -219,24 +219,24 @@ def MenuPrimary(pie, context):
     # mask
     c = box.column(align=True)
     r = c.row(align=True)
-    r.label(text=MPM_OT_MakeMaskWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
-    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "Unselected").is_invert = False
+    r.label(text=MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_label)
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Invert").is_invert = False
     op = _Util.layout_operator(r, "paint.mask_flood_fill", "Clear")
     op.mode = "VALUE"
     op.value = 0
     # face set
     r = c.row(align=True)
-    r.label(text=MPM_OT_MakeFaceSetWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
-    _Util.layout_operator(r, MPM_OT_MakeFaceSetWithSelectedVert.bl_idname, "Unselected").mode = "Unselected"
-    _Util.layout_operator(r, MPM_OT_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
+    r.label(text=MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_label)
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Invert").mode = "Unselected"
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_MakeFaceSetWithSelectedVert(bpy.types.Operator):
+class MPM_OT_Sculpt_MakeFaceSetWithSelectedVert(bpy.types.Operator):
     bl_idname = "mpm.sculpt_make_faceset_with_selected_vert"
-    bl_label = "Fill faceset with selected verts"
+    bl_label = "Faceset with selected verts"
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.StringProperty(options={"HIDDEN"})
 
@@ -246,10 +246,14 @@ class MPM_OT_MakeFaceSetWithSelectedVert(bpy.types.Operator):
 
     def execute(self, context):
         data = context.object.data
-        # クリア
-        attr_data = data.attributes[".sculpt_face_set"].data
-        for i in range(0, len(attr_data)):
-            attr_data[i].value = 1
+        # 最初にクリア
+        bm = bmesh.new()
+        bm.from_mesh(data)
+        layer = bm.faces.layers.int.get('.sculpt_face_set')
+        for i in bm.faces:
+            i[layer] = 1
+        bm.to_mesh(data)
+        bm.free()
         if self.mode == "Selected":
             bpy.ops.sculpt.face_sets_create(mode="SELECTION")
         elif self.mode == "Unselected":
@@ -263,9 +267,9 @@ class MPM_OT_MakeFaceSetWithSelectedVert(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
+class MPM_OT_Sculpt_MakeMaskWithSelectedVert(bpy.types.Operator):
     bl_idname = "mpm.sculpt_make_mask_with_selected_vert"
-    bl_label = "Fill mask with selected verts"
+    bl_label = "Mask with selected verts"
     bl_options = {"REGISTER", "UNDO"}
     is_overwrite: bpy.props.BoolProperty(name="Overwrite", options={"HIDDEN"})
     is_invert: bpy.props.BoolProperty(name="Invert", options={"HIDDEN"})
@@ -300,7 +304,7 @@ class MPM_OT_MakeMaskWithSelectedVert(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
+class MPM_OT_Sculpt_AutoWireframeEnable(bpy.types.Operator):
     bl_idname = "mpm.sculpt_auto_wireframe_enable"
     bl_label = "Auto Show Wireframe"
     bl_options = {"REGISTER", "UNDO"}
@@ -324,9 +328,9 @@ class MPM_OT_AutoWireframeEnable(bpy.types.Operator):
 
 
 classes = (
-    MPM_OT_MakeMaskWithSelectedVert,
-    MPM_OT_MakeFaceSetWithSelectedVert,
-    MPM_OT_AutoWireframeEnable,
+    MPM_OT_Sculpt_MakeMaskWithSelectedVert,
+    MPM_OT_Sculpt_MakeFaceSetWithSelectedVert,
+    MPM_OT_Sculpt_AutoWireframeEnable,
 )
 
 
@@ -431,7 +435,7 @@ def MenuPrimary_v4_2(pie, context):
     box.label(text="Sculpt Primary")
 
     c = box.column(align=True)
-    _Util.layout_operator(c, MPM_OT_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
+    _Util.layout_operator(c, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
     # ブラシ
     r = c.row(align=True)
     box = r.box()
@@ -512,16 +516,16 @@ def MenuPrimary_v4_2(pie, context):
     # mask
     c = box.column(align=True)
     r = c.row(align=True)
-    r.label(text=MPM_OT_MakeMaskWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
-    _Util.layout_operator(r, MPM_OT_MakeMaskWithSelectedVert.bl_idname, "Unselected").is_invert = False
+    r.label(text=MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_label)
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Unselected").is_invert = False
     op = _Util.layout_operator(r, "paint.mask_flood_fill", "Clear")
     op.mode = "VALUE"
     op.value = 0
     # face set
     r = c.row(align=True)
-    r.label(text=MPM_OT_MakeFaceSetWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
-    _Util.layout_operator(r, MPM_OT_MakeFaceSetWithSelectedVert.bl_idname, "Unselected").mode = "Unselected"
-    _Util.layout_operator(r, MPM_OT_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
+    r.label(text=MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_label)
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Unselected").mode = "Unselected"
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
 # --------------------------------------------------------------------------------
