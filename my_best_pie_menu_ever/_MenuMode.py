@@ -33,7 +33,7 @@ def PieMenuDraw_ChangeModeLast(layout, context):
         layout.separator()  # これで空白を描画して、位置を調整してる
 
 
-def PieMenuDraw_ChangeMode(layout, context):
+def draw_pie_menu(layout, context):
 
     if context.space_data.type == "VIEW_3D":
         DrawView3D(layout, context)

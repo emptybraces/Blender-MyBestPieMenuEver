@@ -20,7 +20,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     imagePaintBrushFilterByName: StringProperty(
         name="ImagePaint Brush Filter", default="", description="Enter the name of the brush you want to display")
     imagePaintBlendFilterByName: StringProperty(name="ImagePaint Brush Blend Filter", default="",
-                                           description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
+                                                description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
     imagePaintShiftBrushName: StringProperty(name="Shift-key Brush", default="Blur",
                                              description="Enter the name of the brush you want to switch to while holding down the Shift key")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(
@@ -120,7 +120,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         # →newするときにheadオプションを使えば先頭に持ってこれるっぽい。https://docs.blender.org/api/current/bpy.types.KeyMapItems.html#bpy.types.KeyMapItems.new
         kc = bpy.context.window_manager.keyconfigs.user
         for km in kc.keymaps:
-            if km.name in ["3D View", "Image"]:
+            if km.name in {"3D View", "Image"}:
                 b = box.box()
                 b.label(text=km.name)
                 for kmi in km.keymap_items:

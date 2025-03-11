@@ -16,6 +16,7 @@
     importlib.reload(_MenuUVEditor)
     importlib.reload(_MenuImageEditor)
     importlib.reload(_PanelSelectionHistory)
+    importlib.reload(_SwitchObjectData)
     importlib.reload(g)
 else:
     from . import _Util
@@ -34,6 +35,7 @@ else:
     from . import _MenuUVEditor
     from . import _MenuImageEditor
     from . import _PanelSelectionHistory
+    from . import _SwitchObjectData
     from . import g
 import bpy
 import math
@@ -53,13 +55,16 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
     def draw(self, context):
         # 西、東、南、北、北西、北東、南西、南東
         pie = self.layout.menu_pie()
-        # 最後に選択したモード
+        # 西　最後に選択したモード
         _MenuMode.PieMenuDraw_ChangeModeLast(pie, context)
-        pie.split()
+        # 東
+        _SwitchObjectData.draw_pie_menu(pie.split(), context)
+        # 南
         row = pie.row()
-        _MenuMode.PieMenuDraw_ChangeMode(row, context)
-        _MenuUtility.PieMenuDraw_Utility(row, context)
-        PieMenuDraw_Primary(pie, context)
+        _MenuMode.draw_pie_menu(row, context)
+        _MenuUtility.draw_pie_menu(row, context)
+        # 北
+        draw_primary(pie, context)
 
 
 class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
@@ -95,7 +100,10 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         # if event.type == self._shortcutKey:
         #     return {"CANCELLED"}
         # print(event.type, event.is_consecutive, event.is_repeat)
-        if event.type in {"LEFTMOUSE", "NONE"} or g.is_force_cancelled_piemenu_modal:
+        if event.type in {"RIGHTMOUSE", "ESC"} or g.is_force_cancelled_piemenu_modal:
+            self.release(context)
+            return {"CANCELLED"}
+        elif event.type in {"LEFTMOUSE", "NONE"}:
             if getattr(context.area.spaces.active, "image", None):
                 context.area.spaces.active.image.reload()
             if event.shift or g.is_request_reopen_piemenu:
@@ -109,9 +117,6 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
             for i in g.on_closed.values():
                 i()
             return {"FINISHED"}
-        elif event.type in {"RIGHTMOUSE", "ESC"}:
-            self.release(context)
-            return {"CANCELLED"}
         else:
             d = math.dist(self._init_mouse_pos, Vector((event.mouse_x, event.mouse_y)))
             if 900 < d:
@@ -130,12 +135,10 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
     def draw_label(self):
         if g.is_force_cancelled_piemenu_modal:
             return
-        _UtilBlf.draw_label(0, "Holding Shift while clicking keeps this PIE open for sequential button presses!",
-                            self._init_mouse_pos.x, self._init_mouse_pos.y - 70, "center")
-        # if bpy.context.active_object:
-        #     for i, vg in enumerate(bpy.context.active_object.vertex_groups):
-        #         _UtilBlf.draw_label_click_handler(0, vg.name, self._init_mouse_pos.x + 400, self._init_mouse_pos.y +
-        #                                           200 - 20 * i, self._init_mouse_pos, self._mouse_pos)
+        x = _Util.clamp(self._init_mouse_pos.x - bpy.context.area.x, 0, bpy.context.area.width)
+        y = _Util.clamp(self._init_mouse_pos.y - bpy.context.area.y - 44, 0, bpy.context.area.height)
+        _UtilBlf.draw_label_fix(0, "Holding Shift while clicking keeps this PIE open for sequential button presses!",
+                                x, y, "center")
 
 
 class MPM_OT_OpenPieMenuModalMonitor(bpy.types.Operator):
@@ -169,7 +172,7 @@ class MPM_OT_OpenPieMenuModalMonitor(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-def PieMenuDraw_Primary(pie, context):
+def draw_primary(pie, context):
     if context.space_data.type == "VIEW_3D":
         current_mode = context.mode
         if current_mode == "OBJECT":
@@ -267,7 +270,7 @@ class MPM_Prop(bpy.types.PropertyGroup):
         items=on_update_color_palette_popover_enum
     )
 
-    # UVMap洗濯用
+    # UVMap選択用
     def on_items_UVMapEnum(self, context):
         if context.active_object is None or context.active_object.type != "MESH":
             return [("", "", "")]
@@ -316,6 +319,7 @@ modules = [
     _MenuSculptCurve,
     _MenuUVEditor,
     _MenuImageEditor,
+    _SwitchObjectData,
     _PanelSelectionHistory,
 ]
 

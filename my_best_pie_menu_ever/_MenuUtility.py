@@ -29,7 +29,7 @@ class MPM_Prop_ViewportCameraTransform(bpy.types.PropertyGroup):
     distance: bpy.props.FloatProperty()
 
 
-def PieMenuDraw_Utility(layout, context):
+def draw_pie_menu(layout, context):
     box = layout.box()
     box.label(text="Utility")
     row_parent = box.row()
@@ -40,9 +40,7 @@ def PieMenuDraw_Utility(layout, context):
     row.operator("import_scene.fbx", icon="IMPORT", text="")
     row.operator("export_scene.fbx", icon="EXPORT", text="")
     row.operator(MPM_OT_Utility_ARPExportPanel.bl_idname, icon="EXPORT", text="")
-
     row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
-
     row.operator(MPM_OT_Utility_OpenDirectory.bl_idname, text="", icon="FOLDER_REDIRECT")
     row = row_parent.row(align=True)
     file_path_list = _AddonPreferences.Accessor.get_open_file_path_list().strip()
@@ -50,7 +48,6 @@ def PieMenuDraw_Utility(layout, context):
         for path in file_path_list.split(','):
             op = _Util.layout_operator(row, MPM_OT_Utility_OpenFile.bl_idname, text="", icon="FILE_FOLDER")
             op.path = path
-
     if context.space_data.type == "VIEW_3D":
         DrawView3D(box, context)
     elif context.space_data.type == "IMAGE_EDITOR":
@@ -117,9 +114,10 @@ def DrawView3D(layout, context):
     for item in bpy.types.View3DShading.bl_rna.properties["type"].enum_items:
         _Util.MPM_OT_SetString.operator(r, "", shading, "type", item.identifier, item.icon, shading.type == item.identifier)
     # オーバーレイとシェーディングのペアショートカット切り替え
-    r = r.row(align=True)
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="Ov+Solid")
-    _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="UnOv+Mat")
+    # 連続押しできるようになったのでコメント
+    # r = r.row(align=True)
+    # _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="Ov+Solid")
+    # _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="UnOv+Mat")
     # シェーディングカラー
     r = c.row()
     r.label(text="Shading Color")
@@ -148,8 +146,8 @@ def DrawView3D(layout, context):
         for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
             _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier,
                                             icons[i], context.active_object.display_type == item.identifier)
-        if armature != None:
-            _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
+        # if armature != None:
+        #     _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
         # UV
         c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
         # ビューポートオブジェクトカラー
@@ -157,7 +155,7 @@ def DrawView3D(layout, context):
         r.scale_x = 0.5
         _Util.layout_prop(r, context.active_object, "color", isActive=shading.color_type == "OBJECT")
         # ポーズ
-        c.label(text="________________________________________")
+        # c.label(text="________________________________________")
         r = c.row(align=True)
         r.label(text="Armature")
         _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransform.bl_idname)
@@ -181,9 +179,10 @@ def DrawView3D(layout, context):
     c = box.column(align=True)
 
     r = c.row(align=True)
+    r.scale_x = 0.9
     _Util.layout_prop(r, context.scene, "frame_start")
-    r = r.row(align=True)
     _Util.layout_prop(r, context.scene, "frame_end")
+    r = r.row()
     _Util.layout_operator(r, MPM_OT_Utility_AnimationEndFrameSyncCurrentAction.bl_idname, icon="FILE_REFRESH")
     r = c.row(align=True)
     _Util.layout_prop(r, context.scene, "frame_current", isActive=False)
@@ -323,33 +322,7 @@ class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
         context.scene.transform_orientation_slots[0].type = "CURSOR"
         context.scene.tool_settings.transform_pivot_point = "CURSOR"
         return {"FINISHED"}
-# --------------------------------------------------------------------------------
 
-
-class MPM_OT_Utility_ViewportShadingSetSolid(bpy.types.Operator):
-    bl_idname = "mpm.util_pivot_viewport_shading_set_solid"
-    bl_label = ""
-    bl_description = "Overlay=True, Shading=SOLID"
-    bl_options = {"REGISTER", "UNDO"}
-    args: bpy.props.StringProperty()
-
-    def execute(self, context):
-        context.space_data.overlay.show_overlays = True
-        context.space_data.shading.type = "SOLID"
-        return {"FINISHED"}
-
-
-class MPM_OT_Utility_ViewportShadingSetMaterial(bpy.types.Operator):
-    bl_idname = "mpm.util_pivot_viewport_shading_set_material"
-    bl_label = ""
-    bl_description = "Overlay=False, Shading=MATERIAL"
-    bl_options = {"REGISTER", "UNDO"}
-    args: bpy.props.StringProperty()
-
-    def execute(self, context):
-        context.space_data.overlay.show_overlays = False
-        context.space_data.shading.type = "MATERIAL"
-        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
 
@@ -669,7 +642,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
     def cancel(self, context):
         _Util.MPM_OT_CallbackOperator.clear()
         bpy.ops.mpm.util_viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
-                                                            target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
+                                                                 target_pos=self.original_transform[0], target_rot=self.original_transform[1], target_distance=self.original_transform[2])
 
     def on_click_moveup(self, context, idx):
         if 0 < idx:
@@ -687,7 +660,7 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
         self.is_skip = False
         _Util.callbacks["on_finish"] = lambda: self._on_finish(context, idx)
         bpy.ops.mpm.util_viewport_camera_transform_restore_modal("INVOKE_DEFAULT",
-                                                            target_pos=data["pos"], target_rot=data["rot"], target_distance=data["distance"])
+                                                                 target_pos=data["pos"], target_rot=data["rot"], target_distance=data["distance"])
 
     def on_click_play(self, context):
         _Util.callbacks["on_finish"] = lambda: self._on_finish(context, -1)
@@ -795,8 +768,6 @@ classes = (
     MPM_OT_Utility_ChangeLanguage,
     MPM_OT_Utility_PivotOrientationSet_Reset,
     MPM_OT_Utility_PivotOrientationSet_Cursor,
-    MPM_OT_Utility_ViewportShadingSetSolid,
-    MPM_OT_Utility_ViewportShadingSetMaterial,
     MPM_OT_Utility_ViewportCameraTransformSave,
     MPM_OT_Utility_ViewportCameraTransformRestorePanel,
     MPM_OT_Utility_ViewportCameraTransformRestoreModal,

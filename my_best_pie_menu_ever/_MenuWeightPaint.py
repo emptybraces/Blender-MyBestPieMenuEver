@@ -226,7 +226,6 @@ class MPM_OT_Weight_MirrorVGFromActiveBase():
         new_name, actural_name, is_replace = mirror_vgroup(obj, target_name, use_topology)
         g.force_cancel_piemenu_modal(context)
         if is_replace:
-            print(1)
             bpy.ops.mpm.weight_mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
         else:
             msg = f"{target_name} -> {actural_name}\n"

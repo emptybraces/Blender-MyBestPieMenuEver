@@ -254,8 +254,9 @@ class MPM_OT_VertexGroupSelectPanel(bpy.types.Operator):
             if v.select:
                 self.init_verts.append(v.index)
             # 頂点グループごとの登録頂点数を取得
-            for i in v[deform_layer].keys():
-                self.vg_counts[i] += 1
+            if deform_layer:
+                for i in v[deform_layer].keys():
+                    self.vg_counts[i] += 1
         g.force_cancel_piemenu_modal(context)
         column_cnt = int(1 + int(len(obj.vertex_groups) / self.limit_rows))
         return context.window_manager.invoke_props_dialog(self, width=max(200, self.single_width * column_cnt))
