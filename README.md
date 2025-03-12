@@ -83,7 +83,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 #
 OBJECT Mode
 
-![image](https://github.com/user-attachments/assets/c86a1cfa-7417-4494-92f9-ec427cd57ea9)
+![image](https://github.com/user-attachments/assets/1b75881b-ae1c-4e39-8268-a412b9c06163)
 
 #
 Edit Mode
