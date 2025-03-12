@@ -79,7 +79,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         if -1 < self.prev_active_idx_vg:
             context.object.vertex_groups.active_index = self.prev_active_idx_vg
         for i, v in enumerate(self.prev_sk_values):
-            if (i < len(context.object.data.shape_keys.key_blocks) < i):
+            if (i < len(context.object.data.shape_keys.key_blocks)):
                 context.object.data.shape_keys.key_blocks[i].value = v
         if -1 < self.prev_active_idx_uv:
             context.object.data.uv_layers.active_index = self.prev_active_idx_uv
@@ -111,7 +111,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         WIDTH_SLASH = 20
         for i, menu in enumerate(menues):
             if 0 < i:
-                _UtilBlf.draw_label_fix(0, "/", x, y)
+                _UtilBlf.draw_label(0, "/", x, y)
                 x += WIDTH_SLASH
             if _UtilBlf.draw_label_mouseover(0, menu, x, y, self.mx, self.my, WIDTH, HEIGHT, self.current_menu_idx == i, align="center"):
                 if self.current_menu_idx != i:
@@ -119,15 +119,14 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             x += WIDTH
         x = self.imx - bpy.context.area.x + 10 + self.current_menu_idx * (WIDTH + WIDTH_SLASH)
         y -= 30
-        _UtilBlf.draw_field(0, "Activate", "| mouseover", x, y)
+        _UtilBlf.draw_key_info(0, "Activate", "| mouseover", x, y)
         x += 90
         if self.current_menu_idx == 1:
-            _UtilBlf.draw_field(0, "Adjust", "| middle-click,", x, y)
-            _UtilBlf.draw_field(0, "", "  mousewheel", x, y-10)
+            _UtilBlf.draw_key_info(0, "Adjust", "| middle-click,\n  mousewheel", x, y)
             x += 90
-        _UtilBlf.draw_field(0, "Apply", "| left-click", x, y)
+        _UtilBlf.draw_key_info(0, "Apply", "| left-click", x, y)
         x += 80
-        _UtilBlf.draw_field(0, "Cancel", "| right-click, ESC", x, y)
+        _UtilBlf.draw_key_info(0, "Cancel", "| right-click, ESC", x, y)
         x = self.imx - bpy.context.area.x
         y -= 40
         _UtilBlf.draw_separator(0, "_____________________________", x, y)
@@ -154,7 +153,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         obj = bpy.context.object
         x, y = self.get_items_start_position()
         if obj.vertex_groups.active == None:
-            _UtilBlf.draw_label_fix(0, "No VertexGroups found.", x, y)
+            _UtilBlf.draw_label(0, "No VertexGroups found.", x, y)
             return
         ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR
         ITEM_HEIGHT = 20
@@ -186,7 +185,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         obj = bpy.context.object
         x, y = self.get_items_start_position()
         if obj.data.shape_keys == None:
-            _UtilBlf.draw_label_fix(0, "No ShapeKeys found.", x, y)
+            _UtilBlf.draw_label(0, "No ShapeKeys found.", x, y)
             return
         ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR + 40
         ITEM_HEIGHT = 20
@@ -233,7 +232,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         obj = bpy.context.object
         x, y = self.get_items_start_position()
         if obj.data.uv_layers.active == None:
-            _UtilBlf.draw_label_fix(0, "No UV Maps found.", x, y)
+            _UtilBlf.draw_label(0, "No UV Maps found.", x, y)
             return
         ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR
         ITEM_HEIGHT = 20
@@ -254,7 +253,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         obj = bpy.context.object
         x, y = self.get_items_start_position()
         if obj.data.color_attributes and len(obj.data.color_attributes) == 0:
-            _UtilBlf.draw_label_fix(0, "No ColorAttributes found.", x, y)
+            _UtilBlf.draw_label(0, "No ColorAttributes found.", x, y)
             return
         ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR
         ITEM_HEIGHT = 20

@@ -946,12 +946,11 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         if self.is_reverting:
             return
         fid = 0  # デフォルトのフォントを使用
-        x = self.mouse_pos.x
-        y = self.mouse_pos.y
+        x = _Util.clamp(self.mouse_pos.x - bpy.context.area.x, 0, bpy.context.area.width)
+        y = _Util.clamp(self.mouse_pos.y - bpy.context.area.y, 0, bpy.context.area.height)
         _UtilBlf.animate_clipping(fid, x, 500, self.timer.time_duration)
-        text = "Align view to edge normal side"
-        _UtilBlf.draw_title(fid, text, x, y)
-
+        _UtilBlf.draw_title(fid, "Align view to edge normal side", x, y)
+        text = ""
         if self.dir[0] != 0:
             text = "+X" if self.dir[0] == 1 else "-X"
         elif self.dir[1] != 0:

@@ -17,6 +17,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Quickly openable Preference/Console.
 - Quickly openable Import/Export Fbx settings.
 - Quickly openable the directory of the currently opened.
+- Quickly switch between Vertex Groups, Shape Keys, UV Maps, and Color Attributes.
 - Create shortcut for open File/Directory with any path.
 - Switchable language to English <-> SecondLanguage.(Setting in preference)
 - Oneshot changes to Pivot and Transform Orientation.
@@ -35,7 +36,8 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 ### [EDIT mode]
 - Quick access to Edge/Vertex crease.
 - Quick access to Vertex groups.
-- Advanced Show/hide shortcuts.
+- Advanced vertex's Show/hide mesh shortcuts.
+- Advanced vertex group's Select/Add/New/Remove shortcuts.
 - Mirror duplication.
 - Generate bones along selected edges.
 - Align camera view to edge normal side.
