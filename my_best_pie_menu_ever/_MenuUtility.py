@@ -3,13 +3,12 @@ if "bpy" in locals():
     importlib.reload(_Util)
     importlib.reload(_AddonPreferences)
     importlib.reload(g)
-    from . import _MenuPose
     importlib.reload(_MenuPose)
 else:
     from . import _Util
     from . import _AddonPreferences
     from . import g
-    from ._MenuPose import MPM_OT_Pose_ResetBoneTransform, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame
+    from . import _MenuPose
 import os
 import subprocess
 import bpy
@@ -130,22 +129,30 @@ def DrawView3D(layout, context):
     col = row.column()
     # オブジェクトメニュー
     box = col.box()
-    box.label(text="Active Object")
+    r = box.row(align=True)
+    r.label(text="Active Object")
+    obj = context.object
+    if obj:
+        _Util.MPM_OT_SetBoolToggle.operator(r, "", obj, "hide_viewport", "HIDE_ON" if obj.hide_viewport else "HIDE_OFF")
+
     # アクティブオブジェクトがなければ空欄
-    if context.active_object:
+    if obj:
         c = box.column(align=True)
         r = c.row(align=True)
-        _Util.layout_prop(r, context.active_object, "show_in_front")
-        armature = _Util.get_armature(context.active_object)
-        _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
-        _Util.layout_prop(c, context.active_object, "show_wire")
+        _Util.layout_prop(r, obj, "show_in_front")
+        armature = _Util.get_armature(obj)
+        # _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
+        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ShowInFrontArmature.bl_idname, "", armature != None,  getattr(
+            armature, "show_in_front", False), "BONE_DATA").is_on = not getattr(armature, "show_in_front", False)
+
+        _Util.layout_prop(c, obj, "show_wire")
 
         r = c.row(align=True)
         r.label(text="Display Type")
         icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
         for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
-            _Util.MPM_OT_SetString.operator(r, "", context.active_object, "display_type", item.identifier,
-                                            icons[i], context.active_object.display_type == item.identifier)
+            _Util.MPM_OT_SetString.operator(r, "", obj, "display_type", item.identifier,
+                                            icons[i], obj.display_type == item.identifier)
         # if armature != None:
         #     _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
         # UV
@@ -153,17 +160,17 @@ def DrawView3D(layout, context):
         # ビューポートオブジェクトカラー
         r = c.row(align=True)
         r.scale_x = 0.5
-        _Util.layout_prop(r, context.active_object, "color", isActive=shading.color_type == "OBJECT")
+        _Util.layout_prop(r, obj, "color", isActive=shading.color_type == "OBJECT")
         # ポーズ
         # c.label(text="________________________________________")
         r = c.row(align=True)
         r.label(text="Armature")
-        _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransform.bl_idname)
-        _Util.layout_operator(r, MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
+        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
+        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
 
         # コピー
         r = c.row(align=True)
-        r.active = context.active_object is not None and 1 < len(context.selected_objects)
+        r.active = obj is not None and 1 < len(context.selected_objects)
         r.label(text="Copy")
         _Util.layout_operator(r, MPM_OT_Utility_CopyPosition.bl_idname)
         _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
@@ -545,6 +552,9 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
         for obj in context.selected_objects:
             if obj.animation_data and obj.animation_data.action:
                 return True
+            arm = obj.find_armature()
+            if arm and arm.animation_data and arm.animation_data.action:
+                return True
         return False
 
     def execute(self, context):
@@ -552,7 +562,11 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
         frame_start = MAX
         frame_end = -MAX
         for obj in context.selected_objects:
-            if obj.animation_data and (action := obj.animation_data.action):
+            action = obj.animation_data and obj.animation_data.action
+            if not action:
+                arm = obj.find_armature()
+                action = arm and arm.animation_data and arm.animation_data.action
+            if action:
                 for fcurve in action.fcurves:
                     keyframe_points = fcurve.keyframe_points
                     if keyframe_points:
@@ -561,7 +575,7 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
         if frame_start != MAX and frame_end != -MAX:
             context.scene.frame_start = int(frame_start)
             context.scene.frame_end = int(frame_end)
-            return {"FINISHED"}
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
 

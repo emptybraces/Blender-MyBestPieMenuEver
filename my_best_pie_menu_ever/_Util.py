@@ -203,6 +203,10 @@ def has_active_vgroup(context):
     return obj and obj.type == "MESH" and obj.vertex_groups.active != None
 
 
+def has_active_image(context):
+    return None != getattr(context.area.spaces.active, "image", None)
+
+
 def is_selected_edges(obj):
     return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 

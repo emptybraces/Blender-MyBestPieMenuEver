@@ -84,8 +84,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr, "mesh.mark_seam").clear = False
     _Util.layout_operator(rr, "mesh.mark_seam", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(rr)
-    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="ADD").is_clear = False
-    _Util.layout_operator(sub, MPM_OT_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
+    _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", icon="ADD").is_clear = False
+    _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
     _Util.layout_operator(cc, "uv.unwrap")
 
     # Vertexメニュー
@@ -93,15 +93,21 @@ def MenuPrimary(pie, context):
     box = c2.box()
     box.label(text="Vertex", icon="VERTEXSEL")
     cc = box.column(align=True)
-    _Util.layout_operator(cc, MPM_OT_VertCreasePanel.bl_idname)
+    _Util.layout_operator(cc, MPM_OT_EditMesh_VertCreasePanel.bl_idname)
 
     # 非表示
     rr = cc.row(align=True)
-    _Util.layout_operator(rr, MPM_OT_HideVerts.bl_idname, "Hide", icon="HIDE_ON").mode = "Hide"
-    _Util.layout_operator(rr, MPM_OT_HideVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Hide Other"
-    _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "Show", icon="HIDE_OFF").mode = "Show"
-    _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
-    _Util.layout_operator(rr, MPM_OT_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_HideVerts.bl_idname, "Hide", icon="HIDE_ON").mode = "Hide"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_HideVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Hide Other"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "Show", icon="HIDE_OFF").mode = "Show"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
+    # 3Dカーソルミラー
+    rr = cc.row(align=True)
+    rr.label(text="MirrorBy3DCursor", icon="PIVOT_CURSOR")
+    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "X").axis = "x"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
+    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
 
     # Edgeメニュー
     box = c2.box()
@@ -113,14 +119,14 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr, "mesh.mark_sharp").clear = False
     _Util.layout_operator(rr, "mesh.mark_sharp", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(rr)
-    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
-    _Util.layout_operator(sub, MPM_OT_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
+    _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
+    _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
     # クリーズ
-    _Util.layout_operator(c, MPM_OT_EdgeCreasePanel.bl_idname)
+    _Util.layout_operator(c, MPM_OT_EditMesh_EdgeCreasePanel.bl_idname)
     # ボーンアーマチュア作成
-    _Util.layout_operator(c, MPM_OT_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
+    _Util.layout_operator(c, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
-    _Util.layout_operator(c, MPM_OT_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
+    _Util.layout_operator(c, MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
 
     # VertexGroupメニュー
     c = r.column()
@@ -148,7 +154,7 @@ def MenuPrimary(pie, context):
     op.direction = 'NEGATIVE_X'
     op.factor = 1
     # 頂点ミラー複製
-    _Util.layout_operator(c, MPM_OT_DuplicateMirror.bl_idname, icon="SEQ_STRIP_DUPLICATE")
+    _Util.layout_operator(c, MPM_OT_EditMesh_DuplicateMirror.bl_idname, icon="SEQ_STRIP_DUPLICATE")
     # 法線
     _Util.layout_operator(c, "mesh.normals_make_consistent", icon="NORMALS_FACE").inside = False
     # マージ
@@ -325,7 +331,7 @@ class MPM_OT_VertexGroupSelectPanel(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_HideVerts(bpy.types.Operator):
+class MPM_OT_EditMesh_HideVerts(bpy.types.Operator):
     bl_idname = "mpm.editmesh_hide_verts"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
@@ -344,7 +350,7 @@ Option1: Hides all vertices except the selected."""
             return bpy.ops.mesh.hide(unselected=True)
 
 
-class MPM_OT_ShowVerts(bpy.types.Operator):
+class MPM_OT_EditMesh_ShowVerts(bpy.types.Operator):
     bl_idname = "mpm.editmesh_show_verts"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
@@ -368,10 +374,48 @@ Option2: Select only the shown vertices."""
             bpy.ops.mesh.reveal(select=True)
         return {"FINISHED"}
 
+
+class MPM_OT_EditMesh_MirrorBy3DCursor(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_mirror_by_3dcursor"
+    bl_label = ""
+    bl_options = {"UNDO"}
+    bl_description = "Mirrors vertices based on the position of the 3D cursor"
+    axis: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(self, context):
+        return _Util.is_selected_verts(context)
+
+    def execute(self, context):
+        obj = context.object
+        bm = bmesh.from_edit_mesh(obj.data)
+        cur_pos_local = obj.matrix_world.inverted() @ bpy.context.scene.cursor.location
+        selected_verts = [v for v in bm.verts if v.select]
+        if len(selected_verts) != 2:
+            for vert in selected_verts:
+                if self.axis == "x":
+                    vert.co.x = cur_pos_local.x - (vert.co.x - cur_pos_local.x)
+                elif self.axis == "y":
+                    vert.co.y = cur_pos_local.y - (vert.co.y - cur_pos_local.y)
+                else:
+                    vert.co.z = cur_pos_local.z - (vert.co.z - cur_pos_local.z)
+        else:
+            v0 = selected_verts[0]
+            v1 = selected_verts[1]
+            v1.co = v0.co.copy()
+            if self.axis == "x":
+                v1.co.x = cur_pos_local.x - (v0.co.x - cur_pos_local.x)
+            elif self.axis == "y":
+                v1.co.y = cur_pos_local.y - (v0.co.y - cur_pos_local.y)
+            else:
+                v1.co.z = cur_pos_local.z - (v0.co.z - cur_pos_local.z)
+        bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
+
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_MirrorSeam(bpy.types.Operator):
+class MPM_OT_EditMesh_MirrorSeam(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_seam"
     bl_label = "Mirror Seam"
     bl_options = {"REGISTER", "UNDO"}
@@ -388,7 +432,7 @@ class MPM_OT_MirrorSeam(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_MirrorSharp(bpy.types.Operator):
+class MPM_OT_EditMesh_MirrorSharp(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_sharp"
     bl_label = "Mirror Sharp"
     bl_options = {"REGISTER", "UNDO"}
@@ -407,7 +451,7 @@ class MPM_OT_MirrorSharp(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_VertCreasePanel(bpy.types.Operator):
+class MPM_OT_EditMesh_VertCreasePanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_vert_crease_panel"
     bl_label = "Vert Crease"
     bl_options = {"REGISTER", "UNDO"}
@@ -441,7 +485,7 @@ class MPM_OT_VertCreasePanel(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
 
-class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
+class MPM_OT_EditMesh_EdgeCreasePanel(bpy.types.Operator):
     bl_idname = "mpm.editmesh_edge_crease_panel"
     bl_label = "Edge Crease"
     bl_options = {"REGISTER", "UNDO"}
@@ -469,7 +513,7 @@ class MPM_OT_EdgeCreasePanel(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_DuplicateMirror(bpy.types.Operator):
+class MPM_OT_EditMesh_DuplicateMirror(bpy.types.Operator):
     bl_idname = "mpm.duplicate_mirror"
     bl_label = "Mirror Duplication"
     bl_options = {"REGISTER", "UNDO"}
@@ -610,7 +654,7 @@ class MPM_OT_DuplicateMirror(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
+class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
     bl_idname = "mpm.generate_along_from_edge"
     bl_label = "Generate bones along selected edges"
     bl_options = {"REGISTER", "UNDO"}
@@ -793,7 +837,7 @@ class MPM_OT_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
+class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
     bl_idname = "mpm.align_view_to_edge_normal_side_modal"
     bl_label = "Align view to edge normal side"
     bl_description = "Transition the view to a position looking perpendicular to the normal of the selected edge along any axis"
@@ -967,19 +1011,20 @@ class MPM_OT_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 classes = (
-    MPM_OT_MirrorSeam,
-    MPM_OT_MirrorSharp,
+    MPM_OT_EditMesh_MirrorSeam,
+    MPM_OT_EditMesh_MirrorSharp,
     MPM_OT_VertexGroupNewPanel,
     MPM_OT_VertexGroupSelectPanel,
     MPM_OT_VertexGroupAdd,
     MPM_OT_VertexGroupRemove,
-    MPM_OT_VertCreasePanel,
-    MPM_OT_EdgeCreasePanel,
-    MPM_OT_HideVerts,
-    MPM_OT_ShowVerts,
-    MPM_OT_DuplicateMirror,
-    MPM_OT_GenterateBonesAlongSelectedEdge,
-    MPM_OT_AlignViewToEdgeNormalSideModal,
+    MPM_OT_EditMesh_VertCreasePanel,
+    MPM_OT_EditMesh_EdgeCreasePanel,
+    MPM_OT_EditMesh_HideVerts,
+    MPM_OT_EditMesh_ShowVerts,
+    MPM_OT_EditMesh_DuplicateMirror,
+    MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge,
+    MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal,
+    MPM_OT_EditMesh_MirrorBy3DCursor,
 )
 
 

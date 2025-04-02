@@ -97,7 +97,7 @@ class MPM_OT_DeleteImage(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return context.area.spaces.active.image is not None
+        return _Util.has_active_image(context)
 
     def invoke(self, context, event):
         g.force_cancel_piemenu_modal(context)
@@ -118,7 +118,7 @@ class MPM_OT_ReloadImage(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return context.area.spaces.active.image is not None
+        return _Util.has_active_image(context)
 
     def execute(self, context):
         context.area.spaces.active.image.reload()
@@ -137,7 +137,7 @@ class MPM_OT_LostRefImagePanel(bpy.types.Operator):
         c = self.layout.column()
         is_found = False
         for image in bpy.data.images:
-            if image.source !=  "GENERATED" and not image.packed_file:
+            if image.source != "GENERATED" and not image.packed_file:
                 file_path = bpy.path.abspath(image.filepath)
                 if any(file_path) and not os.path.exists(file_path):
                     is_found = True
@@ -160,7 +160,7 @@ class MPM_OT_SeparateTextureChannelPanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return context.area.spaces.active.image is not None
+        return _Util.has_active_image(context)
 
     def invoke(self, context, event):
         g.force_cancel_piemenu_modal(context)

@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "2.2.0"
+version = "2.3.0"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -14,7 +14,7 @@ website = "https://emptybraces.github.io"
 # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
 tags = ["3D View", "User Interface"]
 
-blender_version_min = "4.2.0"
+blender_version_min = "4.2.1"
 ## Optional: Blender version that the extension does not support, earlier versions are supported.
 ## This can be omitted and defined later on the extensions platform if an issue is found.
 # blender_version_max = "5.1.0"
@@ -28,6 +28,8 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
+# v2.3.0
+# - [EditMesh] 3Dカーソル基準に頂点位置をミラーリングする機能を追加。
 # v2.2.0
 # - [Switch Object Data] アクティブオブジェクトの頂点グループ、シェイプキー、UVMap、カラー頂点情報を高速に切り替える機能を追加。
 # - [Edit] 選択している頂点をアクティブな頂点グループに追加/削除するボタンを追加し、整理。

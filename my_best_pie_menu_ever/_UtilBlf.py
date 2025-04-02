@@ -105,7 +105,7 @@ def draw_key_info(fid, field, desc, x, y):
     blf.disable(fid, blf.SHADOW)
 
 
-def draw_label_mouseover(fid, text, x, y, mx, my, width, height, active=False, hover_scale=1.0, align="left"):
+def draw_label_mousehover(fid, text, x, y, mx, my, width, height, active=False, hover_scale=1.0, align="left"):
     # エリア空間に変換
     mx = mx - bpy.context.area.x
     my = my - bpy.context.area.y

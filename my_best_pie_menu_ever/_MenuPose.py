@@ -63,7 +63,26 @@ class MPM_OT_Pose_ResetBoneTransformAndAnimationFrame(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.frame_set(context.scene.frame_start)
-        bpy.ops.mpm.pose_reset_bone_transform()
+        selected_objects = context.selected_objects
+        for obj in selected_objects:
+            _Util.reset_pose_bone(obj)
+        return {"FINISHED"}
+
+
+class MPM_OT_Pose_ShowInFrontArmature(bpy.types.Operator):
+    bl_idname = "mpm.pose_show_in_front_armature"
+    bl_label = "Show In Front"
+    bl_options = {"REGISTER", "UNDO"}
+    is_on: bpy.props.BoolProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return _Util.is_armature_in_selected()
+
+    def execute(self, context):
+        for obj in context.selected_objects:
+            if arm := obj if obj.type == "ARMATURE" else obj.find_armature():
+                arm.show_in_front = self.is_on
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
@@ -111,6 +130,7 @@ classes = (
     MPM_OT_Pose_ResetBoneTransform,
     MPM_OT_Pose_ResetBoneTransformAndAnimationFrame,
     MPM_OT_Pose_ARP_SnapIKFK,
+    MPM_OT_Pose_ShowInFrontArmature,
 )
 
 

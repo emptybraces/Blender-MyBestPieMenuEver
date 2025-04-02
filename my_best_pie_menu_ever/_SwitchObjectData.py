@@ -113,13 +113,13 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if 0 < i:
                 _UtilBlf.draw_label(0, "/", x, y)
                 x += WIDTH_SLASH
-            if _UtilBlf.draw_label_mouseover(0, menu, x, y, self.mx, self.my, WIDTH, HEIGHT, self.current_menu_idx == i, align="center"):
+            if _UtilBlf.draw_label_mousehover(0, menu, x, y, self.mx, self.my, WIDTH, HEIGHT, self.current_menu_idx == i, align="center"):
                 if self.current_menu_idx != i:
                     self.update_mode(i)
             x += WIDTH
         x = self.imx - bpy.context.area.x + 10 + self.current_menu_idx * (WIDTH + WIDTH_SLASH)
         y -= 30
-        _UtilBlf.draw_key_info(0, "Activate", "| mouseover", x, y)
+        _UtilBlf.draw_key_info(0, "Activate", "| mousehover", x, y)
         x += 90
         if self.current_menu_idx == 1:
             _UtilBlf.draw_key_info(0, "Adjust", "| middle-click,\n  mousewheel", x, y)
@@ -166,8 +166,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             column = int(i / self.ROW_LIMIT)
             row = i % self.ROW_LIMIT
             label = vg.name if is_fullname else vg.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(vg.name) else "")
-            if _UtilBlf.draw_label_mouseover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                             self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
+            if _UtilBlf.draw_label_mousehover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
+                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
                 self.current_item_idx = i
                 if active_idx != i:
                     obj.vertex_groups.active_index = i
@@ -200,8 +200,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             label = sk.name if is_fullname else sk.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(sk.name) else "")
             if 0 < i:
                 label += f"[{sk.value:.1f}]"
-            if _UtilBlf.draw_label_mouseover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                             self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
+            if _UtilBlf.draw_label_mousehover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
+                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
                 self.current_item_idx = i
                 if active_idx != i:
                     obj.active_shape_key_index = i
@@ -242,8 +242,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             column = int(i / self.ROW_LIMIT)
             row = i % self.ROW_LIMIT
             label = uv.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(uv.name) else "")
-            if _UtilBlf.draw_label_mouseover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                             self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
+            if _UtilBlf.draw_label_mousehover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
+                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
                 self.current_item_idx = i
                 if active_idx != i:
                     obj.data.uv_layers.active_index = i
@@ -266,8 +266,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             column = int(i / self.ROW_LIMIT)
             row = i % self.ROW_LIMIT
             label = ca.name if is_fullname else ca.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(ca.name) else "")
-            if _UtilBlf.draw_label_mouseover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                             self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i):
+            if _UtilBlf.draw_label_mousehover(0, label, x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
+                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i):
                 self.current_item_idx = i
                 if active_idx != i:
                     obj.data.color_attributes.active_color_index = i
