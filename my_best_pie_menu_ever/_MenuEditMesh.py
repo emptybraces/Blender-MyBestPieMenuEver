@@ -391,7 +391,7 @@ class MPM_OT_EditMesh_MirrorBy3DCursor(bpy.types.Operator):
         bm = bmesh.from_edit_mesh(obj.data)
         cur_pos_local = obj.matrix_world.inverted() @ bpy.context.scene.cursor.location
         selected_verts = [v for v in bm.verts if v.select]
-        if len(selected_verts) != 2:
+        if len(selected_verts) != 2 or not isinstance(bm.select_history.active, bmesh.types.BMVert):
             for vert in selected_verts:
                 if self.axis == "x":
                     vert.co.x = cur_pos_local.x - (vert.co.x - cur_pos_local.x)
@@ -400,15 +400,15 @@ class MPM_OT_EditMesh_MirrorBy3DCursor(bpy.types.Operator):
                 else:
                     vert.co.z = cur_pos_local.z - (vert.co.z - cur_pos_local.z)
         else:
-            v0 = selected_verts[0]
-            v1 = selected_verts[1]
-            v1.co = v0.co.copy()
+            active = bm.select_history.active
+            other = selected_verts[1] if selected_verts[0] == active else selected_verts[0]
+            other.co = active.co.copy()
             if self.axis == "x":
-                v1.co.x = cur_pos_local.x - (v0.co.x - cur_pos_local.x)
+                other.co.x = cur_pos_local.x - (active.co.x - cur_pos_local.x)
             elif self.axis == "y":
-                v1.co.y = cur_pos_local.y - (v0.co.y - cur_pos_local.y)
+                other.co.y = cur_pos_local.y - (active.co.y - cur_pos_local.y)
             else:
-                v1.co.z = cur_pos_local.z - (v0.co.z - cur_pos_local.z)
+                other.co.z = cur_pos_local.z - (active.co.z - cur_pos_local.z)
         bmesh.update_edit_mesh(obj.data)
         return {"FINISHED"}
 
