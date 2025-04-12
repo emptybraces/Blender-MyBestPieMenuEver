@@ -178,6 +178,12 @@ class MPM_OT_CallPanel(bpy.types.Operator):
 
 # --------------------------------------------------------------------------------
 
+def selected_objects():
+    objs = set(bpy.context.selected_objects)
+    if bpy.context.active_object:
+        objs.add(bpy.context.active_object)
+    return objs
+
 
 def select_active(obj):
     if obj:

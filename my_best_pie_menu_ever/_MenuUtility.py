@@ -185,6 +185,7 @@ def DrawView3D(layout, context):
     box.label(text="Animation")
     c = box.column(align=True)
 
+    c.prop(context.scene.mpm_prop, "AnimationSpeed")
     r = c.row(align=True)
     r.scale_x = 0.9
     _Util.layout_prop(r, context.scene, "frame_start")
@@ -549,7 +550,7 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        for obj in context.selected_objects:
+        for obj in _Util.selected_objects():
             if obj.animation_data and obj.animation_data.action:
                 return True
             arm = obj.find_armature()
@@ -561,7 +562,7 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
         MAX = 99999
         frame_start = MAX
         frame_end = -MAX
-        for obj in context.selected_objects:
+        for obj in _Util.selected_objects():
             action = obj.animation_data and obj.animation_data.action
             if not action:
                 arm = obj.find_armature()
@@ -574,7 +575,7 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
                         frame_end = max(frame_end, keyframe_points[-1].co.x)
         if frame_start != MAX and frame_end != -MAX:
             context.scene.frame_start = int(frame_start)
-            context.scene.frame_end = int(frame_end)
+            context.scene.frame_end = int(frame_end * (context.scene.render.frame_map_new / context.scene.render.frame_map_old))
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 

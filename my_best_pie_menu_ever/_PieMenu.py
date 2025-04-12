@@ -301,6 +301,24 @@ class MPM_Prop(bpy.types.PropertyGroup):
         set=on_set_UVMapEnum
     )
 
+    # アニメーション速度用
+    def on_set_AnimationSpeed(self, v):
+        bpy.context.scene.render.frame_map_old = 100
+        bpy.context.scene.render.frame_map_new = math.ceil(100 / v)
+
+    def on_get_AnimationSpeed(self):
+        return bpy.context.scene.render.frame_map_old / bpy.context.scene.render.frame_map_new
+
+    AnimationSpeed: bpy.props.FloatProperty(
+        name="Animation Speed",
+        default=1.0,
+        min=0.1,
+        max=10.0,
+        step=0.1,
+        set=on_set_AnimationSpeed,
+        get=on_get_AnimationSpeed
+    )
+
 
 # --------------------------------------------------------------------------------
 classes = (
