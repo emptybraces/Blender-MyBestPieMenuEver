@@ -118,11 +118,13 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
                 i()
             return {"FINISHED"}
         else:
-            d = math.dist(self._init_mouse_pos, Vector((event.mouse_x, event.mouse_y)))
-            if 900 < d:
-                context.window.screen = context.window.screen
-                self.release(context)
-                return {"CANCELLED"}
+            pass
+            # 環境によって正しくない、ウィンドウ幅を取らないとだめなのかも。でも必要ない気がする。
+            # d = math.dist(self._init_mouse_pos, Vector((event.mouse_x, event.mouse_y)))
+            # if 900 < d:
+            #     context.window.screen = context.window.screen
+            #     self.release(context)
+            #     return {"CANCELLED"}
             # context.area.header_text_set("Offset %.4f %.4f %.4f" % tuple(self.offset))
         return {"RUNNING_MODAL"}
 
