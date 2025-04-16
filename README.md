@@ -24,6 +24,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 - Move 3DCursor on ViewPlane.
 - Quickly switch the UVMap of the active object.
 - Reset all bone transform of selected object, and simultaneously resets the animation frame.
+- Quickly open the bone collection panel.
 - World transform can be copy/paste to selected objects.
 - Viewport camera's current transform can be saved/restored stackability, plus animation feature.
 - (If installed) Shortcut to call AutoRigPRO/ExportFBX with selecting objects tied to an armature related to selected object.
@@ -68,7 +69,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
 ### [POSE mode]
 
-- (Quickly switch to showing bone layer group.)
+- Quickly open the bone collection panel.
 - (If installed) Wiggle2: Shortcut ResetPhysics.
 - (If installed) AutoRigPro: Snap FKIKs of four limbs in one click.
 
