@@ -153,21 +153,12 @@ def DrawView3D(layout, context):
         for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
             _Util.MPM_OT_SetString.operator(r, "", obj, "display_type", item.identifier,
                                             icons[i], obj.display_type == item.identifier)
-        # if armature != None:
-        #     _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
         # UV
         c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
         # ビューポートオブジェクトカラー
         r = c.row(align=True)
         r.scale_x = 0.5
         _Util.layout_prop(r, obj, "color", isActive=shading.color_type == "OBJECT")
-        # ポーズ
-        # c.label(text="________________________________________")
-        r = c.row(align=True)
-        r.label(text="Armature")
-        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
-        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
-
         # コピー
         r = c.row(align=True)
         r.active = obj is not None and 1 < len(context.selected_objects)
@@ -175,6 +166,16 @@ def DrawView3D(layout, context):
         _Util.layout_operator(r, MPM_OT_Utility_CopyPosition.bl_idname)
         _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
         _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
+        # アーマチュア
+        box = c.box()
+        box.label(text="Armature")
+        c = box.column(align=True)
+        r = c.row(align=True)
+        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
+        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
+        if armature != None:
+            c.popover(panel=_MenuPose.MPM_PT_Pose_BoneCollectionPopover.bl_idname, icon="GROUP_BONE")
+            _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
 
     # -------------------------------
     # 次の列
