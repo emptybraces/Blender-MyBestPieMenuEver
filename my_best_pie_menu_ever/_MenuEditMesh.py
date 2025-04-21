@@ -949,13 +949,13 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mouse_pos.x = _Util.lerp(self.mouse_pos.x, event.mouse_x, 0.05)
         self.mouse_pos.y = _Util.lerp(self.mouse_pos.y, event.mouse_y, 0.05)
-        if _UtilInput.is_pressed_key(event, "X")[0]:
+        if _UtilInput.is_pressed_key(event, "X"):
             self.dir = Vector((-1 if self.dir[0] == 1 else 1, 0, 0))
             return self.execute(context)
-        if _UtilInput.is_pressed_key(event, "Y")[0]:
+        if _UtilInput.is_pressed_key(event, "Y"):
             self.dir = Vector((0, -1 if self.dir[1] == 1 else 1, 0))
             return self.execute(context)
-        if _UtilInput.is_pressed_key(event, "Z")[0]:
+        if _UtilInput.is_pressed_key(event, "Z"):
             if event.alt:
                 context.space_data.shading.show_xray = not context.space_data.shading.show_xray
             else:

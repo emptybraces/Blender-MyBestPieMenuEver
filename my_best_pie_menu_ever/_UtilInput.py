@@ -13,12 +13,13 @@ def is_pressed_key(event, key):
     if event.type == key:
         is_pressed_down = False
         if event.value == "PRESS":
+            # Releaseされるまで押下判定しないようにする。
             is_pressed_down = not key_pressed_dict.get(key, False)
             key_pressed_dict[key] = True
-        elif event.type == key and event.value == "RELEASE":
+        elif event.value == "RELEASE":
             key_pressed_dict[key] = False
-        return is_pressed_down, key_pressed_dict.get(key, False)
-    return False, False
+        return is_pressed_down
+    return False
 
 
 @staticmethod

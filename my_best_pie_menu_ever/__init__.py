@@ -11,7 +11,7 @@ import bpy
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",
-    "version": (2, 3, 0),
+    "version": (2, 4, 0),
     "blender": (4, 2, 0),
     "location": "3D View",
     "description": "Quick access to the functions you need",
@@ -72,12 +72,15 @@ def unregister_keymap():
     if kmkmi[1] is not None:
         kmkmi[0].keymap_items.remove(kmkmi[1])
 
+# アドオンの場合、blenderからコールされる。
+
 
 def register():
     register_keymap(False, cat_3dview, "VIEW_3D")
     register_keymap(False, cat_image, "IMAGE_EDITOR")
     for cls in classes:
         cls.register()
+    # bpy.app.timers.register(init, first_interval=0.1)
 
 
 def unregister():
@@ -86,5 +89,22 @@ def unregister():
         cls.unregister()
 
 
-if __name__ == "__main__":
-    register()
+# is_try = False
+
+
+# def init():
+#     print("mpm: try init")
+#     for window in bpy.context.window_manager.windows:
+#         for area in window.screen.areas:
+#             if area.type == "VIEW_3D":
+#                 _PieMenu.init()
+#                 return None  # タイマー終了
+#     # 1回だけ
+#     if is_try:
+#         return None
+#     is_try = True
+#     return 1  # ウェイト
+
+# print(__name__)
+# if __name__ == "__main__":
+#    register()

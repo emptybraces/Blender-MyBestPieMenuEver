@@ -90,9 +90,10 @@ class MPM_OT_Pose_ResetBoneTransform(bpy.types.Operator):
         return _Util.is_armature_in_selected()
 
     def execute(self, context):
-        selected_objects = context.selected_objects
-        for obj in selected_objects:
+        for obj in _Util.selected_objects():
             _Util.reset_pose_bone(obj)
+        if context.screen.is_animation_playing:
+            bpy.ops.screen.animation_play()
         return {"FINISHED"}
 
 
@@ -108,9 +109,10 @@ class MPM_OT_Pose_ResetBoneTransformAndAnimationFrame(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.frame_set(context.scene.frame_start)
-        selected_objects = context.selected_objects
-        for obj in selected_objects:
+        for obj in _Util.selected_objects():
             _Util.reset_pose_bone(obj)
+        if context.screen.is_animation_playing:
+            bpy.ops.screen.animation_play()
         return {"FINISHED"}
 
 
@@ -125,7 +127,7 @@ class MPM_OT_Pose_ShowInFrontArmature(bpy.types.Operator):
         return _Util.is_armature_in_selected()
 
     def execute(self, context):
-        for obj in context.selected_objects:
+        for obj in _Util.selected_objects():
             if arm := obj if obj.type == "ARMATURE" else obj.find_armature():
                 arm.show_in_front = self.is_on
         return {"FINISHED"}

@@ -61,9 +61,11 @@ class OT_ReinstallAddon(bpy.types.Operator):
             _AddonPreferences.Accessor.get_ref().dict_apply(self.dict)
             self.dict = None
 
-        def draw(self, context):
-            self.layout.label(text="reinstalled!")
-        context.window_manager.popup_menu(draw)
+        # エラーが出るので、printに変えた
+        # def draw(self, context):
+        #     self.layout.label(text="reinstalled!")
+        # context.window_manager.popup_menu(draw)
+        print("reinstalled!")
         return {'FINISHED'}
 
 

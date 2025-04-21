@@ -28,6 +28,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5,
                                      description="Specify the line count for displaying brushes")
     sculptBrushFilterByName: StringProperty(name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
+    weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
@@ -75,40 +76,39 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         def sub_row(self, layout, prop1, prop2):
-            row = layout.row()
-            row.prop(self, prop1)
-            row.scale_x = 0.2
-            row.prop(self, prop2)
+            r = layout.row()
+            r.prop(self, prop1)
+            r.scale_x = 0.2
+            r.prop(self, prop2)
         global blends
         layout = self.layout
         layout.label(text="*Please Mouseover to read description.")
-        box = layout.box().column(heading='Utility')
-        box.prop(self, "secondLanguage")
-        box.prop(self, "openFilePathList")
+        c = layout.box().column(heading='Utility')
+        c.prop(self, "secondLanguage")
+        c.prop(self, "openFilePathList")
 
-        box = layout.box()
-        box.label(text='Image Paint')
-        box.prop(self, "imagePaintBrushFilterByName")
-        sub_row(self, box, "imagePaintBlendFilterByName", "imagePaintBlendDropDown")
-        box.prop(self, "imagePaintShiftBrushName")
+        c = layout.box().column(heading='Image Paint')
+        c.prop(self, "imagePaintBrushFilterByName")
+        sub_row(self, c, "imagePaintBlendFilterByName", "imagePaintBlendDropDown")
+        c.prop(self, "imagePaintShiftBrushName")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
-        row = box.row(align=True)
-        row.label(text="Ctrl+LMB Behaviour:")
-        row.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="")
-        row.label(text="Invert" if not b else "EraseAlpha")
+        r = c.row(align=True)
+        r.label(text="Ctrl+LMB Behaviour:")
+        r.prop(self, "image_paint_is_ctrl_behaviour_invert_or_erasealpha", text="")
+        r.label(text="Invert" if not b else "EraseAlpha")
+        c.prop(self, "imagePaintLimitRowCount")
 
-        box.prop(self, "imagePaintLimitRowCount")
-
-        box = layout.box()
-        box.label(text='Sculpt')
+        c = layout.box().column(heading='Sculpt')
         if g.is_v4_3_later():
-            box.prop(self, "sculptBrushFilterByName")
+            c.prop(self, "sculptBrushFilterByName")
         else:
-            sub_row(self, box, "sculptBrushFilterByName", "sculptBrushNameDropDown")
-        box.prop(self, "sculptLimitRowCount")
+            sub_row(self, c, "sculptBrushFilterByName", "sculptBrushNameDropDown")
+        c.prop(self, "sculptLimitRowCount")
 
-        box = layout.box()
-        box.label(text="KeyConfig")
+        c = layout.box().column(heading='Weight Paint')
+        c.prop(self, "weightPaintHideBone")
+
+        c = layout.box().column(heading='KeyConfig')
 
         # 登録するときはaddonで、変更するときはuserだと上手くいく
         # では最初からuserで登録すればいいのではと思うのだが、userで登録するとキーリストの一番最後に登録される。
@@ -118,12 +118,12 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         kc = bpy.context.window_manager.keyconfigs.user
         for km in kc.keymaps:
             if km.name in {"3D View", "Image"}:
-                b = box.box()
+                b = c.box()
                 b.label(text=km.name)
                 for kmi in km.keymap_items:
                     if "My Best Pie Menu Ever" in kmi.name:
-                        box.context_pointer_set("keymap", kmi)
-                        rna_keymap_ui.draw_kmi([], kc, km, kmi, box, 0)
+                        c.context_pointer_set("keymap", kmi)
+                        rna_keymap_ui.draw_kmi([], kc, km, kmi, c, 0)
                         break
         # box.operator(MPM_OT_RevertKeymap.bl_idname)
 
@@ -194,6 +194,8 @@ class Accessor():
     def set_sculpt_brush_filter_by_name(v): Accessor.get_ref().sculptBrushFilterByName = v
     @staticmethod
     def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
+    @staticmethod
+    def get_weight_paint_hide_bone(): return Accessor.get_ref().weightPaintHideBone
     # @staticmethod
     # def get_is_debug(): return Accessor.get_ref().isDebug
 

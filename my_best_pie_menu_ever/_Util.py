@@ -297,7 +297,7 @@ def unregister_classes(classes):
 
 
 def is_armature_in_selected():
-    for obj in bpy.context.selected_objects:
+    for obj in selected_objects():
         if obj.type == "ARMATURE":
             return True
         if 0 < len([m for m in obj.modifiers if m.type == "ARMATURE" and m.object != None]):

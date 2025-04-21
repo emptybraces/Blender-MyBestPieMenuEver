@@ -1,9 +1,14 @@
+from . import _AddonPreferences
 if "bpy" in locals():
     import importlib
     importlib.reload(_Util)
+    importlib.reload(_UtilInput)
+    # importlib.reload(_AddonPreferences)
     importlib.reload(g)
 else:
     from . import _Util
+    from . import _UtilInput
+    from . import _AddonPreferences
     from . import g
 import bpy
 import os
@@ -17,29 +22,28 @@ def MenuPrimary(pie, context):
     box.label(text="WeightPaint Primary")
 
     # icons
-    row = box.row(align=True)
-    _Util.layout_prop(row, bpy.context.object.data, "use_paint_mask", icon_only=True)
-    _Util.layout_prop(row, bpy.context.object.data, "use_paint_mask_vertex", icon_only=True)
-    # row.operator("screen.userpref_show", icon='PREFERENCES', text="")
-    # row.operator("wm.console_toggle", icon='CONSOLE', text="")
+    r = box.row(align=True)
+    _Util.layout_prop(r, context.object.data, "use_paint_mask", icon_only=True)
+    _Util.layout_prop(r, context.object.data, "use_paint_mask_vertex", icon_only=True)
+    _Util.layout_prop(r, context.object.data, "use_paint_bone_selection", icon_only=True)
+    r = r.split(factor=0.2, align=True)
+    _Util.layout_prop(r, _AddonPreferences.Accessor.get_ref(), "weightPaintHideBone", "HideBoneOnPaint")
 
     # box menu
-    row = box.row()
+    rr = box.row()
 
     # brushes
-    box = row.box()
+    box = rr.box()
     box.label(text="Brush Property", icon="BRUSH_DATA")
-    cc = box.column(align=True)
-    r = cc.row()
     current_brush = context.tool_settings.weight_paint.brush
     unified_paint_settings = context.tool_settings.unified_paint_settings
 
     # weight
+    c = box.column(align=True)
+    r = c.row()
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_weight else current_brush
-    r = cc.row()
     _Util.layout_prop(r, brush_property_target, "weight")
     r = r.row(align=True)
-    r.scale_x = 0.8
     _Util.MPM_OT_SetSingle.operator(r, "0.0", brush_property_target, "weight", 0.0)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "weight", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "weight", 0.5)
@@ -48,10 +52,9 @@ def MenuPrimary(pie, context):
 
     # size
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
-    r = cc.row()
+    r = c.row()
     _Util.layout_prop(r, brush_property_target, "size")
     r = r.row(align=True)
-    r.scale_x = 0.8
     _Util.MPM_OT_SetInt.operator(r, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
     _Util.MPM_OT_SetInt.operator(r, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
     _Util.MPM_OT_SetInt.operator(r, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
@@ -59,10 +62,9 @@ def MenuPrimary(pie, context):
     _Util.layout_prop(r, unified_paint_settings, "use_unified_size")
 
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_strength else current_brush
-    r = cc.row()
+    r = c.row()
     _Util.layout_prop(r, brush_property_target, "strength")
     r = r.row(align=True)
-    r.scale_x = 0.8
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "strength", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "strength", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "strength", 1.0)
@@ -70,14 +72,15 @@ def MenuPrimary(pie, context):
     _Util.MPM_OT_SetSingle.operator(r, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
     _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
     # Blends
-    r = cc.row(align=True)
+    r = c.row(align=True)
     target_blends = ["mix", "add", "sub"]
     for i in _Util.enum_values(current_brush, "blend"):
         if i.lower() in target_blends:
             is_use = current_brush.blend == i
             _Util.MPM_OT_SetString.operator(r, i, current_brush, "blend", i, depress=is_use)
     # 蓄積
-    _Util.layout_prop(cc, current_brush, "use_accumulate")
+    s = c.split(factor=0.2, align=True)
+    _Util.layout_prop(s, current_brush, "use_accumulate")
     # ぼかしブラシの強さ
     blur_brush = None
     if g.is_v4_3_later():
@@ -95,37 +98,37 @@ def MenuPrimary(pie, context):
                 blur_brush = current_brush
                 break
     if blur_brush:
-        r = cc.row(align=True)
+        r = c.row(align=True)
         r.enabled = not unified_paint_settings.use_unified_strength
         _Util.layout_prop(r, blur_brush, "strength", "Blur Brush: Strength")
         r = r.row(align=True)
-        r.scale_x = 0.8
         _Util.MPM_OT_SetSingle.operator(r, "50%", blur_brush, "strength", max(0, blur_brush.strength * 0.5))
         _Util.MPM_OT_SetSingle.operator(r, "75%", blur_brush, "strength", max(0, blur_brush.strength * 0.75))
         _Util.MPM_OT_SetSingle.operator(r, "150%", blur_brush, "strength", min(1, blur_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", blur_brush, "strength", min(1, blur_brush.strength * 2))
+
     # util
-    c = row.column()
+    c = rr.box()
     box = c.box()
     box.label(text="Utility", icon="MODIFIER")
-    cc = box.column(align=True)
-    _Util.layout_prop(cc, context.space_data.overlay, "weight_paint_mode_opacity")
-    r = cc.row(align=True)
+    c = box.column(align=True)
+    _Util.layout_prop(c, context.space_data.overlay, "weight_paint_mode_opacity")
+    r = c.row(align=True)
     r.label(text="Zero Weights")
     _Util.layout_prop(r, context.scene.tool_settings, "vertex_group_user", expand=True)
-    _Util.layout_prop(cc, context.space_data.overlay, "show_paint_wire")
+    _Util.layout_prop(c, context.space_data.overlay, "show_paint_wire")
 
     # apply
     box = c.box()
     box.label(text="Apply", icon="CHECKMARK")
-    cc = box.column(align=True)
-    rr = cc.row(align=True)
+    c = box.column(align=True)
+    rr = c.row(align=True)
     _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname).is_mask = False
     _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
     _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname).is_mask = False
     _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
-    MirrorVertexGroup(cc)
-    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    MirrorVertexGroup(c)
+    _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
 # --------------------------------------------------------------------------------
 
@@ -437,7 +440,42 @@ class MPM_OT_Weight_RemoveWeight(bpy.types.Operator):
         else:
             vg.remove([v.index for v in context.active_object.data.vertices])
         return {"FINISHED"}
+# --------------------------------------------------------------------------------
 
+
+class MPM_OT_Weight_ModalMonitor (bpy.types.Operator):
+    bl_idname = "mpm.weight_modal_monitor"
+    bl_label = ""
+    is_start = False
+
+    def modal(self, context, event):
+        if context.mode == "PAINT_WEIGHT" and _AddonPreferences.Accessor.get_weight_paint_hide_bone():
+            if event.type == "LEFTMOUSE" and event.value == "PRESS":
+                self.is_press = True
+                self.show_bone(False)
+            elif self.is_press and event.type == "MOUSEMOVE" and event.value == "NOTHING":
+                self.is_press = False
+                self.show_bone(True)
+        return {"PASS_THROUGH"}
+
+    def invoke(self, context, event):
+        if MPM_OT_Weight_ModalMonitor.is_start:
+            return {"CANCELLED"}
+        MPM_OT_Weight_ModalMonitor.is_start = True
+        self.is_press = False
+
+        for window in bpy.context.window_manager.windows:
+            for area in window.screen.areas:
+                if area.type == "VIEW_3D":
+                    context.window_manager.modal_handler_add(self)
+                    return {"RUNNING_MODAL"}
+        else:
+            return {"CANCELLED"}
+
+    def show_bone(self, is_on):
+        overlay = getattr(bpy.context.space_data, "overlay", None)
+        if overlay:
+            overlay.show_bones = is_on
 # --------------------------------------------------------------------------------
 
 
@@ -450,6 +488,7 @@ classes = (
     MPM_OT_Weight_RemoveUnusedVertexGroup,
     MPM_OT_Weight_SetWeight,
     MPM_OT_Weight_RemoveWeight,
+    MPM_OT_Weight_ModalMonitor,
 )
 
 

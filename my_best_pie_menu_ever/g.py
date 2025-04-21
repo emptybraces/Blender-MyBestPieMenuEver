@@ -13,3 +13,6 @@ def force_cancel_piemenu_modal(context):
 
 
 def is_v4_3_later(): return (4, 3, 0) <= bpy.app.version
+
+
+def is_unregistered(): bpy.types.Scene.mpm_prop is None

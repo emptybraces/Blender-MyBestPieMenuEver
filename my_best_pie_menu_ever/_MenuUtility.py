@@ -83,7 +83,11 @@ def DrawView3D(layout, context):
     _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
     _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
-
+    r = r.row(align=True)
+    r.scale_x = 0.7
+    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="X0").mode = "x"
+    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Y0").mode = "y"
+    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Z0").mode = "z"
     # 設定
     box = col.box()
     box.label(text="Settings")
@@ -541,6 +545,24 @@ class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
         else:
             self.report({"WARNING"}, "View3D not found, cannot run operator")
             return {"CANCELLED"}
+
+
+class MPM_OT_Utility_3DCursorPositionSetZero(bpy.types.Operator):
+    bl_idname = "mpm.util_3dcursor_position_set_zero"
+    bl_label = ""
+    bl_description = "Set 3DCursor Position Zero"
+    bl_options = {"REGISTER", "UNDO"}
+    mode: bpy.props.StringProperty(options={"HIDDEN"})
+
+    def execute(self, context):
+        if self.mode == "x":
+            bpy.context.scene.cursor.location.x = 0.0
+        elif self.mode == "y":
+            bpy.context.scene.cursor.location.y = 0.0
+        else:
+            bpy.context.scene.cursor.location.z = 0.0
+        return {"FINISHED"}
+
 # --------------------------------------------------------------------------------
 
 
@@ -793,6 +815,7 @@ classes = (
     MPM_OT_Utility_ARPExportAll,
     MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
+    MPM_OT_Utility_3DCursorPositionSetZero,
     MPM_OT_Utility_OpenDirectory,
     MPM_OT_Utility_AnimationEndFrameSyncCurrentAction,
 )
