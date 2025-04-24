@@ -129,6 +129,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
     MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_operator(c, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, icon="MOD_MASK")
+
 
 # --------------------------------------------------------------------------------
 
@@ -402,6 +404,21 @@ class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
+class MPM_OT_Weight_MaskActiveVertexGroup(bpy.types.Operator):
+    bl_idname = "mpm.weight_mask_active_vgroup"
+    bl_label = "Mask Active Vgroup"
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Mask only the vertices with the current weight set"
+
+    def execute(self, context):
+        context.object.data.use_paint_mask_vertex = True
+        _Util.deselect_all(context)
+        bpy.ops.object.vertex_group_select()
+        return {"FINISHED"}
+
+# --------------------------------------------------------------------------------
+
+
 class MPM_OT_Weight_SetWeight(bpy.types.Operator):
     bl_idname = "mpm.weight_set"
     bl_label = "Set Weight"
@@ -448,12 +465,13 @@ class MPM_OT_Weight_ModalMonitor (bpy.types.Operator):
     bl_label = ""
     is_start = False
 
-    def modal(self, context, event):
+    def modal(self, context, e):
         if context.mode == "PAINT_WEIGHT" and _AddonPreferences.Accessor.get_weight_paint_hide_bone():
-            if event.type == "LEFTMOUSE" and event.value == "PRESS":
+            if e.type == "LEFTMOUSE" and e.value == "PRESS" and not (e.ctrl and e.shift):  # ボーン選択操作のみ条件排除
                 self.is_press = True
                 self.show_bone(False)
-            elif self.is_press and event.type == "MOUSEMOVE" and event.value == "NOTHING":
+            # Release呼ばれないのでこれ
+            elif self.is_press and e.type == "MOUSEMOVE" and e.value == "NOTHING":
                 self.is_press = False
                 self.show_bone(True)
         return {"PASS_THROUGH"}
@@ -461,12 +479,12 @@ class MPM_OT_Weight_ModalMonitor (bpy.types.Operator):
     def invoke(self, context, event):
         if MPM_OT_Weight_ModalMonitor.is_start:
             return {"CANCELLED"}
-        MPM_OT_Weight_ModalMonitor.is_start = True
         self.is_press = False
 
         for window in bpy.context.window_manager.windows:
             for area in window.screen.areas:
                 if area.type == "VIEW_3D":
+                    MPM_OT_Weight_ModalMonitor.is_start = True
                     context.window_manager.modal_handler_add(self)
                     return {"RUNNING_MODAL"}
         else:
@@ -486,6 +504,7 @@ classes = (
     MPM_OT_Weight_MirrorVGFromActiveTopology,
     MPM_OT_Weight_MirrorVGOverwriteConfirm,
     MPM_OT_Weight_RemoveUnusedVertexGroup,
+    MPM_OT_Weight_MaskActiveVertexGroup,
     MPM_OT_Weight_SetWeight,
     MPM_OT_Weight_RemoveWeight,
     MPM_OT_Weight_ModalMonitor,

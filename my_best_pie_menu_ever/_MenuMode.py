@@ -85,7 +85,7 @@ def DrawOperatorSculptMode(layout, context):
     object_mode = "OBJECT" if context.active_object is None else context.mode
     active_type_is_mesh = context.active_object != None and context.active_object.type == "MESH"
 
-    r = layout.row()
+    r = layout.row(align=True)
     r.enabled = object_mode != "SCULPT" and active_type_is_mesh
     op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, "Sculpt", icon="SCULPTMODE_HLT", depress=object_mode == "SCULPT")
     if active_type_is_mesh:
@@ -220,7 +220,7 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode != "SCLUPT" and _Util.is_selected_verts(context)
+        return context.mode != "SCLUPT" and _Util.has_selected_verts(context)
 
     def execute(self, context):
         context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
@@ -243,7 +243,7 @@ class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode != "SCLUPT" and _Util.is_selected_verts(context)
+        return context.mode != "SCLUPT" and _Util.has_selected_verts(context)
 
     def execute(self, context):
         context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp

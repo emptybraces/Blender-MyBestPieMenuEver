@@ -195,7 +195,7 @@ def select_add(obj):
     obj.select_set(True)
 
 
-def is_selected_verts(context):
+def has_selected_verts(context):
     if context.mode == "EDIT_MESH":
         obj = context.edit_object
         return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).verts)
@@ -213,8 +213,21 @@ def has_active_image(context):
     return None != getattr(context.area.spaces.active, "image", None)
 
 
-def is_selected_edges(obj):
+def has_selected_edges(obj):
     return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+
+
+def deselect_all(context):
+    if context.mode == "EDIT_MESH":
+        obj = bpy.context.edit_object
+        mesh = bmesh.from_edit_mesh(obj.data)
+        for v in mesh.verts:
+            v.select_set(False)
+        bmesh.update_edit_mesh(obj.data)
+    elif context.mode == "PAINT_WEIGHT":
+        bpy.ops.paint.vert_select_all(action="DESELECT")
+    else:
+        bpy.ops.object.select_all(action="DESELECT")
 
 
 def print_enum_values(obj, prop_name):

@@ -179,7 +179,7 @@ class MPM_OT_VertexGroupNewPanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context)
+        return _Util.has_selected_verts(context)
 
     def invoke(self, context, event):
         g.force_cancel_piemenu_modal(context)
@@ -205,7 +205,7 @@ class MPM_OT_VertexGroupAdd(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context) and _Util.has_active_vgroup(context)
+        return _Util.has_selected_verts(context) and _Util.has_active_vgroup(context)
 
     def execute(self, context):
         obj = context.object
@@ -224,7 +224,7 @@ class MPM_OT_VertexGroupRemove(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context) and _Util.has_active_vgroup(context)
+        return _Util.has_selected_verts(context) and _Util.has_active_vgroup(context)
 
     def execute(self, context):
         obj = context.object
@@ -270,7 +270,7 @@ class MPM_OT_VertexGroupSelectPanel(bpy.types.Operator):
     def draw(self, context):
         self.layout.label(text="Click the VGroup to Select/Unselect.")
         _Util.MPM_OT_CallbackOperator.operator(self.layout, "Deselect All", self.bl_idname + ".clear",
-                                               self.on_click_clear, (context, ), "X", _Util.is_selected_verts(context))
+                                               self.on_click_clear, (context, ), "X", _Util.has_selected_verts(context))
         # vgrupsボタン
         cnt = 0
         r = self.layout.row(align=False)
@@ -341,7 +341,7 @@ Option1: Hides all vertices except the selected."""
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context)
+        return _Util.has_selected_verts(context)
 
     def execute(self, context):
         if self.mode == "Hide":
@@ -384,7 +384,7 @@ class MPM_OT_EditMesh_MirrorBy3DCursor(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context)
+        return _Util.has_selected_verts(context)
 
     def execute(self, context):
         obj = context.object
@@ -467,7 +467,7 @@ class MPM_OT_EditMesh_VertCreasePanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context)
+        return _Util.has_selected_verts(context)
 
     def execute(self, context):
         mesh = context.object.data
@@ -494,7 +494,7 @@ class MPM_OT_EditMesh_EdgeCreasePanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_edges(context.edit_object)
+        return _Util.has_selected_edges(context.edit_object)
 
     def execute(self, context):
         mesh = context.object.data
@@ -523,7 +523,7 @@ class MPM_OT_EditMesh_DuplicateMirror(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_verts(context)
+        return _Util.has_selected_verts(context)
 
     def execute(self, context):
         obj = context.edit_object
@@ -670,7 +670,7 @@ class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_edges(context.edit_object)
+        return _Util.has_selected_edges(context.edit_object)
 
     def execute(self, context):
         obj = context.edit_object
@@ -856,7 +856,7 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.is_selected_edges(context.edit_object)
+        return _Util.has_selected_edges(context.edit_object)
 
     def invoke(self, context, event):
         self.is_reverting = False

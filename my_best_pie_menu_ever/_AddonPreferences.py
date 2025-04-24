@@ -139,6 +139,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             "image_paint_is_ctrl_behaviour_invert_or_erasealpha": self.image_paint_is_ctrl_behaviour_invert_or_erasealpha,
             "sculptLimitRowCount": self.sculptLimitRowCount,
             "sculptBrushFilterByName": self.sculptBrushFilterByName,
+            "weightPaintHideBone": self.weightPaintHideBone,
         }
 
     def dict_apply(self, dict):
