@@ -136,7 +136,7 @@ class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
 
 class MPM_OT_CallbackOperator(bpy.types.Operator):
     bl_idname = "mpm.util_callback"
-    bl_label = ""
+    bl_label = "Temporary operator"
     bl_options = {"UNDO"}
     key: bpy.props.StringProperty()
     func_dict: dict[str, Callable[[], None]] = {}
@@ -204,6 +204,15 @@ def has_selected_verts(context):
         return obj and obj.type == "MESH" and any(v.select for v in obj.data.vertices)
 
 
+def has_selected_edges(context):
+    if context.mode == "EDIT_MESH":
+        obj = context.edit_object
+        return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
+    else:
+        obj = context.active_object
+        return obj and obj.type == "MESH" and any(v.select for v in obj.data.edges)
+
+
 def has_active_vgroup(context):
     obj = context.object
     return obj and obj.type == "MESH" and obj.vertex_groups.active != None
@@ -211,10 +220,6 @@ def has_active_vgroup(context):
 
 def has_active_image(context):
     return None != getattr(context.area.spaces.active, "image", None)
-
-
-def has_selected_edges(obj):
-    return obj and obj.type == "MESH" and any(e.select for e in bmesh.from_edit_mesh(obj.data).edges)
 
 
 def deselect_all(context):
@@ -426,6 +431,11 @@ def view_rotation(view_dir, up_dir):
         view_dir   # Z軸
     )).transposed()  # Blenderの行列は列優先なので転置
     return rotation_matrix.to_quaternion()
+
+
+def edge_center_point(edge):
+    v1, v2 = edge.verts
+    return (v2.co + v1.co) / 2
 
 
 def get_any_view3d_space():

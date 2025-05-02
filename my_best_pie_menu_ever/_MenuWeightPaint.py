@@ -30,47 +30,56 @@ def MenuPrimary(pie, context):
     _Util.layout_prop(r, _AddonPreferences.Accessor.get_ref(), "weightPaintHideBone", "HideBoneOnPaint")
 
     # box menu
-    rr = box.row()
+    root_row = box.row()
 
     # brushes
-    box = rr.box()
+    box = root_row.box()
     box.label(text="Brush Property", icon="BRUSH_DATA")
     current_brush = context.tool_settings.weight_paint.brush
     unified_paint_settings = context.tool_settings.unified_paint_settings
 
     # weight
     c = box.column(align=True)
-    r = c.row()
+
+    def _get_row3(layout):
+        split = layout.row().split(factor=0.25, align=True)
+        c1 = split.column(align=True)
+        rest = split.column(align=True)
+        split = rest.split(factor=0.6, align=True)
+        c2 = split.column(align=True)
+        c3 = split.column(align=True)
+        return c1, c2, c3
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_weight else current_brush
-    _Util.layout_prop(r, brush_property_target, "weight")
-    r = r.row(align=True)
+    c1, c2, c3 = _get_row3(c)
+    _Util.layout_prop(c1, brush_property_target, "weight")
+    r = c2.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "0.0", brush_property_target, "weight", 0.0)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "weight", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "weight", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "weight", 1.0)
-    _Util.layout_prop(r, unified_paint_settings, "use_unified_weight")
+    _Util.layout_prop(c3, unified_paint_settings, "use_unified_weight")
 
     # size
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
-    r = c.row()
-    _Util.layout_prop(r, brush_property_target, "size")
-    r = r.row(align=True)
+    c1, c2, c3 = _get_row3(c)
+    _Util.layout_prop(c1, brush_property_target, "size")
+    r = c2.row(align=True)
     _Util.MPM_OT_SetInt.operator(r, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
     _Util.MPM_OT_SetInt.operator(r, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
     _Util.MPM_OT_SetInt.operator(r, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
     _Util.MPM_OT_SetInt.operator(r, "200%", brush_property_target, "size", int(brush_property_target.size * 2.0))
-    _Util.layout_prop(r, unified_paint_settings, "use_unified_size")
+    _Util.layout_prop(c3, unified_paint_settings, "use_unified_size")
 
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_strength else current_brush
-    r = c.row()
-    _Util.layout_prop(r, brush_property_target, "strength")
-    r = r.row(align=True)
+    c1, c2, c3 = _get_row3(c)
+    _Util.layout_prop(c1, brush_property_target, "strength")
+    r = c2.row(align=True)
     _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "strength", 0.1)
     _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "strength", 0.5)
     _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "strength", 1.0)
     _Util.MPM_OT_SetSingle.operator(r, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
-    _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
+    _Util.layout_prop(c3, unified_paint_settings, "use_unified_strength")
     # Blends
     r = c.row(align=True)
     target_blends = ["mix", "add", "sub"]
@@ -98,17 +107,17 @@ def MenuPrimary(pie, context):
                 blur_brush = current_brush
                 break
     if blur_brush:
-        r = c.row(align=True)
-        r.enabled = not unified_paint_settings.use_unified_strength
-        _Util.layout_prop(r, blur_brush, "strength", "Blur Brush: Strength")
-        r = r.row(align=True)
+        c1, c2, c3 = _get_row3(c)
+        c1.enabled = not unified_paint_settings.use_unified_strength
+        _Util.layout_prop(c1, blur_brush, "strength", "Blur Strength")
+        r = c2.row(align=True)
         _Util.MPM_OT_SetSingle.operator(r, "50%", blur_brush, "strength", max(0, blur_brush.strength * 0.5))
         _Util.MPM_OT_SetSingle.operator(r, "75%", blur_brush, "strength", max(0, blur_brush.strength * 0.75))
         _Util.MPM_OT_SetSingle.operator(r, "150%", blur_brush, "strength", min(1, blur_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", blur_brush, "strength", min(1, blur_brush.strength * 2))
 
     # util
-    c = rr.box()
+    c = root_row.box()
     box = c.box()
     box.label(text="Utility", icon="MODIFIER")
     c = box.column(align=True)
@@ -122,14 +131,16 @@ def MenuPrimary(pie, context):
     box = c.box()
     box.label(text="Apply", icon="CHECKMARK")
     c = box.column(align=True)
-    rr = c.row(align=True)
-    _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname).is_mask = False
-    _Util.layout_operator(rr, MPM_OT_Weight_SetWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
-    _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname).is_mask = False
-    _Util.layout_operator(rr, MPM_OT_Weight_RemoveWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
+    r = c.row(align=True)
+    _Util.layout_operator(r, MPM_OT_Weight_SetWeight.bl_idname).is_mask = False
+    _Util.layout_operator(r, MPM_OT_Weight_SetWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
+    _Util.layout_operator(r, MPM_OT_Weight_RemoveWeight.bl_idname).is_mask = False
+    _Util.layout_operator(r, MPM_OT_Weight_RemoveWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
     MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
-    _Util.layout_operator(c, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, icon="MOD_MASK")
+    r = c.row(align=True)
+    _Util.layout_operator(r, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, icon="MOD_MASK").is_invert = False
+    _Util.layout_operator(r, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, "", icon="ARROW_LEFTRIGHT").is_invert = True
 
 
 # --------------------------------------------------------------------------------
@@ -409,11 +420,14 @@ class MPM_OT_Weight_MaskActiveVertexGroup(bpy.types.Operator):
     bl_label = "Mask Active Vgroup"
     bl_options = {"REGISTER", "UNDO"}
     bl_description = "Mask only the vertices with the current weight set"
+    is_invert: bpy.props.BoolProperty()
 
     def execute(self, context):
         context.object.data.use_paint_mask_vertex = True
         _Util.deselect_all(context)
         bpy.ops.object.vertex_group_select()
+        if self.is_invert:
+            bpy.ops.paint.vert_select_all(action='INVERT')
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
@@ -508,6 +522,8 @@ classes = (
     MPM_OT_Weight_SetWeight,
     MPM_OT_Weight_RemoveWeight,
     MPM_OT_Weight_ModalMonitor,
+
+
 )
 
 

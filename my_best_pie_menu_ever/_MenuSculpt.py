@@ -202,15 +202,15 @@ def MenuPrimary(pie, context):
                     break
         smooth_brush = bpy.data.brushes.get("Smooth")
     if smooth_brush != None:
-        r = c.row(align=True)
-        _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength")
+        r = c.split(factor=0.4, align=True)
+        _Util.layout_prop(r, smooth_brush, "strength", "Smooth Strength")
         r = r.row(align=True)
-        r.scale_x = 0.8
         _Util.MPM_OT_SetSingle.operator(r, "50%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.5))
         _Util.MPM_OT_SetSingle.operator(r, "75%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.75))
         _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
     # オートワイヤーフレーム
+    c = c.split(factor=0.4)
     _Util.layout_operator(c, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
 
     # Applyメニュー
@@ -218,7 +218,7 @@ def MenuPrimary(pie, context):
     box.label(text="Apply", icon="CHECKMARK")
     # mask
     c = box.column(align=True)
-    r = c.row(align=True)
+    r = c.split(factor=0.45, align=True)
     r.label(text=MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_label)
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Invert").is_invert = False
@@ -226,7 +226,7 @@ def MenuPrimary(pie, context):
     op.mode = "VALUE"
     op.value = 0
     # face set
-    r = c.row(align=True)
+    r = c.split(factor=0.45, align=True)
     r.label(text=MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_label)
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Invert").mode = "Unselected"

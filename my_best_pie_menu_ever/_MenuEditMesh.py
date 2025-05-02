@@ -127,6 +127,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
     _Util.layout_operator(c, MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
+    # 辺リングの選択
+    _Util.layout_operator(c, MPM_OT_EditMesh_GrowEdgeRingSelection.bl_idname)
 
     # VertexGroupメニュー
     c = r.column()
@@ -494,7 +496,7 @@ class MPM_OT_EditMesh_EdgeCreasePanel(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.has_selected_edges(context.edit_object)
+        return _Util.has_selected_edges(context)
 
     def execute(self, context):
         mesh = context.object.data
@@ -657,8 +659,8 @@ class MPM_OT_EditMesh_DuplicateMirror(bpy.types.Operator):
 class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
     bl_idname = "mpm.generate_along_from_edge"
     bl_label = "Generate bones along selected edges"
-    bl_options = {"REGISTER", "UNDO"}
     bl_description = "Generates bones along the selected edge"
+    bl_options = {"REGISTER", "UNDO"}
 
     order_dir: bpy.props.EnumProperty(name="Order", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     order_invert: bpy.props.BoolProperty(name="Invert", description="")
@@ -666,19 +668,37 @@ class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
     bone_ratio: bpy.props.FloatProperty(name="Bone Ratio", description="", default=1.0, min=0.01, max=2.0)
     slide_to_normal: bpy.props.FloatProperty(name="Slide To Normal", description="", default=0.0, min=-1.0, max=1.0)
     angle_for_isolate: bpy.props.IntProperty(
-        name="Separates edge groups by vertices with edge pairs that are lower than the specified angle", description="", default=0, min=0, max=120)
+        name="Angle For Isolate", description="Separates edge groups by vertices with edge pairs that are lower than the specified angle", default=0, min=0, max=120)
 
     @classmethod
     def poll(self, context):
-        return _Util.has_selected_edges(context.edit_object)
+        return _Util.has_selected_edges(context)
+
+    def invoke(self, context, event):
+        self.target_object = context.edit_object
+        self.target_armature = None
+        g.force_cancel_piemenu_modal(context)
+        return context.window_manager.invoke_props_popup(self, event)
+
+    def draw(self, context):
+        layout = self.layout
+        c = layout.column(align=True)
+        c.prop(self, "order_dir")
+        c.prop(self, "order_invert")
+        c.prop(self, "bone_chain")
+        c.prop(self, "bone_ratio")
+        c.prop(self, "slide_to_normal")
+        c.prop(self, "angle_for_isolate")
+        _Util.MPM_OT_CallbackOperator.operator(c, "Execute", self.bl_idname,
+                                               self.execute, (context, ))
 
     def execute(self, context):
-        obj = context.edit_object
+        bpy.ops.object.mode_set(mode="OBJECT")
+        _Util.select_active(self.target_object)
+        bpy.ops.object.mode_set(mode="EDIT")
+        obj = self.target_object
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)
-        if not any(e.select for e in bm.edges):
-            _Util.show_report_error(self, "Please select at least one edge.")
-            return {"CANCELLED"}
 
         def find_isolated_vert_edge_groups(bm, limit_angle):
             # 孤立された頂点・辺グループを取得。グループは指定鋭角、３つ以上の分岐で分離する。
@@ -802,9 +822,13 @@ class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
                 sorted_lists[i] = sorted_lists[i][::-1]
         # アーマチュアを追加
         bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.armature_add()
-        armature = context.object
-        armature.name = "bones_from_edges"
+        if self.target_armature is None:
+            bpy.ops.object.armature_add()
+            self.target_armature = armature = context.object
+            armature.name = "bones_from_edges"
+        else:
+            armature = self.target_armature
+            _Util.select_active(armature)
         # ボーン追加
         bpy.ops.object.mode_set(mode="EDIT")
         edit_bones = armature.data.edit_bones
@@ -834,6 +858,25 @@ class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge(bpy.types.Operator):
                 bone.parent = prev_bone if self.bone_chain else None
                 prev_bone = bone
                 # _Util.show_report(self, f"{bone.name}, {p1}, {p2}, {bone.head}, {bone.tail}")
+
+        return {"FINISHED"}
+
+
+class MPM_OT_EditMesh_GenterateBonesAlongSelectedEdgeInternal(bpy.types.Operator):
+    bl_idname = "mpm.generate_along_from_edge_internal"
+    bl_label = ""
+    bl_options = {'INTERNAL'}  # UIに出ない
+
+    def execute(self, context):
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.armature_add()
+        armature = context.object
+        armature.name = "bones_from_edges"
+        # ボーン追加
+        bpy.ops.object.mode_set(mode="EDIT")
+        edit_bones = armature.data.edit_bones
+        for bone in edit_bones:
+            edit_bones.remove(bone)
         return {"FINISHED"}
 
 
@@ -856,7 +899,7 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.has_selected_edges(context.edit_object)
+        return _Util.has_selected_edges(context)
 
     def invoke(self, context, event):
         self.is_reverting = False
@@ -1009,6 +1052,147 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         _UtilBlf.draw_field(fid, "Finish", None, "| left click", x + 200, y, 2)
 
 
+class MPM_OT_EditMesh_GrowEdgeRingSelection(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_grow_edge_ring_selection"
+    bl_label = "Grow Edge Ring Selection"
+    bl_description = ""
+    bl_options = {"REGISTER", "UNDO"}
+    steps: bpy.props.IntProperty(name="Steps", default=1, min=1)
+    skip_offset: bpy.props.IntProperty(name="Skip Offset", default=0, min=0)
+    direction: bpy.props.EnumProperty(
+        name="Direction",
+        items=[
+            ("BOTH", "Both", "Expand in both directions"),
+            ("FORWARD", "Forward", "Expand only in forward direction"),
+            ("BACKWARD", "Backward", "Expand only in backward direction"),
+        ],
+        default="BOTH"
+    )
+    alignment: bpy.props.EnumProperty(
+        name="Alignment",
+        items=[
+            ("None", "None", ""),
+            ("X+", "X+", ""),
+            ("X-", "X-", ""),
+            ("Y+", "Y+", ""),
+            ("Y-", "Y-", ""),
+            ("Z+", "Z+", ""),
+            ("Z-", "Z-", ""),
+        ],
+        default="None"
+    )
+
+    @classmethod
+    def poll(self, context):
+        return _Util.has_selected_edges(context)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        c = layout.column(align=True)
+        c.prop(self, "steps")
+        c.prop(self, "skip_offset")
+        c.prop(self, "direction")
+        r = c.row(align=True)
+        r.enabled = self.direction != "BOTH"
+        r.prop(self, "alignment")
+
+    def invoke(self, context, event):
+        self.steps = 0
+        return self.execute(context)
+
+    def execute(self, context):
+        obj = context.edit_object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        selected_edges = [e for e in bm.edges if e.select]
+        visited_edges = set(selected_edges)
+        result_edges = set()
+        candidate_edges = list()
+        to_visit = list()
+        to_visit_next = list()
+        face_list = list()
+        edge_verts_set = set()
+
+        alignment_filter_func = self.get_alignment_filter_func()
+
+        for edge in selected_edges:
+            current_step = 0
+            current_offset = self.skip_offset
+            to_visit.clear()
+            to_visit_next.clear()
+            to_visit_next.append(edge)
+            while to_visit_next:
+                to_visit.extend(to_visit_next)
+                to_visit_next.clear()
+                while to_visit:
+                    edge = to_visit.pop(0)
+                    edge_verts_set.clear()
+                    edge_verts_set.update(edge.verts)
+                    candidate_edges.clear()
+                    face_list.clear()
+                    face_list.extend(edge.link_faces)
+                    if self.direction == "BACKWARD":
+                        face_list.reverse()
+                    for face in face_list:
+                        for loop in face.loops:
+                            other_edge = loop.edge
+                            # 各エッジの頂点が重複している
+                            if edge_verts_set & set(other_edge.verts):
+                                continue
+                            # 一旦、候補用のリストに格納して後でまとめて比較して、最適なものを処理する
+                            if other_edge not in visited_edges:
+                                candidate_edges.insert(0, other_edge)  # appendより安定する。
+                                break
+                    # 片方向かつ、複数が見つかっている場合はアラインメントに適した方を採用する
+                    if 1 < len(candidate_edges) and self.direction != "BOTH":
+                        for candidate_edge in candidate_edges:
+                            if alignment_filter_func(edge, candidate_edge):
+                                continue
+                            if current_offset == 0:
+                                result_edges.add(candidate_edge)
+                            visited_edges.add(candidate_edge)
+                            to_visit_next.append(candidate_edge)
+                            break
+                    else:
+                        if current_offset == 0:
+                            result_edges.update(candidate_edges)
+                        visited_edges.update(candidate_edges)
+                        to_visit_next.extend(candidate_edges)
+
+                current_offset -= 1
+                if current_offset < 0:
+                    current_offset = self.skip_offset
+                # step処理
+                current_step += 1
+                if self.steps <= current_step:
+                    current_step = 0
+                    break
+        for edge in result_edges:
+            edge.select_set(True)
+        bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
+
+    def get_alignment_filter_func(self):
+        if self.direction == "BOTH" or self.alignment == "None":
+            return lambda edge, other_edge: False
+        if self.alignment == "X+":
+            return lambda edge, other_edge: other_edge.verts[0].co.x < edge.verts[0].co.x
+        elif self.alignment == "X-":
+            return lambda edge, other_edge: other_edge.verts[0].co.x > edge.verts[0].co.x
+        elif self.alignment == "Y+":
+            return lambda edge, other_edge: other_edge.verts[0].co.y < edge.verts[0].co.y
+        elif self.alignment == "Y-":
+            return lambda edge, other_edge: other_edge.verts[0].co.y > edge.verts[0].co.y
+        elif self.alignment == "Z+":
+            return lambda edge, other_edge: other_edge.verts[0].co.z < edge.verts[0].co.z
+        elif self.alignment == "Z-":
+            return lambda edge, other_edge: other_edge.verts[0].co.z > edge.verts[0].co.z
+        else:
+            return lambda edge, other_edge: False
+
+
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_EditMesh_MirrorSeam,
@@ -1023,8 +1207,10 @@ classes = (
     MPM_OT_EditMesh_ShowVerts,
     MPM_OT_EditMesh_DuplicateMirror,
     MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge,
+    MPM_OT_EditMesh_GenterateBonesAlongSelectedEdgeInternal,
     MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal,
     MPM_OT_EditMesh_MirrorBy3DCursor,
+    MPM_OT_EditMesh_GrowEdgeRingSelection,
 )
 
 
