@@ -127,8 +127,10 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
     _Util.layout_operator(c, MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
-    # 辺リングの選択
+    # 辺リングの拡張選択
     _Util.layout_operator(c, MPM_OT_EditMesh_GrowEdgeRingSelection.bl_idname)
+    # エッジループのセンタリング
+    _Util.layout_operator(c, MPM_OT_EditMesh_CenteringEdgeLoop.bl_idname)
 
     # VertexGroupメニュー
     c = r.column()
@@ -1193,6 +1195,74 @@ class MPM_OT_EditMesh_GrowEdgeRingSelection(bpy.types.Operator):
             return lambda edge, other_edge: False
 
 
+class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_centering_edge_loop"
+    bl_label = "Centering Edge Ring"
+    bl_description = ""
+    bl_options = {"REGISTER", "UNDO"}
+    centering_factor: bpy.props.FloatProperty(name="Factor", default=0.5, min=0, max=1)
+
+    @classmethod
+    def poll(self, context):
+        return _Util.has_selected_edges(context)
+
+    def execute(self, context):
+        obj = context.edit_object
+        bm = bmesh.from_edit_mesh(obj.data)
+        selected_edges = [e for e in bm.edges if e.select]
+        neighbor_edges = list()
+        neighbor_verts = list()
+        visited_verts = set()
+        for edge in selected_edges:
+            neighbor_edges.clear()
+            edge_verts_set = _Util.Temp.set1_clear_update(edge.verts)
+            # 頂点と隣接するエッジを探す
+            for face in edge.link_faces:
+                for loop in face.loops:
+                    other_edge = loop.edge
+                    # エッジの頂点が重複している
+                    if edge_verts_set & _Util.Temp.set2_clear_update(other_edge.verts):
+                        continue
+                    neighbor_edges.append(other_edge)
+
+            if 2 != len(neighbor_edges):
+                _Util.show_msgbox("Edges on both sides do not exist.", icon="ERROR")
+                return {"CANCELLED"}
+            # 選択頂点と繋がる頂点
+            last_neighbor_edge = None
+            for v in edge.verts:
+                if v in visited_verts:
+                    continue
+                neighbor_verts.clear()
+                for neighbor_edge in neighbor_edges:
+                    # 隣の繋がってる頂点
+                    for vv in neighbor_edge.verts:
+                        if self.are_vertices_connected(v, vv):
+                            neighbor_verts.append(vv)
+                            break
+                # 選択中の頂点の隣の頂点が２つある
+                if 2 != len(neighbor_verts):
+                    continue
+                visited_verts.add(v)
+                # 隣の頂点の順番を入れ替える
+                idx = 0
+                if not last_neighbor_edge:
+                    last_neighbor_edge = neighbor_edges[0]
+                else:
+                    if _Util.Temp.set1_clear_update(last_neighbor_edge.verts) & _Util.Temp.set2_clear_update(neighbor_edges[0].verts):
+                        last_neighbor_edge = neighbor_edges[0]
+                    else:
+                        last_neighbor_edge = neighbor_edges[1]
+                        idx = 1
+                v.co = _Util.lerp(neighbor_verts[idx].co, neighbor_verts[idx ^ 1].co, self.centering_factor)
+
+        bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
+
+    def are_vertices_connected(self, v1, v2):
+        return any(e for e in v1.link_edges if v2 in e.verts)
+
+
 # --------------------------------------------------------------------------------
 classes = (
     MPM_OT_EditMesh_MirrorSeam,
@@ -1211,6 +1281,7 @@ classes = (
     MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal,
     MPM_OT_EditMesh_MirrorBy3DCursor,
     MPM_OT_EditMesh_GrowEdgeRingSelection,
+    MPM_OT_EditMesh_CenteringEdgeLoop,
 )
 
 
