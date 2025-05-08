@@ -15,6 +15,7 @@ VEC3_X = (lambda: Vector((1, 0, 0)))
 VEC3_Y = (lambda: Vector((0, 1, 0)))
 VEC3_Z = (lambda: Vector((0, 0, 1)))
 callbacks = {}
+
 # HT – ヘッダー
 # MT – メニュー
 # OT – オペレーター
@@ -228,6 +229,8 @@ def deselect_all(context):
         mesh = bmesh.from_edit_mesh(obj.data)
         for v in mesh.verts:
             v.select_set(False)
+        for e in mesh.edges:
+            v.select_set(False)
         bmesh.update_edit_mesh(obj.data)
     elif context.mode == "PAINT_WEIGHT":
         bpy.ops.paint.vert_select_all(action="DESELECT")
@@ -318,7 +321,7 @@ def is_armature_in_selected():
     for obj in selected_objects():
         if obj.type == "ARMATURE":
             return True
-        if 0 < len([m for m in obj.modifiers if m.type == "ARMATURE" and m.object != None]):
+        elif obj.find_armature():
             return True
     return False
 
@@ -458,6 +461,53 @@ def find_keymap(keymapName, itemName):
     km = kc.keymaps.get(keymapName)
     kmi = km.keymap_items.get(itemName) if km != None else None
     return (km, kmi)
+
+
+class Temp:
+    tmpset1 = set()
+    tmpset2 = set()
+
+    @classmethod
+    def set1_clear(cls, e):
+        cls.tmpset1.clear()
+        return cls.tmpset1
+
+    @classmethod
+    def set2_clear(cls, e):
+        cls.tmpset2.clear()
+        return cls.tmpset2
+
+    @classmethod
+    def set1_clear_set(cls, e):
+        cls.tmpset1.clear()
+        cls.tmpset1.set(e)
+        return cls.tmpset1
+
+    @classmethod
+    def set2_clear_set(cls, e):
+        cls.tmpset2.clear()
+        cls.tmpset2.set(e)
+        return cls.tmpset2
+
+    @classmethod
+    def set1_clear_update(cls, e):
+        cls.tmpset1.clear()
+        cls.tmpset1.update(e)
+        return cls.tmpset1
+
+    @classmethod
+    def set2_clear_update(cls, e):
+        cls.tmpset2.clear()
+        cls.tmpset2.update(e)
+        return cls.tmpset2
+
+    @classmethod
+    def intersect_sets(cls, set1, set2):
+        cls.tmpset1.clear()
+        cls.tmpset1.update(set1)
+        cls.tmpset2.clear()
+        cls.tmpset2.update(set2)
+        return cls.tmpset1 & cls.tmpset2
 
 
 # --------------------------------------------------------------------------------

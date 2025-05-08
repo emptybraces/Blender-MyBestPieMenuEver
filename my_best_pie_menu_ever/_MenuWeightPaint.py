@@ -160,34 +160,31 @@ def MirrorVertexGroup(layout):
 class MPM_OT_Weight_MirrorVGFromSelectedBoneBase():
     @classmethod
     def poll(cls, context):
-        if context.active_object and context.active_object.type == "MESH":
-            for obj in bpy.context.selected_objects:
+        is_mesh = False
+        is_armature = 0
+        for obj in _Util.selected_objects():
+            is_mesh |= obj.type == "MESH"
+            if not is_armature:
                 if obj.type == "ARMATURE" and 0 < len([bone for bone in obj.data.bones if bone.select]):
-                    return True
-        return False
-
-    def get_selected_bone_names(self, obj):
-        if obj and obj.type == "ARMATURE":
-            armature = obj.data
-            selected_bones = [bone for bone in armature.bones if bone.select]
-            selected_bone_names = [bone.name for bone in selected_bones]
-            return selected_bone_names
-        return None
+                    is_armature += 1
+        return is_mesh and 1 == is_armature
 
     def execute(self, context, use_topology):
         msg = ""
-        selected_objects = context.selected_objects
         names = []
         g.force_cancel_piemenu_modal(context)
-        for obj in selected_objects:
-            names = self.get_selected_bone_names(obj)
-            if names != None:
-                for name in names:
-                    if name in obj.vertex_groups:
-                        new_name, actural_name, is_replace = mirror_vgroup(context.active_object, name, use_topology)
-                        msg += f"{name} -> {actural_name}\n"
-                    else:
-                        msg += f"VertexGroup '{name}' not found.\n"
+        for obj in _Util.selected_objects():
+            arm = _Util.get_armature(obj)
+            selected_bone_names = [bone.name for bone in arm.data.bones if bone.select]
+            if arm:
+                break
+        for obj in _Util.selected_objects():
+            if obj.type != "MESH":
+                continue
+            for name in selected_bone_names:
+                if name in obj.vertex_groups:
+                    new_name, actural_name, is_replace = mirror_vgroup(obj, name, use_topology)
+                    msg += f"{name} -> {actural_name}\n"
         _Util.show_msgbox(msg if msg else "Invalid Selection!", "Mirror VGroup from selected bones")
         return {"FINISHED"}
 
@@ -200,7 +197,7 @@ class MPM_OT_Weight_MirrorVGFromSelectedBoneTopology(bpy.types.Operator, MPM_OT_
 
     @classmethod
     def poll(cls, context):
-        super().poll(context)
+        return super().poll(context)
 
     def execute(self, context):
         return super().execute(context, True)

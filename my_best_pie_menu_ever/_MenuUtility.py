@@ -307,6 +307,7 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
     def execute(self, context):
         if bpy.context.preferences.view.language == "en_US":
             bpy.context.preferences.view.language = _AddonPreferences.Accessor.get_second_language()
+            bpy.context.preferences.view.use_translate_new_dataname = False
         else:
             bpy.context.preferences.view.language = "en_US"
         return {"FINISHED"}

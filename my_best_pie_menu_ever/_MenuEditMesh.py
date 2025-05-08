@@ -1200,7 +1200,7 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
     bl_label = "Centering Edge Ring"
     bl_description = ""
     bl_options = {"REGISTER", "UNDO"}
-    centering_factor: bpy.props.FloatProperty(name="Factor", default=0.5, min=0, max=1)
+    bias: bpy.props.FloatProperty(name="Bias", default=0.5, min=0, max=1)
 
     @classmethod
     def poll(self, context):
@@ -1209,58 +1209,94 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
     def execute(self, context):
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
+        selected_verts = [e for e in bm.verts if e.select]
         selected_edges = [e for e in bm.edges if e.select]
-        neighbor_edges = list()
-        neighbor_verts = list()
-        visited_verts = set()
-        for edge in selected_edges:
-            neighbor_edges.clear()
-            edge_verts_set = _Util.Temp.set1_clear_update(edge.verts)
-            # 頂点と隣接するエッジを探す
-            for face in edge.link_faces:
-                for loop in face.loops:
-                    other_edge = loop.edge
-                    # エッジの頂点が重複している
-                    if edge_verts_set & _Util.Temp.set2_clear_update(other_edge.verts):
+        # 隣接するエッジリングを取得
+        adjacent_ring_edges = set()
+        for e in selected_edges:
+            for face in e.link_faces:
+                for other_edge in face.edges:
+                    if other_edge is e:
                         continue
-                    neighbor_edges.append(other_edge)
-
-            if 2 != len(neighbor_edges):
-                _Util.show_msgbox("Edges on both sides do not exist.", icon="ERROR")
-                return {"CANCELLED"}
-            # 選択頂点と繋がる頂点
-            last_neighbor_edge = None
-            for v in edge.verts:
-                if v in visited_verts:
-                    continue
-                neighbor_verts.clear()
-                for neighbor_edge in neighbor_edges:
-                    # 隣の繋がってる頂点
-                    for vv in neighbor_edge.verts:
-                        if self.are_vertices_connected(v, vv):
-                            neighbor_verts.append(vv)
-                            break
-                # 選択中の頂点の隣の頂点が２つある
-                if 2 != len(neighbor_verts):
-                    continue
-                visited_verts.add(v)
-                # 隣の頂点の順番を入れ替える
-                idx = 0
-                if not last_neighbor_edge:
-                    last_neighbor_edge = neighbor_edges[0]
-                else:
-                    if _Util.Temp.set1_clear_update(last_neighbor_edge.verts) & _Util.Temp.set2_clear_update(neighbor_edges[0].verts):
-                        last_neighbor_edge = neighbor_edges[0]
-                    else:
-                        last_neighbor_edge = neighbor_edges[1]
-                        idx = 1
-                v.co = _Util.lerp(neighbor_verts[idx].co, neighbor_verts[idx ^ 1].co, self.centering_factor)
+                    # エッジ同士が1つの頂点だけ共有していれば隣接とみなす
+                    shared_verts = _Util.Temp.intersect_sets(e.verts, other_edge.verts)
+                    if len(shared_verts) == 1:
+                        adjacent_ring_edges.add(other_edge)
+        # 両サイドの端エッジを取得
+        end_edges = []
+        for e in adjacent_ring_edges:
+            connected = 0
+            for v in e.verts:
+                for linked_edge in v.link_edges:
+                    if linked_edge != e and linked_edge in adjacent_ring_edges:
+                        connected += 1
+            if connected == 1:
+                end_edges.append(e)
+        # 一つ端っこの頂点を取得する
+        edge = min(end_edges, key=lambda e: (e.verts[0].co + e.verts[1].co) / 2)
+        cur_v = edge.verts[1] if edge.verts[0] in selected_verts else edge.verts[0]
+        # 端っこの頂点リストを取得
+        end_edge_verts = [cur_v]
+        stack = [cur_v]
+        visited = {cur_v}
+        while stack:
+            v = stack.pop()
+            # 最初の端の頂点から繋がる辺
+            for e in v.link_edges:
+                # 端エッジリストに含まれない辺
+                if not e in end_edges:
+                    other_vert = e.other_vert(v)  # 端の頂点の隣接頂点
+                    # 一度見た頂点はスキップ
+                    if other_vert in visited:
+                        continue
+                    visited.add(other_vert)
+                    # 端エッジリストから隣接頂点が含まれるかどうか確認
+                    for ee in end_edges:
+                        if other_vert in ee.verts:
+                            stack.append(other_vert)
+                            end_edge_verts.append(other_vert)
+        # 端っこの頂点から、反対の端の頂点までのリストを作成
+        edge_ring_verts = []
+        for v in end_edge_verts:
+            verts = [v]
+            stack.clear()
+            stack.append(v)
+            while stack:
+                v = stack.pop()
+                for e in v.link_edges:
+                    if e in adjacent_ring_edges:
+                        ov = e.other_vert(v)
+                        stack.append(ov)
+                        verts.append(ov)
+                        adjacent_ring_edges.remove(e)
+            edge_ring_verts.append(verts)
+        # 位置更新
+        for verts in edge_ring_verts:
+            start = verts[0].co.copy()
+            end = verts[-1].co.copy()
+            cnt = len(verts) - 1
+            # 中間の頂点を線形補完
+            for i in range(1, cnt):
+                linear = i / cnt
+                factor = 0.5 + (linear - 0.5) * (1 - self.bias)
+                verts[i].co = start.lerp(end, self.remap(linear, self.bias))
 
         bmesh.update_edit_mesh(obj.data)
         return {"FINISHED"}
 
-    def are_vertices_connected(self, v1, v2):
-        return any(e for e in v1.link_edges if v2 in e.verts)
+    def remap(self, linear, bias):
+        if linear == 0.5 or bias == 0.5:
+            return linear
+        # 偏差（中央からどれだけ離れているか）
+        deviation = linear - 0.5
+        # 吸着の強さ：bias < 0.5 で中央に、bias > 0.5 で端に吸着
+        factor = abs(bias - 0.5) * 2  # 0〜1の範囲
+        if bias < 0.5:
+            # 中央に近づける
+            return linear - deviation * factor
+        else:
+            # 中心から遠ざける
+            return linear + deviation * factor
 
 
 # --------------------------------------------------------------------------------
