@@ -495,6 +495,7 @@ class MPM_OT_Weight_ModalMonitor (bpy.types.Operator):
         for window in bpy.context.window_manager.windows:
             for area in window.screen.areas:
                 if area.type == "VIEW_3D":
+                    print("start")
                     MPM_OT_Weight_ModalMonitor.is_start = True
                     context.window_manager.modal_handler_add(self)
                     return {"RUNNING_MODAL"}

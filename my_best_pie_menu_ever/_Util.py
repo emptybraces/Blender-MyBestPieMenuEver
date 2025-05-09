@@ -271,6 +271,13 @@ def layout_for_mirror(layout):
     return row, sub
 
 
+def layout_split_row2(layout, factor1):
+    split = layout.row().split(factor=factor1, align=True)
+    c1 = split.row(align=True)
+    rest = split.row(align=True)
+    return c1, rest
+
+
 def reset_pose_bone_location(armature):
     if armature != None and armature.type == "ARMATURE":
         for b in armature.pose.bones:

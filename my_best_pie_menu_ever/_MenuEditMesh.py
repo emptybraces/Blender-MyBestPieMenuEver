@@ -62,73 +62,75 @@ def MenuPrimary(pie, context):
     cc = box.column(align=True)
     _Util.layout_prop(cc, overlay, "show_weight", isActive=overlay.show_overlays)
 
-    # 選択ボックス
+    # 選択
     box = c.box()
     box.label(text="Selection", icon="ZOOM_SELECTED")
-    cc = box.column(align=True)
-
-    rr = cc.row(align=True)
+    c = box.column(align=True)
+    rr = c.row(align=True)
     _Util.layout_operator(rr, "mesh.select_mirror").extend = False
     _Util.layout_operator(rr, "mesh.select_mirror", "", icon="ADD").extend = True
-
-    _Util.layout_operator(cc, "mesh.shortest_path_select").edge_mode = "SELECT"
-    op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
+    _Util.layout_operator(c, "mesh.shortest_path_select").edge_mode = "SELECT"
+    op = _Util.layout_operator(c, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
     op.type = "GREATER"
+    # 辺リングの拡張選択
+    _Util.layout_operator(c, MPM_OT_EditMesh_GrowEdgeRingSelection.bl_idname, icon="EDGESEL")
 
     # UVボックス
     box = c.box()
     box.label(text="UV", icon="UV")
-    cc = box.column(align=True)
-    rr = cc.row(align=True)
+    c = box.column(align=True)
+    rr = c.row(align=True)
     _Util.layout_operator(rr, "mesh.mark_seam").clear = False
     _Util.layout_operator(rr, "mesh.mark_seam", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(rr)
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
-    _Util.layout_operator(cc, "uv.unwrap")
+    _Util.layout_operator(c, "uv.unwrap")
 
     # Vertexメニュー
     c2 = r.column()
     box = c2.box()
     box.label(text="Vertex", icon="VERTEXSEL")
-    cc = box.column(align=True)
-    _Util.layout_operator(cc, MPM_OT_EditMesh_VertCreasePanel.bl_idname)
+    c = box.column(align=True)
+    rr = c.row(align=True)
+    _Util.layout_prop(rr, context.scene, "mpm_editmesh_vertcrease", "Crease", vert_crease_poll(context))
+    _Util.layout_prop(rr, context.scene, "mpm_editmesh_vertbevel", "Bevel", vert_crease_poll(context))
 
     # 非表示
-    rr = cc.row(align=True)
+    rr = c.row(align=True)
     _Util.layout_operator(rr, MPM_OT_EditMesh_HideVerts.bl_idname, "Hide", icon="HIDE_ON").mode = "Hide"
     _Util.layout_operator(rr, MPM_OT_EditMesh_HideVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Hide Other"
     _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "Show", icon="HIDE_OFF").mode = "Show"
     _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
     _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
     # 3Dカーソルミラー
-    rr = cc.row(align=True)
-    rr.label(text="MirrorBy3DCursor", icon="PIVOT_CURSOR")
-    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "X").axis = "x"
-    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
-    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
+    rr1, rr2 = _Util.layout_split_row2(c, 0.6)
+    rr1.label(text="3DCursor Mirror", icon="PIVOT_CURSOR")
+    _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "X").axis = "x"
+    _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
+    _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
 
     # Edgeメニュー
     box = c2.box()
     box.label(text="Edge", icon="EDGESEL")
     c = box.column(align=True)
-    rr = c.row(align=True)
 
+    # クリーズ
+    rr = c.row(align=True)
+    _Util.layout_prop(rr, context.scene, "mpm_editmesh_edgecrease", "Crease", edge_crease_poll(context))
+    _Util.layout_prop(rr, context.scene, "mpm_editmesh_edgebevel", "Bevel", edge_crease_poll(context))
     # シャープ
+    rr = c.row(align=True)
     _Util.layout_operator(rr, "mesh.mark_sharp").clear = False
     _Util.layout_operator(rr, "mesh.mark_sharp", "", icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(rr)
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", icon="REMOVE").is_clear = True
-    # クリーズ
-    _Util.layout_operator(c, MPM_OT_EditMesh_EdgeCreasePanel.bl_idname)
     # ボーンアーマチュア作成
     _Util.layout_operator(c, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
     _Util.layout_operator(c, MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
-    # 辺リングの拡張選択
-    _Util.layout_operator(c, MPM_OT_EditMesh_GrowEdgeRingSelection.bl_idname)
     # エッジループのセンタリング
     _Util.layout_operator(c, MPM_OT_EditMesh_CenteringEdgeLoop.bl_idname)
 
@@ -136,14 +138,14 @@ def MenuPrimary(pie, context):
     c = r.column()
     box = c.box()
     box.label(text="Vertex Group", icon="GROUP_VERTEX")
-    cc = box.column(align=True)
-    rr = cc.row(align=True)
+    c = box.column(align=True)
+    rr = c.row(align=True)
     _Util.layout_operator(rr, MPM_OT_VertexGroupSelectPanel.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupNewPanel.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupAdd.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupRemove.bl_idname)
-    MirrorVertexGroup(cc)
-    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    MirrorVertexGroup(c)
+    _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
     # Applyメニュー
     box = c.box()
@@ -455,65 +457,92 @@ class MPM_OT_EditMesh_MirrorSharp(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_EditMesh_VertCreasePanel(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_vert_crease_panel"
-    bl_label = "Vert Crease"
-    bl_options = {"REGISTER", "UNDO"}
-    crease_value: bpy.props.FloatProperty(
-        name="Crease",
-        description="Adjust the crease value of selected edges",
-        min=0.0,
-        max=1.0,
-        default=0.0,
-        step=0.1,
-        precision=2
-    )
-
-    @classmethod
-    def poll(self, context):
-        return _Util.has_selected_verts(context)
-
-    def execute(self, context):
-        mesh = context.object.data
-        bm = bmesh.from_edit_mesh(mesh)
-        crease_layer = bm.verts.layers.float.get("crease_vert", None)
-        if crease_layer is None:
-            crease_layer = bm.verts.layers.float.new("crease_vert")
-        for v in [v for v in bm.verts if v.select]:
-            v[crease_layer] = self.crease_value
-        bmesh.update_edit_mesh(context.object.data)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        g.force_cancel_piemenu_modal(context)
-        return context.window_manager.invoke_props_dialog(self)
+def vert_crease_poll(context):
+    return _Util.has_selected_verts(context)
 
 
-class MPM_OT_EditMesh_EdgeCreasePanel(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_edge_crease_panel"
-    bl_label = "Edge Crease"
-    bl_options = {"REGISTER", "UNDO"}
-    crease_value: bpy.props.FloatProperty(name="Crease", description="Adjust the crease value of selected edges",
-                                          min=0.0, max=1.0, default=0.0, step=0.1, precision=2)
+def edge_crease_poll(context):
+    return _Util.has_selected_edges(context)
 
-    @classmethod
-    def poll(self, context):
-        return _Util.has_selected_edges(context)
 
-    def execute(self, context):
-        mesh = context.object.data
-        bm = bmesh.from_edit_mesh(mesh)
-        crease_layer = bm.edges.layers.float.get("crease_edge", None)
-        if crease_layer is None:
-            crease_layer = bm.edges.layers.float.new("crease_edge")
-        for edge in [v for v in bm.edges if v.select]:
-            edge[crease_layer] = self.crease_value
-        bmesh.update_edit_mesh(context.object.data)
-        return {"FINISHED"}
+def vert_crease_get(self):
+    if not _Util.has_selected_verts(bpy.context):
+        return 0
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return get_layer_property(obj, bm, bm.verts.layers.float, "crease_vert")
 
-    def invoke(self, context, event):
-        g.force_cancel_piemenu_modal(context)
-        return context.window_manager.invoke_props_dialog(self)
+
+def vert_crease_set(self, value):
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return set_layer_property(obj, bm, bm.verts.layers.float, "crease_vert", value)
+
+
+def vert_bevel_weight_get(self):
+    if not _Util.has_selected_verts(bpy.context):
+        return 0
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return get_layer_property(obj, bm, bm.verts.layers.float, "bevel_weight_vert")
+
+
+def vert_bevel_weight_set(self, value):
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return set_layer_property(obj, bm, bm.verts.layers.float, "bevel_weight_vert", value)
+
+
+def edge_crease_get(self):
+    if not _Util.has_selected_edges(bpy.context):
+        return 0
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return get_layer_property(obj, bm, bm.edges.layers.float, "crease_edge")
+
+
+def edge_crease_set(self, value):
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return set_layer_property(obj, bm, bm.edges.layers.float, "crease_edge", value)
+
+
+def edge_bevel_weight_get(self):
+    if not _Util.has_selected_edges(bpy.context):
+        return 0
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return get_layer_property(obj, bm, bm.edges.layers.float, "bevel_weight_edge")
+
+
+def edge_bevel_weight_set(self, value):
+    obj = bpy.context.edit_object
+    bm = bmesh.from_edit_mesh(obj.data)
+    return set_layer_property(obj, bm, bm.edges.layers.float, "bevel_weight_edge", value)
+
+
+def get_layer_property(obj, bm, layer_correction, prop_name):
+    # print(bm.verts.layers.float.items())
+    item = layer_correction.get(prop_name, None)
+    if item is None:
+        item = layer_correction.new(prop_name)
+        return 0
+    targets = bm.verts if "vert" in prop_name else bm.edges
+    values = [v[item] for v in targets if v.select]
+    return sum(values) / len(values)
+
+
+def set_layer_property(obj, bm, layer_correction, prop_name, value):
+    item = layer_correction.get(prop_name, None)
+    if item is None:
+        item = layer_correction.new(prop_name)
+        return 0
+    targets = bm.verts if "vert" in prop_name else bm.edges
+    for v in [v for v in targets if v.select]:
+        v[item] = value
+    bmesh.update_edit_mesh(obj.data)
+
+
 # --------------------------------------------------------------------------------
 
 
@@ -1204,7 +1233,7 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return _Util.has_selected_edges(context)
+        return _Util.has_selected_edges(context) and context.tool_settings.mesh_select_mode[1]
 
     def execute(self, context):
         obj = context.edit_object
@@ -1307,8 +1336,6 @@ classes = (
     MPM_OT_VertexGroupSelectPanel,
     MPM_OT_VertexGroupAdd,
     MPM_OT_VertexGroupRemove,
-    MPM_OT_EditMesh_VertCreasePanel,
-    MPM_OT_EditMesh_EdgeCreasePanel,
     MPM_OT_EditMesh_HideVerts,
     MPM_OT_EditMesh_ShowVerts,
     MPM_OT_EditMesh_DuplicateMirror,
@@ -1322,6 +1349,10 @@ classes = (
 
 
 def register():
+    bpy.types.Scene.mpm_editmesh_vertcrease = bpy.props.FloatProperty(min=0, max=1, get=vert_crease_get, set=vert_crease_set)
+    bpy.types.Scene.mpm_editmesh_vertbevel = bpy.props.FloatProperty(min=0, max=1, get=vert_bevel_weight_get, set=vert_bevel_weight_set)
+    bpy.types.Scene.mpm_editmesh_edgecrease = bpy.props.FloatProperty(min=0, max=1, get=edge_crease_get, set=edge_crease_set)
+    bpy.types.Scene.mpm_editmesh_edgebevel = bpy.props.FloatProperty(min=0, max=1, get=edge_bevel_weight_get, set=edge_bevel_weight_set)
     _Util.register_classes(classes)
 
 
