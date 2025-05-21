@@ -48,7 +48,6 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
-        _UtilInput.init()
         g.force_cancel_piemenu_modal(context)
         return {"RUNNING_MODAL"}
 
@@ -56,15 +55,16 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mx = event.mouse_x
         self.my = event.mouse_y
+        _UtilInput.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W")
         if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
             self.on_mousewheel and self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
-        elif _UtilInput.is_pressed_keys(event, "MIDDLEMOUSE"):
+        elif _UtilInput.is_pressed_key("MIDDLEMOUSE"):
             self.on_middle_click and self.on_middle_click(context)
-        elif _UtilInput.is_pressed_keys(event, "LEFTMOUSE", "SPACE"):
+        elif _UtilInput.is_pressed_key("LEFTMOUSE", "SPACE"):
             return self.finished(context)
-        elif _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "ESC"):
+        elif _UtilInput.is_pressed_key("RIGHTMOUSE", "ESC"):
             return self.cancelled(context)
-        elif _UtilInput.is_pressed_keys(event, "W"):
+        elif _UtilInput.is_pressed_key("W"):
             ret = self.finished(context)
             bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
             return ret

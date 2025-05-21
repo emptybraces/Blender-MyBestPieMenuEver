@@ -1,9 +1,8 @@
-from . import _AddonPreferences
 if "bpy" in locals():
     import importlib
     importlib.reload(_Util)
     importlib.reload(_UtilInput)
-    # importlib.reload(_AddonPreferences)
+    importlib.reload(_AddonPreferences)
     importlib.reload(g)
 else:
     from . import _Util

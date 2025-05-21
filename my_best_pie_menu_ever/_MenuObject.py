@@ -2,11 +2,14 @@ if "bpy" in locals():
     import importlib
     from . import _MenuPose
     from . import _MenuWeightPaint
+    from . import _MenuEditMesh
     importlib.reload(_MenuPose)
     importlib.reload(_MenuWeightPaint)
+    importlib.reload(_MenuEditMesh)
     importlib.reload(_Util)
 from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
 from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
+from ._MenuEditMesh import MPM_OT_EditMesh_Ghost
 from . import _Util
 import bpy
 
@@ -28,6 +31,7 @@ def MenuPrimary(pie, context):
 
     MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED")
 
     # if imported
     c = r.column(align=True)
@@ -107,7 +111,6 @@ class MPM_OT_SwitchSelectionToolLasso(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.wm.tool_set_by_id(name="builtin.select_lasso")
         return {"FINISHED"}
-
 
 
 # --------------------------------------------------------------------------------

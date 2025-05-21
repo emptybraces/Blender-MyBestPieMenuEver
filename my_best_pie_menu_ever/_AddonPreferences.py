@@ -80,7 +80,6 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             r.prop(self, prop1)
             r.scale_x = 0.2
             r.prop(self, prop2)
-        global blends
         layout = self.layout
         layout.label(text="*Please Mouseover to read description.")
         c = layout.box().column(heading='Utility')

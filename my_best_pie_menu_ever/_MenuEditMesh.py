@@ -69,9 +69,9 @@ def MenuPrimary(pie, context):
     box.label(text="Selection", icon="ZOOM_SELECTED")
     c = box.column(align=True)
     rr = c.row(align=True)
-    _Util.layout_operator(rr, "mesh.select_mirror").extend = False
+    _Util.layout_operator(rr, "mesh.select_mirror", "Mirror").extend = False
     _Util.layout_operator(rr, "mesh.select_mirror", "", icon="ADD").extend = True
-    _Util.layout_operator(c, "mesh.shortest_path_select").edge_mode = "SELECT"
+    _Util.layout_operator(c, "mesh.shortest_path_select", "Shortest Path").edge_mode = "SELECT"
     op = _Util.layout_operator(c, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
     op.type = "GREATER"
@@ -112,8 +112,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "X").axis = "x"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
-    _Util.layout_operator(c, MPM_OT_EditMesh_FixedVertsModal.bl_idname)
-    _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname)
+    _Util.layout_operator(c, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname)
+    _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED")
 
     # Edgeメニュー
     box = c2.box()
@@ -942,7 +942,6 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.mouse_pos.y = event.mouse_y
         self.original_location = context.region_data.view_location.copy()
         self.original_rotation = context.region_data.view_rotation.copy()
-        _UtilInput.init()
         self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
@@ -1027,13 +1026,14 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mouse_pos.x = _Util.lerp(self.mouse_pos.x, event.mouse_x, 0.05)
         self.mouse_pos.y = _Util.lerp(self.mouse_pos.y, event.mouse_y, 0.05)
-        if _UtilInput.is_pressed_key(event, "X"):
+        _UtilInput.update(event, "X", "Y", "Z", "LEFTMOUSE", "RET", "RIGHTMOUSE", "ESC", "SPACE", "RET")
+        if _UtilInput.is_pressed_key("X"):
             self.dir = Vector((-1 if self.dir[0] == 1 else 1, 0, 0))
             return self.execute(context)
-        if _UtilInput.is_pressed_key(event, "Y"):
+        if _UtilInput.is_pressed_key("Y"):
             self.dir = Vector((0, -1 if self.dir[1] == 1 else 1, 0))
             return self.execute(context)
-        if _UtilInput.is_pressed_key(event, "Z"):
+        if _UtilInput.is_pressed_key("Z"):
             if event.alt:
                 context.space_data.shading.show_xray = not context.space_data.shading.show_xray
             else:
@@ -1045,9 +1045,9 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         elif event.type == "WHEELDOWNMOUSE":
             context.region_data.view_distance += 0.5
             return {"RUNNING_MODAL"}
-        if _UtilInput.is_pressed_keys(event, "LEFTMOUSE", "RET"):
+        if _UtilInput.is_pressed_key("LEFTMOUSE", "RET"):
             return self.cancel(context)
-        if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "ESC", "SPACE", "RET"):
+        if _UtilInput.is_pressed_key("RIGHTMOUSE", "ESC", "SPACE", "RET"):
             self.is_reverting = True
             self.start_time = time.time()
             return {"RUNNING_MODAL"}
@@ -1089,7 +1089,7 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
 
 class MPM_OT_EditMesh_GrowEdgeRingSelection(bpy.types.Operator):
     bl_idname = "mpm.editmesh_grow_edge_ring_selection"
-    bl_label = "Grow Edge Ring Selection"
+    bl_label = "Edge Ring Ex"
     bl_description = ""
     bl_options = {"REGISTER", "UNDO"}
     steps: bpy.props.IntProperty(name="Steps", default=1, min=1)
@@ -1333,9 +1333,9 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_EditMesh_FixedVertsModal(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_fixed_verts_modal"
-    bl_label = "Fixed Verts"
+class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_pin_selected_verts_modal"
+    bl_label = "Pin Selected"
     bl_description = ""
     attr_name = "mpm_tmp_vcolor"
 
@@ -1373,7 +1373,6 @@ class MPM_OT_EditMesh_FixedVertsModal(bpy.types.Operator):
                 v[attr] = (0, 0, 0, 1)
                 self.fixed_positions[v] = v.co.copy()
         bmesh.update_edit_mesh(self.obj_data)
-        _UtilInput.init()
         MPM_OT_EditMesh_FixedVertsModal_DrawHandler.setup(obj)
         context.window_manager.modal_handler_add(self)
         g.force_cancel_piemenu_modal(context)
@@ -1381,7 +1380,8 @@ class MPM_OT_EditMesh_FixedVertsModal(bpy.types.Operator):
 
     def modal(self, context, event):
         MPM_OT_EditMesh_FixedVertsModal_DrawHandler.reset_timer()
-        if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "ESC") or context.object.mode != "EDIT":
+        _UtilInput.update(event, "RIGHTMOUSE", "ESC")
+        if _UtilInput.is_pressed_key("RIGHTMOUSE", "ESC") or context.object.mode != "EDIT":
             return self.cancel(context)
         if event.type != "LEFTMOUSE" and event.type == "RET":
             return {"PASS_THROUGH"}
@@ -1492,19 +1492,44 @@ class MPM_OT_EditMesh_FixedVertsModal_DrawHandler:
 
 class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
     bl_idname = "mpm.editmesh_ghost"
-    bl_label = "Show Ghost"
-    bl_description = ""
+    bl_label = "Add Ghost of Selection"
+    bl_description = "Add a ghost of the current selection. Listed below the viewport — click 'X' to remove."
+    mx, my = 0.0, 0.0
+    is_modal_running = False
+    current_hover_idx, current_hover_type = -1, ""
+    modals = []
 
     @classmethod
     def poll(self, context):
-        return _Util.has_selected_verts(context)
+        if context.mode == "EDIT_MESH":
+            return _Util.has_selected_verts(context)
+        return context.mode == "OBJECT" and context.object.type == "MESH"
 
-    def execute(self, context):
-        ghosts.append(MPM_GhostModal.make_instance(context.edit_object))
-        return {"FINISHED"}
+    def invoke(self, context, event):
+        cls = MPM_OT_EditMesh_Ghost
+        if not cls.is_modal_running:
+            cls.is_modal_running = True
+            context.window_manager.modal_handler_add(self)
+        cls.modals.append(MPM_GhostModal.make_instance(context.active_object))
+        return {"RUNNING_MODAL"}
 
-
-ghosts = []  # すべてのモーダルオペレーターを格納するリスト
+    def modal(self, context, event):
+        cls = MPM_OT_EditMesh_Ghost
+        if not cls.modals:
+            cls.is_modal_running = False
+            return {"CANCELLED"}
+        context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
+        cls.mx = event.mouse_x
+        cls.my = event.mouse_y
+        _UtilInput.update(event, "LEFTMOUSE")
+        if 0 <= cls.current_hover_idx and _UtilInput.is_pressed_key("LEFTMOUSE"):
+            modal = cls.modals[cls.current_hover_idx]
+            if cls.current_hover_type == "depth_test":
+                modal.depth_test = "LESS_EQUAL" if modal.depth_test != "LESS_EQUAL" else "ALWAYS"
+            else:
+                modal.cancel()
+                cls.current_hover_idx = -1
+        return {"PASS_THROUGH"}
 
 
 class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
@@ -1516,6 +1541,7 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         self.batch_f = None
         self.handler3d = None
         self.handler2d = None
+        self.depth_test = "LESS_EQUAL"
         if MPM_GhostModal.shader is None:
             MPM_GhostModal.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
 
@@ -1531,11 +1557,22 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         bm.verts.ensure_lookup_table()
         bm.faces.ensure_lookup_table()
         bm.normal_update()
-        verts = [obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005) for v in bm.verts]
+        verts = []
         tris = []
+        vert_index_map = {}
+        for i, v in enumerate(bm.verts):
+            if bpy.context.mode == "OBJECT" or v.select:
+                verts.append(obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005))
+                vert_index_map[v] = i
         for tri in bm.calc_loop_triangles():
-            idxs = [loop.vert.index for loop in tri]
-            tris.append(idxs)
+            for loop in tri:
+                if bpy.context.mode == "OBJECT" or loop.face.select:
+                    try:
+                        idxs = [vert_index_map[loop.vert] for loop in tri]
+                        tris.append(idxs)
+                    except KeyError:
+                        # 選択された頂点以外が混ざっている三角形はスキップ
+                        pass
         bm.free()
         c.batch_v = batch_for_shader(cls.shader, "POINTS", {"pos": verts})
         # c.batch_e = batch_for_shader(cls.shader, "LINES", {"pos": verts}, indices=edges)
@@ -1543,6 +1580,7 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         c.handler3d = bpy.types.SpaceView3D.draw_handler_add(c.draw3d, (), "WINDOW", "POST_VIEW")  # POST_VIEWは3D用
         c.handler2d = bpy.types.SpaceView3D.draw_handler_add(c.draw2d, (), "WINDOW", "POST_PIXEL")  # POST_VIEWは3D用
         bpy.app.handlers.load_pre.append(c.on_loadpre)
+        return c
 
     def draw3d(self):
         shader = MPM_GhostModal.shader
@@ -1551,12 +1589,11 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
             return
         shader.bind()
         # 面
-        gpu.state.depth_test_set("LESS_EQUAL")
+        gpu.state.depth_test_set(self.depth_test)
         gpu.state.blend_set("ALPHA")
         shader.bind()
         shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
         self.batch_f.draw(shader)
-        gpu.state.blend_set("NONE")
         # 辺
         # cls.shader.uniform_float("color", (0.0, 0.0, 0.0, 1.0))
         # gpu.state.line_width_set(2.0)
@@ -1564,12 +1601,34 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         # 頂点
         gpu.state.point_size_set(4.0)
         shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))  # 赤
+        gpu.state.blend_set("NONE")
         self.batch_v.draw(shader)
 
     def draw2d(self):
-        x = bpy.context.area.x
-        y = bpy.context.area.y
-        _UtilBlf.draw_label(0, "Align view to edge normal side", 10, 10)
+        ghost_cls = MPM_OT_EditMesh_Ghost
+        if not self in ghost_cls.modals:
+            return
+        index = ghost_cls.modals.index(self)
+        if ghost_cls.current_hover_idx == index:
+            ghost_cls.current_hover_idx = -1
+            ghost_cls.current_hover_type = ""
+        # label
+        text = f"#{index+1}: Ghost "
+        w, h = _UtilBlf.draw_label_dimensions(0, text)
+        h *= 2
+        x, y = bpy.context.area.width * 0.8, h*2 + h * index
+        _UtilBlf.draw_label(0, text, x, y, "right")
+        # depth test button
+        x += 10
+        if _UtilBlf.draw_label_mousehover(0, self.depth_test, x, y, ghost_cls.mx, ghost_cls.my, ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "depth_test", align="left"):
+            ghost_cls.current_hover_idx = index
+            ghost_cls.current_hover_type = "depth_test"
+        # remove button
+        w, h = _UtilBlf.draw_label_dimensions(0, "LESS_EQUAL")
+        x += 10 + w
+        if _UtilBlf.draw_label_mousehover(0, "[X]", x, y, ghost_cls.mx, ghost_cls.my, ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "remove", align="left"):
+            ghost_cls.current_hover_idx = index
+            ghost_cls.current_hover_type = "remove"
 
     def cancel(self):
         # print("cancel")
@@ -1580,7 +1639,10 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         if self.handler2d:
             bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
         self.handler2d = None
-        bpy.app.handlers.load_pre.remove(self.on_loadpre)
+        if self.on_loadpre in bpy.app.handlers.load_pre:
+            bpy.app.handlers.load_pre.remove(self.on_loadpre)
+        if self in MPM_OT_EditMesh_Ghost.modals:
+            MPM_OT_EditMesh_Ghost.modals.remove(self)
 
     def on_loadpre(self, a, b):
         self.cancel()
@@ -1603,7 +1665,7 @@ classes = (
     MPM_OT_EditMesh_MirrorBy3DCursor,
     MPM_OT_EditMesh_GrowEdgeRingSelection,
     MPM_OT_EditMesh_CenteringEdgeLoop,
-    MPM_OT_EditMesh_FixedVertsModal,
+    MPM_OT_EditMesh_PinSelectedVertsModal,
     MPM_OT_EditMesh_Ghost,
 
 

@@ -76,11 +76,19 @@ def draw_variable_str(fid, text, x, y):
     blf.draw(fid, text)
 
 
+def draw_label_dimensions(fid, text):
+    blf.size(fid, FONT_SIZE_LABEL)  # dimensionsの前
+    return blf.dimensions(0, text)
+
+
 def draw_label(fid, text, x, y, align="left"):
     # これより上の関数はマウス位置が渡される前提の処理、修正する機会がもしあれば以下に統一する
     blf.size(fid, FONT_SIZE_LABEL)  # dimensionsの前
+    w, h = blf.dimensions(fid, text)
     if align == "center":
-        x = x - blf.dimensions(fid, text)[0] / 2
+        x = x - w / 2
+    elif align == "right":
+        x = x - w
     blf.enable(fid, blf.SHADOW)
     blf.shadow(fid, *SHADOW)
     blf.shadow_offset(fid, *SHADOW_OFS)
@@ -88,6 +96,7 @@ def draw_label(fid, text, x, y, align="left"):
     blf.color(fid, *COLOR_LABEL)
     blf.draw(fid, text)
     blf.disable(fid, blf.SHADOW)
+    return w, h
 
 
 def draw_key_info(fid, field, desc, x, y):
@@ -105,17 +114,22 @@ def draw_key_info(fid, field, desc, x, y):
     blf.disable(fid, blf.SHADOW)
 
 
-def draw_label_mousehover(fid, text, x, y, mx, my, width, height, active=False, hover_scale=1.0, align="left"):
+def draw_label_mousehover(fid, text, x, y, mx, my, active=False, hover_scale=1.0, align="left"):
     # エリア空間に変換
     mx = mx - bpy.context.area.x
     my = my - bpy.context.area.y
-    is_in = x < mx < x + width and y < my < y + height
-    blf.size(fid, FONT_SIZE_LABEL * (hover_scale if is_in else 1))  # dimensionsの前
+    blf.size(fid, FONT_SIZE_LABEL)  # dimensionsの前
+    w, h = blf.dimensions(fid, text)
+    if align == "center":
+        x = x - w / 2
+    elif align == "right":
+        x = x - w
+    is_in = x < mx < x + w and y < my < y + h
+    if is_in and hover_scale != 1.0:
+        blf.size(fid, FONT_SIZE_LABEL * hover_scale)  # dimensionsの前
     blf.enable(fid, blf.SHADOW)
     blf.shadow(fid, *SHADOW)
     blf.shadow_offset(fid, *SHADOW_OFS)
-    if align == "center":
-        x = (x + width/2) - (blf.dimensions(fid, text)[0]/2)
     blf.position(fid, x, y, 0)
     blf.color(fid, *COLOR_HIGHLIGHT if is_in else COLOR_HIGHLIGHT_ACTIVE if active else COLOR_LABEL)
     blf.draw(fid, text)
