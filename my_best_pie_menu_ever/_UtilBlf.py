@@ -114,12 +114,14 @@ def draw_key_info(fid, field, desc, x, y):
     blf.disable(fid, blf.SHADOW)
 
 
-def draw_label_mousehover(fid, text, x, y, mx, my, active=False, hover_scale=1.0, align="left"):
+def draw_label_mousehover(fid, text, x, y, mx, my, w=0, h=0, active=False, hover_scale=1.0, align="left"):
     # エリア空間に変換
     mx = mx - bpy.context.area.x
     my = my - bpy.context.area.y
     blf.size(fid, FONT_SIZE_LABEL)  # dimensionsの前
-    w, h = blf.dimensions(fid, text)
+    ww, hh = blf.dimensions(fid, text)
+    w = w if 0 < w else ww
+    h = h if 0 < h else hh
     if align == "center":
         x = x - w / 2
     elif align == "right":

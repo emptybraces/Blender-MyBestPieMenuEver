@@ -4,17 +4,11 @@ if "bpy" in locals():
     importlib.reload(_UtilInput)
     importlib.reload(_UtilBlf)
     importlib.reload(g)
-    from . import _MenuObject
-    from . import _MenuWeightPaint
-    importlib.reload(_MenuObject)
-    importlib.reload(_MenuWeightPaint)
 else:
     from . import _Util
     from . import _UtilInput
     from . import _UtilBlf
     from . import g
-    from ._MenuObject import LayoutSwitchSelectionOperator
-    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
 import bpy
 import bmesh
 from mathutils import Vector, Matrix
@@ -31,6 +25,7 @@ def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text='Edit Mesh Primary')
     r = box.row(align=True)
+    from ._MenuObject import LayoutSwitchSelectionOperator
     LayoutSwitchSelectionOperator(context, r)
 
     # ヘッダー
@@ -148,6 +143,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr, MPM_OT_VertexGroupNewPanel.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupAdd.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupRemove.bl_idname)
+    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
     MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
 
@@ -1560,10 +1556,12 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         verts = []
         tris = []
         vert_index_map = {}
-        for i, v in enumerate(bm.verts):
+        cnt = 0
+        for v in bm.verts:
             if bpy.context.mode == "OBJECT" or v.select:
                 verts.append(obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005))
-                vert_index_map[v] = i
+                vert_index_map[v] = cnt
+                cnt += 1
         for tri in bm.calc_loop_triangles():
             for loop in tri:
                 if bpy.context.mode == "OBJECT" or loop.face.select:
@@ -1620,13 +1618,13 @@ class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
         _UtilBlf.draw_label(0, text, x, y, "right")
         # depth test button
         x += 10
-        if _UtilBlf.draw_label_mousehover(0, self.depth_test, x, y, ghost_cls.mx, ghost_cls.my, ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "depth_test", align="left"):
+        if _UtilBlf.draw_label_mousehover(0, self.depth_test, x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "depth_test", align="left"):
             ghost_cls.current_hover_idx = index
             ghost_cls.current_hover_type = "depth_test"
         # remove button
         w, h = _UtilBlf.draw_label_dimensions(0, "LESS_EQUAL")
         x += 10 + w
-        if _UtilBlf.draw_label_mousehover(0, "[X]", x, y, ghost_cls.mx, ghost_cls.my, ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "remove", align="left"):
+        if _UtilBlf.draw_label_mousehover(0, "[X]", x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "remove", align="left"):
             ghost_cls.current_hover_idx = index
             ghost_cls.current_hover_type = "remove"
 
@@ -1667,8 +1665,6 @@ classes = (
     MPM_OT_EditMesh_CenteringEdgeLoop,
     MPM_OT_EditMesh_PinSelectedVertsModal,
     MPM_OT_EditMesh_Ghost,
-
-
 )
 
 

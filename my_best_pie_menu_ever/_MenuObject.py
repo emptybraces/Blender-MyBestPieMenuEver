@@ -1,16 +1,8 @@
 if "bpy" in locals():
     import importlib
-    from . import _MenuPose
-    from . import _MenuWeightPaint
-    from . import _MenuEditMesh
-    importlib.reload(_MenuPose)
-    importlib.reload(_MenuWeightPaint)
-    importlib.reload(_MenuEditMesh)
     importlib.reload(_Util)
-from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
-from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
-from ._MenuEditMesh import MPM_OT_EditMesh_Ghost
-from . import _Util
+else:
+    from . import _Util
 import bpy
 
 # --------------------------------------------------------------------------------
@@ -29,8 +21,10 @@ def MenuPrimary(pie, context):
     r = box.row()
     c = r.column(align=True)
 
+    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
     MirrorVertexGroup(c)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    from ._MenuEditMesh import MPM_OT_EditMesh_Ghost
     _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED")
 
     # if imported
@@ -41,6 +35,7 @@ def MenuPrimary(pie, context):
         box.label(text="3rd Party Tool")
         _Util.layout_operator(box, "wiggle.reset", "Wiggle2: ResetPhysics")
     if any("auto_rig_pro" in i for i in enabled_addons):
+        from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
         _Util.layout_operator(box, MPM_OT_Pose_ARP_SnapIKFK.bl_idname)
 
 # --------------------------------------------------------------------------------
