@@ -20,6 +20,8 @@ import bmesh
 from mathutils import Vector, Matrix
 import time
 import math
+import gpu
+from gpu_extras.batch import batch_for_shader
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -88,7 +90,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", icon="REMOVE").is_clear = True
     _Util.layout_operator(c, "uv.unwrap")
 
-    # Vertexメニュー
+    # 頂点メニュー
     c2 = r.column()
     box = c2.box()
     box.label(text="Vertex", icon="VERTEXSEL")
@@ -110,6 +112,8 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "X").axis = "x"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
+    _Util.layout_operator(c, MPM_OT_EditMesh_FixedVertsModal.bl_idname)
+    _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname)
 
     # Edgeメニュー
     box = c2.box()
@@ -1326,6 +1330,260 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
         else:
             # 中心から遠ざける
             return linear + deviation * factor
+# --------------------------------------------------------------------------------
+
+
+class MPM_OT_EditMesh_FixedVertsModal(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_fixed_verts_modal"
+    bl_label = "Fixed Verts"
+    bl_description = ""
+    attr_name = "mpm_tmp_vcolor"
+
+    @classmethod
+    def poll(self, context):
+        return _Util.has_selected_verts(context)
+
+    def invoke(self, context, event):
+        self.cancel(context)
+        # 頂点カラー表示
+        view = context.space_data
+        shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
+        shading.color_type = "VERTEX"
+
+        obj = context.edit_object
+        self.fixed_positions = {}
+        self.obj_data = obj.data
+        # self.bmに入れないとbm.vertの参照がNoneになる
+        self.bm = bmesh.from_edit_mesh(self.obj_data)
+        self.bm.verts.ensure_lookup_table()
+        self.bm.edges.ensure_lookup_table()
+        color_layers = self.bm.verts.layers.color
+        if self.attr_name in color_layers:
+            color_layers.remove(color_layers[self.attr_name])
+        attr = color_layers.new(self.attr_name)
+        # アクティブ化
+        for i, a in enumerate(obj.data.color_attributes):
+            if a.name == self.attr_name:
+                obj.data.color_attributes.active_color_index = i
+                break
+        for v in self.bm.verts:
+            if v.select:
+                v[attr] = (1, 1, 1, 1)
+            else:
+                v[attr] = (0, 0, 0, 1)
+                self.fixed_positions[v] = v.co.copy()
+        bmesh.update_edit_mesh(self.obj_data)
+        _UtilInput.init()
+        MPM_OT_EditMesh_FixedVertsModal_DrawHandler.setup(obj)
+        context.window_manager.modal_handler_add(self)
+        g.force_cancel_piemenu_modal(context)
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context, event):
+        MPM_OT_EditMesh_FixedVertsModal_DrawHandler.reset_timer()
+        if _UtilInput.is_pressed_keys(event, "RIGHTMOUSE", "ESC") or context.object.mode != "EDIT":
+            return self.cancel(context)
+        if event.type != "LEFTMOUSE" and event.type == "RET":
+            return {"PASS_THROUGH"}
+        try:
+            for v, pos in self.fixed_positions.items():
+                v.co = pos
+            bmesh.update_edit_mesh(self.obj_data)
+        except Exception as e:
+            # print(e)
+            self.bm = bmesh.from_edit_mesh(self.obj_data)
+            self.bm.verts.ensure_lookup_table()
+            self.bm.edges.ensure_lookup_table()
+            self.fixed_positions.clear()
+            attr = self.bm.verts.layers.color[self.attr_name]
+            for v in self.bm.verts:
+                if 0 == v[attr][0]:
+                    self.fixed_positions[v] = v.co.copy()
+            if 0 == len(self.fixed_positions):
+                return self.cancel(context)
+        return {"PASS_THROUGH"}
+
+    def cancel(self, context):
+        # print("cancelld")
+        MPM_OT_EditMesh_FixedVertsModal_DrawHandler.cancel()
+        context.area.tag_redraw()
+        self.bm = None
+        self.obj_data = None
+        return {"CANCELLED"}
+
+
+class MPM_OT_EditMesh_FixedVertsModal_DrawHandler:
+    batch_v = None
+    batch_e = None
+    batch_f = None
+    shader = None
+    handler = None
+    interrupt = False
+    count = 0.0
+
+    @classmethod
+    def setup(cls, obj):
+        cls.count = 0
+        cls.interrupt = False
+        bpy.app.timers.register(cls._monitor)
+        if cls.shader is None:
+            cls.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+        # 常に編集モードでの編集後のメッシュ情報が欲しいため、一時メッシュを取得する
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        obj_eval = obj.evaluated_get(depsgraph)
+        bm = bmesh.new()
+        bm.from_mesh(obj_eval.to_mesh())
+        obj_eval.to_mesh_clear()  # しないとメモリリークする
+        bm.verts.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
+        bm.normal_update()
+        verts = [obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005) for v in bm.verts]
+        tris = []
+        for tri in bm.calc_loop_triangles():
+            idxs = [loop.vert.index for loop in tri]
+            tris.append(idxs)
+        bm.free()
+        cls.batch_v = batch_for_shader(cls.shader, "POINTS", {"pos": verts})
+        # cls.batch_e = batch_for_shader(cls.shader, "LINES", {"pos": verts}, indices=edges)
+        cls.batch_f = batch_for_shader(cls.shader, "TRIS", {"pos": verts}, indices=tris)
+        cls.handler = bpy.types.SpaceView3D.draw_handler_add(cls.draw, (), "WINDOW", "POST_VIEW")  # POST_VIEWは3D用
+
+    @classmethod
+    def draw(cls):
+        cls.shader.bind()
+        # 面
+        gpu.state.depth_test_set("LESS_EQUAL")
+        gpu.state.blend_set("ALPHA")
+        cls.shader.bind()
+        cls.shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
+        cls.batch_f.draw(cls.shader)
+        gpu.state.blend_set("NONE")
+        # 辺
+        # cls.shader.uniform_float("color", (0.0, 0.0, 0.0, 1.0))
+        # gpu.state.line_width_set(2.0)
+        # cls.batch_e.draw(cls.shader)
+        # 頂点
+        gpu.state.point_size_set(4.0)
+        cls.shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))  # 赤
+        cls.batch_v.draw(cls.shader)
+
+    @classmethod
+    def reset_timer(cls):
+        cls.count = 0
+
+    @classmethod
+    def cancel(cls):
+        cls.interrupt = True
+        if cls.handler:
+            bpy.types.SpaceView3D.draw_handler_remove(cls.handler, "WINDOW")
+        cls.handler = None
+
+    @classmethod
+    def _monitor(cls):
+        if cls.interrupt:
+            return None
+        cls.count += 0.1
+        # print(cls.count)
+        if 60 < cls.count:
+            cls.cancel()
+            return None  # タイマー終了
+        return 0.1
+
+
+class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_ghost"
+    bl_label = "Show Ghost"
+    bl_description = ""
+
+    @classmethod
+    def poll(self, context):
+        return _Util.has_selected_verts(context)
+
+    def execute(self, context):
+        ghosts.append(MPM_GhostModal.make_instance(context.edit_object))
+        return {"FINISHED"}
+
+
+ghosts = []  # すべてのモーダルオペレーターを格納するリスト
+
+
+class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
+    shader = None
+
+    def __init__(self):
+        self.batch_v = None
+        self.batch_e = None
+        self.batch_f = None
+        self.handler3d = None
+        self.handler2d = None
+        if MPM_GhostModal.shader is None:
+            MPM_GhostModal.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+
+    @classmethod
+    def make_instance(cls, obj):
+        c = cls()
+        # 常に編集モードでの編集後のメッシュ情報が欲しいため、一時メッシュを取得する
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        obj_eval = obj.evaluated_get(depsgraph)
+        bm = bmesh.new()
+        bm.from_mesh(obj_eval.to_mesh())
+        obj_eval.to_mesh_clear()  # しないとメモリリークする
+        bm.verts.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
+        bm.normal_update()
+        verts = [obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005) for v in bm.verts]
+        tris = []
+        for tri in bm.calc_loop_triangles():
+            idxs = [loop.vert.index for loop in tri]
+            tris.append(idxs)
+        bm.free()
+        c.batch_v = batch_for_shader(cls.shader, "POINTS", {"pos": verts})
+        # c.batch_e = batch_for_shader(cls.shader, "LINES", {"pos": verts}, indices=edges)
+        c.batch_f = batch_for_shader(cls.shader, "TRIS", {"pos": verts}, indices=tris)
+        c.handler3d = bpy.types.SpaceView3D.draw_handler_add(c.draw3d, (), "WINDOW", "POST_VIEW")  # POST_VIEWは3D用
+        c.handler2d = bpy.types.SpaceView3D.draw_handler_add(c.draw2d, (), "WINDOW", "POST_PIXEL")  # POST_VIEWは3D用
+        bpy.app.handlers.load_pre.append(c.on_loadpre)
+
+    def draw3d(self):
+        shader = MPM_GhostModal.shader
+        if not shader:
+            self.cancel()
+            return
+        shader.bind()
+        # 面
+        gpu.state.depth_test_set("LESS_EQUAL")
+        gpu.state.blend_set("ALPHA")
+        shader.bind()
+        shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
+        self.batch_f.draw(shader)
+        gpu.state.blend_set("NONE")
+        # 辺
+        # cls.shader.uniform_float("color", (0.0, 0.0, 0.0, 1.0))
+        # gpu.state.line_width_set(2.0)
+        # cls.batch_e.draw(cls.shader)
+        # 頂点
+        gpu.state.point_size_set(4.0)
+        shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))  # 赤
+        self.batch_v.draw(shader)
+
+    def draw2d(self):
+        x = bpy.context.area.x
+        y = bpy.context.area.y
+        _UtilBlf.draw_label(0, "Align view to edge normal side", 10, 10)
+
+    def cancel(self):
+        # print("cancel")
+        super().cancel()
+        if self.handler3d:
+            bpy.types.SpaceView3D.draw_handler_remove(self.handler3d, "WINDOW")
+        self.handler3d = None
+        if self.handler2d:
+            bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
+        self.handler2d = None
+        bpy.app.handlers.load_pre.remove(self.on_loadpre)
+
+    def on_loadpre(self, a, b):
+        self.cancel()
 
 
 # --------------------------------------------------------------------------------
@@ -1345,6 +1603,10 @@ classes = (
     MPM_OT_EditMesh_MirrorBy3DCursor,
     MPM_OT_EditMesh_GrowEdgeRingSelection,
     MPM_OT_EditMesh_CenteringEdgeLoop,
+    MPM_OT_EditMesh_FixedVertsModal,
+    MPM_OT_EditMesh_Ghost,
+
+
 )
 
 

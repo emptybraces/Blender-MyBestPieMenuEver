@@ -177,7 +177,30 @@ class MPM_OT_CallPanel(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class MPM_OT_ModalMonitor:
+    def __init__(self):
+        self.interrupt = False
+        self.count = 0.0
+        bpy.app.timers.register(self._monitor)
+
+    def reset_timer(self):
+        self.count = 0
+
+    def _monitor(self):
+        if self.interrupt:
+            return None
+        self.count += 0.1
+        # print(self.count)
+        if 60 < self.count:
+            self.cancel()
+            return None  # 終了
+        return 0.1
+
+    def cancel(self):
+        self.interrupt = True
+
 # --------------------------------------------------------------------------------
+
 
 def selected_objects():
     objs = set(bpy.context.selected_objects)
