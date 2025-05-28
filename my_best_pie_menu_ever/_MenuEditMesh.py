@@ -108,7 +108,9 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
     _Util.layout_operator(c, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname)
-    _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED")
+    rr = c.row(align=True)
+    _Util.layout_operator(rr, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED").with_hide = False
+    _Util.layout_operator(rr, MPM_OT_EditMesh_Ghost.bl_idname, "", icon="HIDE_ON").with_hide = True
 
     # Edgeメニュー
     box = c2.box()
@@ -342,7 +344,7 @@ class MPM_OT_EditMesh_HideVerts(bpy.types.Operator):
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     bl_description = """Hides the selected vertex.
-Option1: Hides all vertices except the selected."""
+Option1: Invert."""
     mode: bpy.props.EnumProperty(name="Mode", items=[("Hide", "Hide", ""), ("Hide Other", "Hide Other", "")])
 
     @classmethod
@@ -361,8 +363,8 @@ class MPM_OT_EditMesh_ShowVerts(bpy.types.Operator):
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
     bl_description = """Show the hide vertices.
-Option1: Shown vertices are selected.
-Option2: Select only the shown vertices."""
+Option1: Selection will be expanded to include the shown vertices.
+Option2: Selection will be refreshed to match the shown vertices."""
     mode: bpy.props.EnumProperty(name="Mode", items=[("Show", "Show", ""), ("Show Only", "Show Only", ""), ("Show Selected", "Show Selected", "")])
 
     @classmethod
@@ -1334,13 +1336,14 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
     bl_label = "Pin Selected"
     bl_description = ""
     attr_name = "mpm_tmp_vcolor"
+    draw_modal = None
+    mx, my = 0.0, 0.0
 
     @classmethod
     def poll(self, context):
-        return _Util.has_selected_verts(context)
+        return MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal == None and _Util.has_selected_verts(context)
 
     def invoke(self, context, event):
-        self.cancel(context)
         # 頂点カラー表示
         view = context.space_data
         shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
@@ -1349,7 +1352,7 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         obj = context.edit_object
         self.fixed_positions = {}
         self.obj_data = obj.data
-        # self.bmに入れないとbm.vertの参照がNoneになる
+        # self.bmに入れないと後でbm.vertの参照がNoneになる
         self.bm = bmesh.from_edit_mesh(self.obj_data)
         self.bm.verts.ensure_lookup_table()
         self.bm.edges.ensure_lookup_table()
@@ -1365,22 +1368,27 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         for v in self.bm.verts:
             if v.select:
                 v[attr] = (1, 1, 1, 1)
+                self.fixed_positions[v] = v.co.copy()
             else:
                 v[attr] = (0, 0, 0, 1)
-                self.fixed_positions[v] = v.co.copy()
         bmesh.update_edit_mesh(self.obj_data)
-        MPM_OT_EditMesh_FixedVertsModal_DrawHandler.setup(obj)
         context.window_manager.modal_handler_add(self)
         g.force_cancel_piemenu_modal(context)
+        MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = MPM_OT_EditMesh_PinSelectedVertsModal.DrawModal()
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        MPM_OT_EditMesh_FixedVertsModal_DrawHandler.reset_timer()
-        _UtilInput.update(event, "RIGHTMOUSE", "ESC")
-        if _UtilInput.is_pressed_key("RIGHTMOUSE", "ESC") or context.object.mode != "EDIT":
+        cls = MPM_OT_EditMesh_PinSelectedVertsModal
+        cls.mx = event.mouse_x
+        cls.my = event.mouse_y
+        context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
+        _UtilInput.update(event, "LEFTMOUSE", "ESC")
+        if context.object.mode != "EDIT":  # モード変更でキャンセル
             return self.cancel(context)
-        if event.type != "LEFTMOUSE" and event.type == "RET":
-            return {"PASS_THROUGH"}
+        if cls.draw_modal.is_hover_cancel and _UtilInput.is_pressed_key("LEFTMOUSE"):
+            return self.cancel(context)
+        # if event.type != "LEFTMOUSE" and event.type == "RET":
+        #     return {"PASS_THROUGH"}
         try:
             for v, pos in self.fixed_positions.items():
                 v.co = pos
@@ -1393,106 +1401,51 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
             self.fixed_positions.clear()
             attr = self.bm.verts.layers.color[self.attr_name]
             for v in self.bm.verts:
-                if 0 == v[attr][0]:
+                if 1 == v[attr][0]:
                     self.fixed_positions[v] = v.co.copy()
             if 0 == len(self.fixed_positions):
                 return self.cancel(context)
         return {"PASS_THROUGH"}
 
     def cancel(self, context):
-        # print("cancelld")
-        MPM_OT_EditMesh_FixedVertsModal_DrawHandler.cancel()
         context.area.tag_redraw()
         self.bm = None
         self.obj_data = None
+        MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = None
         return {"CANCELLED"}
 
+    class DrawModal(_Util.MPM_OT_ModalMonitor):
+        def __init__(self):
+            self.handler2d = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")
+            self.is_hover_cancel = False
+            g.space_view_command_display_stack_sety("pin verts")
 
-class MPM_OT_EditMesh_FixedVertsModal_DrawHandler:
-    batch_v = None
-    batch_e = None
-    batch_f = None
-    shader = None
-    handler = None
-    interrupt = False
-    count = 0.0
+        def draw2d(self):
+            cls = MPM_OT_EditMesh_PinSelectedVertsModal
+            if cls.draw_modal == None:
+                self.cancel()
+                return
+            # label
+            x, y = g.space_view_command_display_begin_pos("pin verts")
+            _UtilBlf.draw_label(0, "Pin Selected Verts: ", x, y, "right")
+            self.is_hover_cancel = _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Cancelling pin verts.",
+                                                                  x, y, cls.mx, cls.my, active=self.is_hover_cancel, align="left")
 
-    @classmethod
-    def setup(cls, obj):
-        cls.count = 0
-        cls.interrupt = False
-        bpy.app.timers.register(cls._monitor)
-        if cls.shader is None:
-            cls.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-        # 常に編集モードでの編集後のメッシュ情報が欲しいため、一時メッシュを取得する
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        obj_eval = obj.evaluated_get(depsgraph)
-        bm = bmesh.new()
-        bm.from_mesh(obj_eval.to_mesh())
-        obj_eval.to_mesh_clear()  # しないとメモリリークする
-        bm.verts.ensure_lookup_table()
-        bm.faces.ensure_lookup_table()
-        bm.normal_update()
-        verts = [obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005) for v in bm.verts]
-        tris = []
-        for tri in bm.calc_loop_triangles():
-            idxs = [loop.vert.index for loop in tri]
-            tris.append(idxs)
-        bm.free()
-        cls.batch_v = batch_for_shader(cls.shader, "POINTS", {"pos": verts})
-        # cls.batch_e = batch_for_shader(cls.shader, "LINES", {"pos": verts}, indices=edges)
-        cls.batch_f = batch_for_shader(cls.shader, "TRIS", {"pos": verts}, indices=tris)
-        cls.handler = bpy.types.SpaceView3D.draw_handler_add(cls.draw, (), "WINDOW", "POST_VIEW")  # POST_VIEWは3D用
-
-    @classmethod
-    def draw(cls):
-        cls.shader.bind()
-        # 面
-        gpu.state.depth_test_set("LESS_EQUAL")
-        gpu.state.blend_set("ALPHA")
-        cls.shader.bind()
-        cls.shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
-        cls.batch_f.draw(cls.shader)
-        gpu.state.blend_set("NONE")
-        # 辺
-        # cls.shader.uniform_float("color", (0.0, 0.0, 0.0, 1.0))
-        # gpu.state.line_width_set(2.0)
-        # cls.batch_e.draw(cls.shader)
-        # 頂点
-        gpu.state.point_size_set(4.0)
-        cls.shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))  # 赤
-        cls.batch_v.draw(cls.shader)
-
-    @classmethod
-    def reset_timer(cls):
-        cls.count = 0
-
-    @classmethod
-    def cancel(cls):
-        cls.interrupt = True
-        if cls.handler:
-            bpy.types.SpaceView3D.draw_handler_remove(cls.handler, "WINDOW")
-        cls.handler = None
-
-    @classmethod
-    def _monitor(cls):
-        if cls.interrupt:
-            return None
-        cls.count += 0.1
-        # print(cls.count)
-        if 60 < cls.count:
-            cls.cancel()
-            return None  # タイマー終了
-        return 0.1
+        def cancel(self):
+            super().cancel()
+            if self.handler2d:
+                bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
+            self.handler2d = None
+            g.space_view_command_display_stack_remove("pin verts")
 
 
 class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
     bl_idname = "mpm.editmesh_ghost"
     bl_label = "Add Ghost of Selection"
     bl_description = "Add a ghost of the current selection. Listed below the viewport — click 'X' to remove."
+    with_hide:  bpy.props.BoolProperty()
     mx, my = 0.0, 0.0
-    is_modal_running = False
-    current_hover_idx, current_hover_type = -1, ""
+    current_hover_idx, current_focus_type = -1, ""
     modals = []
 
     @classmethod
@@ -1503,147 +1456,182 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
 
     def invoke(self, context, event):
         cls = MPM_OT_EditMesh_Ghost
-        if not cls.is_modal_running:
-            cls.is_modal_running = True
+        if not cls.modals:
             context.window_manager.modal_handler_add(self)
-        cls.modals.append(MPM_GhostModal.make_instance(context.active_object))
+        cls.modals.append(MPM_OT_EditMesh_Ghost.DrawModal.make_instance(context.active_object))
+        if self.with_hide:
+            bpy.ops.mesh.hide(unselected=False)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
+        # このモーダルは最後のDrawModalまで生存
         cls = MPM_OT_EditMesh_Ghost
         if not cls.modals:
-            cls.is_modal_running = False
+            g.space_view_command_display_stack_remove("ghost")
             return {"CANCELLED"}
+        g.space_view_command_display_stack_sety("ghost", len(self.modals) * (_UtilBlf.LABEL_SIZE_Y * 2))
         context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
         cls.mx = event.mouse_x
         cls.my = event.mouse_y
-        _UtilInput.update(event, "LEFTMOUSE")
-        if 0 <= cls.current_hover_idx and _UtilInput.is_pressed_key("LEFTMOUSE"):
+        _UtilInput.update(event, "LEFTMOUSE", "RIGHTMOUSE")
+        if 0 <= cls.current_hover_idx:
             modal = cls.modals[cls.current_hover_idx]
-            if cls.current_hover_type == "depth_test":
+            if cls.current_focus_type == "depth_test" and _UtilInput.is_pressed_key("LEFTMOUSE"):
                 modal.depth_test = "LESS_EQUAL" if modal.depth_test != "LESS_EQUAL" else "ALWAYS"
-            else:
+                return {"RUNNING_MODAL"}
+            elif cls.current_focus_type == "remove" and _UtilInput.is_pressed_key("LEFTMOUSE"):
                 modal.cancel()
                 cls.current_hover_idx = -1
+                if event.shift:
+                    bpy.ops.mesh.reveal(select=False)
+                return {"RUNNING_MODAL"}
+            elif cls.current_focus_type == "extrude":
+                if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
+                    value = 0.05 if event.shift else 0.01
+                    modal.extrude_offset += value if event.type == "WHEELUPMOUSE" else -value
+                    modal.make_batch()
+                    return {"RUNNING_MODAL"}
+                elif _UtilInput.is_pressed_key("RIGHTMOUSE"):
+                    modal.extrude_offset = 0
+                    modal.make_batch()
+                    return {"RUNNING_MODAL"}
         return {"PASS_THROUGH"}
 
+    class DrawModal(_Util.MPM_OT_ModalMonitor):
+        shader = None
 
-class MPM_GhostModal(_Util.MPM_OT_ModalMonitor):
-    shader = None
+        def __init__(self):
+            self.verts = []
+            self.edges = []
+            self.normals = []
+            self.tris = []
+            self.obj = None
+            self.extrude_offset = 0.0001
+            self.batch_v = None
+            self.batch_e = None
+            self.batch_f = None
+            self.handler3d = None
+            self.handler2d = None
+            self.depth_test = "LESS_EQUAL"
+            if MPM_OT_EditMesh_Ghost.DrawModal.shader is None:
+                MPM_OT_EditMesh_Ghost.DrawModal.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
 
-    def __init__(self):
-        self.batch_v = None
-        self.batch_e = None
-        self.batch_f = None
-        self.handler3d = None
-        self.handler2d = None
-        self.depth_test = "LESS_EQUAL"
-        if MPM_GhostModal.shader is None:
-            MPM_GhostModal.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+        @classmethod
+        def make_instance(cls, obj):
+            c = cls()
+            c.Obj = obj
+            # 常に編集モードでの編集後のメッシュ情報が欲しいため、一時メッシュを取得する
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            obj_eval = obj.evaluated_get(depsgraph)
+            bm = bmesh.new()
+            bm.from_mesh(obj_eval.to_mesh())
+            obj_eval.to_mesh_clear()  # しないとメモリリークする
+            bm.verts.ensure_lookup_table()
+            bm.faces.ensure_lookup_table()
+            bm.normal_update()
+            vert_index_map = {}
+            cnt = 0
+            for v in bm.verts:
+                if bpy.context.mode == "OBJECT" or v.select:
+                    c.verts.append(obj.matrix_world @ v.co)
+                    c.normals.append(obj.matrix_world @ v.normal)
+                    vert_index_map[v] = cnt
+                    cnt += 1
+            for e in bm.edges:
+                v1, v2 = e.verts
+                if v1 in vert_index_map and v2 in vert_index_map:
+                    c.edges.append((vert_index_map[v1], vert_index_map[v2]))
+            for tri in bm.calc_loop_triangles():
+                for loop in tri:
+                    if bpy.context.mode == "OBJECT" or loop.face.select:
+                        try:
+                            idxs = [vert_index_map[loop.vert] for loop in tri]
+                            c.tris.append(idxs)
+                        except KeyError:
+                            # 選択された頂点以外が混ざっている三角形はスキップ
+                            pass
+            bm.free()
+            c.make_batch()
+            c.handler3d = bpy.types.SpaceView3D.draw_handler_add(c.draw3d, (), "WINDOW", "POST_VIEW")  # POST_VIEWは3D用
+            c.handler2d = bpy.types.SpaceView3D.draw_handler_add(c.draw2d, (), "WINDOW", "POST_PIXEL")  # POST_VIEWは3D用
+            return c
 
-    @classmethod
-    def make_instance(cls, obj):
-        c = cls()
-        # 常に編集モードでの編集後のメッシュ情報が欲しいため、一時メッシュを取得する
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        obj_eval = obj.evaluated_get(depsgraph)
-        bm = bmesh.new()
-        bm.from_mesh(obj_eval.to_mesh())
-        obj_eval.to_mesh_clear()  # しないとメモリリークする
-        bm.verts.ensure_lookup_table()
-        bm.faces.ensure_lookup_table()
-        bm.normal_update()
-        verts = []
-        tris = []
-        vert_index_map = {}
-        cnt = 0
-        for v in bm.verts:
-            if bpy.context.mode == "OBJECT" or v.select:
-                verts.append(obj.matrix_world @ (v.co - v.normal.normalized() * 0.00005))
-                vert_index_map[v] = cnt
-                cnt += 1
-        for tri in bm.calc_loop_triangles():
-            for loop in tri:
-                if bpy.context.mode == "OBJECT" or loop.face.select:
-                    try:
-                        idxs = [vert_index_map[loop.vert] for loop in tri]
-                        tris.append(idxs)
-                    except KeyError:
-                        # 選択された頂点以外が混ざっている三角形はスキップ
-                        pass
-        bm.free()
-        c.batch_v = batch_for_shader(cls.shader, "POINTS", {"pos": verts})
-        # c.batch_e = batch_for_shader(cls.shader, "LINES", {"pos": verts}, indices=edges)
-        c.batch_f = batch_for_shader(cls.shader, "TRIS", {"pos": verts}, indices=tris)
-        c.handler3d = bpy.types.SpaceView3D.draw_handler_add(c.draw3d, (), "WINDOW", "POST_VIEW")  # POST_VIEWは3D用
-        c.handler2d = bpy.types.SpaceView3D.draw_handler_add(c.draw2d, (), "WINDOW", "POST_PIXEL")  # POST_VIEWは3D用
-        bpy.app.handlers.load_pre.append(c.on_loadpre)
-        return c
+        def make_batch(self):
+            verts = [(v + n * self.extrude_offset) for v, n in zip(self.verts, self.normals)]
+            self.batch_v = batch_for_shader(MPM_OT_EditMesh_Ghost.DrawModal.shader, "POINTS", {"pos": verts})
+            self.batch_e = batch_for_shader(MPM_OT_EditMesh_Ghost.DrawModal.shader, "LINES", {"pos": verts}, indices=self.edges)
+            self.batch_f = batch_for_shader(MPM_OT_EditMesh_Ghost.DrawModal.shader, "TRIS", {"pos": verts}, indices=self.tris)
 
-    def draw3d(self):
-        shader = MPM_GhostModal.shader
-        if not shader:
-            self.cancel()
-            return
-        shader.bind()
-        # 面
-        gpu.state.depth_test_set(self.depth_test)
-        gpu.state.blend_set("ALPHA")
-        shader.bind()
-        shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
-        self.batch_f.draw(shader)
-        # 辺
-        # cls.shader.uniform_float("color", (0.0, 0.0, 0.0, 1.0))
-        # gpu.state.line_width_set(2.0)
-        # cls.batch_e.draw(cls.shader)
-        # 頂点
-        gpu.state.point_size_set(4.0)
-        shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))  # 赤
-        gpu.state.blend_set("NONE")
-        self.batch_v.draw(shader)
+        def draw3d(self):
+            shader = MPM_OT_EditMesh_Ghost.DrawModal.shader
+            if not shader:
+                self.cancel()
+                return
+            shader.bind()
+            # 面
+            gpu.state.depth_test_set(self.depth_test)
+            gpu.state.blend_set("ALPHA")
+            shader.bind()
+            shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
+            self.batch_f.draw(shader)
+            # 辺
+            gpu.state.line_width_set(2.0)
+            shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))
+            self.batch_e.draw(shader)
+            # 頂点
+            gpu.state.point_size_set(4.0)
+            shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))
+            self.batch_v.draw(shader)
+            gpu.state.blend_set("NONE")
 
-    def draw2d(self):
-        ghost_cls = MPM_OT_EditMesh_Ghost
-        if not self in ghost_cls.modals:
-            return
-        index = ghost_cls.modals.index(self)
-        if ghost_cls.current_hover_idx == index:
-            ghost_cls.current_hover_idx = -1
-            ghost_cls.current_hover_type = ""
-        # label
-        text = f"#{index+1}: Ghost "
-        w, h = _UtilBlf.draw_label_dimensions(0, text)
-        h *= 2
-        x, y = bpy.context.area.width * 0.8, h*2 + h * index
-        _UtilBlf.draw_label(0, text, x, y, "right")
-        # depth test button
-        x += 10
-        if _UtilBlf.draw_label_mousehover(0, self.depth_test, x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "depth_test", align="left"):
-            ghost_cls.current_hover_idx = index
-            ghost_cls.current_hover_type = "depth_test"
-        # remove button
-        w, h = _UtilBlf.draw_label_dimensions(0, "LESS_EQUAL")
-        x += 10 + w
-        if _UtilBlf.draw_label_mousehover(0, "[X]", x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_hover_type == "remove", align="left"):
-            ghost_cls.current_hover_idx = index
-            ghost_cls.current_hover_type = "remove"
+        def draw2d(self):
+            ghost_cls = MPM_OT_EditMesh_Ghost
+            if not self in ghost_cls.modals:
+                self.cancel()
+                return
+            index = ghost_cls.modals.index(self)
+            if ghost_cls.current_hover_idx == index:
+                ghost_cls.current_hover_idx = -1
+                ghost_cls.current_focus_type = ""
+            # label
+            text = "Ghost: "
+            w, h = _UtilBlf.draw_label_dimensions(0, text)
+            h *= 2
+            x, y = g.space_view_command_display_begin_pos("ghost")
+            y += h * index
+            _UtilBlf.draw_label(0, text, x, y, "right")
+            # depth test button
+            x += 10
+            if _UtilBlf.draw_label_mousehover(0, self.depth_test, "left click: Change depth test mode.",
+                                              x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_focus_type == "depth_test", align="left"):
+                ghost_cls.current_hover_idx = index
+                ghost_cls.current_focus_type = "depth_test"
+            # extrude value
+            w, h = _UtilBlf.draw_label_dimensions(0, "LESS_EQUAL")
+            x += 10 + w
+            if _UtilBlf.draw_label_mousehover(0, f"{self.extrude_offset:.3f}", "mouse wheel: Adjust extrusion distance.(shift: Increase amount)",
+                                              x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_focus_type == "extrude", align="left"):
+                ghost_cls.current_hover_idx = index
+                ghost_cls.current_focus_type = "extrude"
+            # remove button
+            w, h = _UtilBlf.draw_label_dimensions(0, "-00.00")
+            x += 10 + w
+            if _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Remove ghost.(shift: With unhide verts)",
+                                              x, y, ghost_cls.mx, ghost_cls.my, active=ghost_cls.current_hover_idx == index and ghost_cls.current_focus_type == "remove", align="left"):
+                ghost_cls.current_hover_idx = index
+                ghost_cls.current_focus_type = "remove"
 
-    def cancel(self):
-        # print("cancel")
-        super().cancel()
-        if self.handler3d:
-            bpy.types.SpaceView3D.draw_handler_remove(self.handler3d, "WINDOW")
-        self.handler3d = None
-        if self.handler2d:
-            bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
-        self.handler2d = None
-        if self.on_loadpre in bpy.app.handlers.load_pre:
-            bpy.app.handlers.load_pre.remove(self.on_loadpre)
-        if self in MPM_OT_EditMesh_Ghost.modals:
-            MPM_OT_EditMesh_Ghost.modals.remove(self)
-
-    def on_loadpre(self, a, b):
-        self.cancel()
+        def cancel(self):
+            # print("cancel")
+            super().cancel()
+            if self.handler3d:
+                bpy.types.SpaceView3D.draw_handler_remove(self.handler3d, "WINDOW")
+            self.handler3d = None
+            if self.handler2d:
+                bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
+            self.handler2d = None
+            if self in MPM_OT_EditMesh_Ghost.modals:
+                MPM_OT_EditMesh_Ghost.modals.remove(self)
 
 
 # --------------------------------------------------------------------------------

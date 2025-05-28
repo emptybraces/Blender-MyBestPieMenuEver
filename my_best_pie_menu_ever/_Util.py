@@ -182,6 +182,7 @@ class MPM_OT_ModalMonitor:
         self.interrupt = False
         self.count = 0.0
         bpy.app.timers.register(self._monitor)
+        bpy.app.handlers.load_pre.append(self.on_loadpre)
 
     def reset_timer(self):
         self.count = 0
@@ -198,6 +199,11 @@ class MPM_OT_ModalMonitor:
 
     def cancel(self):
         self.interrupt = True
+        if self.on_loadpre in bpy.app.handlers.load_pre:
+            bpy.app.handlers.load_pre.remove(self.on_loadpre)
+
+    def on_loadpre(self, a, b):
+        self.cancel()
 
 # --------------------------------------------------------------------------------
 

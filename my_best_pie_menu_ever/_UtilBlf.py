@@ -81,6 +81,9 @@ def draw_label_dimensions(fid, text):
     return blf.dimensions(0, text)
 
 
+LABEL_SIZE_Y = draw_label_dimensions(0, "X")[1]
+
+
 def draw_label(fid, text, x, y, align="left"):
     # これより上の関数はマウス位置が渡される前提の処理、修正する機会がもしあれば以下に統一する
     blf.size(fid, FONT_SIZE_LABEL)  # dimensionsの前
@@ -114,7 +117,11 @@ def draw_key_info(fid, field, desc, x, y):
     blf.disable(fid, blf.SHADOW)
 
 
-def draw_label_mousehover(fid, text, x, y, mx, my, w=0, h=0, active=False, hover_scale=1.0, align="left"):
+last_hover_time = {}
+last_hover_key = ""
+
+
+def draw_label_mousehover(fid, text, desc, x, y, mx, my, w=0, h=0, active=False, hover_scale=1.0, align="left"):
     # エリア空間に変換
     mx = mx - bpy.context.area.x
     my = my - bpy.context.area.y
@@ -141,6 +148,22 @@ def draw_label_mousehover(fid, text, x, y, mx, my, w=0, h=0, active=False, hover
     # blf.draw(fid, f"{sx},{sy} | {mx},{my}")
     # blf.position(fid, x + 100, y-40, 0)
     # blf.draw(fid, f"mouse position = {pm}")
+    global last_hover_key
+    if desc != "":
+        key = f"{text}{int(x)}{int(y)}"
+        if is_in:
+            if last_hover_key != key or (last_hover_key == key and key not in last_hover_time):
+                last_hover_time[key] = time.time()
+            elif 1.0 < time.time() - last_hover_time.get(key, 0):
+                blf.size(fid, FONT_SIZE_INFO)
+                ww, _ = blf.dimensions(fid, desc)
+                mx -= max(0, (mx + ww) - bpy.context.area.width)
+                blf.position(fid, mx, y - 15, 0)
+                blf.color(fid, *COLOR_NORMAL)
+                blf.draw(fid, desc)
+            last_hover_key = key
+        else:
+            last_hover_time.pop(key, None)
     blf.disable(fid, blf.SHADOW)
     return is_in
 
