@@ -7,14 +7,14 @@ else:
     from . import g
 import bpy
 import rna_keymap_ui
-from bpy.props import IntProperty, StringProperty, BoolProperty
+from bpy.props import IntProperty, StringProperty, BoolProperty, FloatVectorProperty
+import colorsys
 addon_keymaps = []
 
 
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
-    secondLanguage: StringProperty(name="Second Language", default="ja_JP",
-                                   description="Set the second language for the language switch button")
+    secondLanguage: StringProperty(name="Second Language", default="ja_JP", description="Set the second language for the language switch button")
     openFilePathList: StringProperty(name="Open File or Explorer Path List",
                                      description="Specify the absolute path you want to execute. You can also show multiple separated by comma.")
     imagePaintBrushFilterByName: StringProperty(name="ImagePaint Brush Filter", default="",
@@ -29,6 +29,12 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                                      description="Specify the line count for displaying brushes")
     sculptBrushFilterByName: StringProperty(name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
     weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="")
+    ghostColorFace: FloatVectorProperty(name="GhostColor: Face", subtype="COLOR", size=4,
+                                        default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.5), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
+    ghostColorEdge: FloatVectorProperty(name="GhostColor: Edge", subtype="COLOR", size=4,
+                                        default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.9), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
+    ghostColorVertex: FloatVectorProperty(name="GhostColor: Vert", subtype="COLOR", size=4,
+                                          default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.9), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
@@ -82,11 +88,16 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             r.prop(self, prop2)
         layout = self.layout
         layout.label(text="*Please Mouseover to read description.")
-        c = layout.box().column(heading='Utility')
+        c = layout.box().column(heading="Utility")
         c.prop(self, "secondLanguage")
         c.prop(self, "openFilePathList")
 
-        c = layout.box().column(heading='Image Paint')
+        c = layout.box().column(heading="EditMesh")
+        c.prop(self, "ghostColorFace")
+        c.prop(self, "ghostColorEdge")
+        c.prop(self, "ghostColorVertex")
+
+        c = layout.box().column(heading="Image Paint")
         c.prop(self, "imagePaintBrushFilterByName")
         sub_row(self, c, "imagePaintBlendFilterByName", "imagePaintBlendDropDown")
         c.prop(self, "imagePaintShiftBrushName")
@@ -97,17 +108,19 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         r.label(text="Invert" if not b else "EraseAlpha")
         c.prop(self, "imagePaintLimitRowCount")
 
-        c = layout.box().column(heading='Sculpt')
+        c = layout.box().column(heading="Sculpt")
         if g.is_v4_3_later():
             c.prop(self, "sculptBrushFilterByName")
         else:
             sub_row(self, c, "sculptBrushFilterByName", "sculptBrushNameDropDown")
         c.prop(self, "sculptLimitRowCount")
 
-        c = layout.box().column(heading='Weight Paint')
+        c = layout.box().column(heading="Weight Paint")
         c.prop(self, "weightPaintHideBone")
 
-        c = layout.box().column(heading='KeyConfig')
+        b = layout.box()
+        b.label(text="Key Config")
+        c = b.column()
 
         # 登録するときはaddonで、変更するときはuserだと上手くいく
         # では最初からuserで登録すればいいのではと思うのだが、userで登録するとキーリストの一番最後に登録される。
@@ -139,6 +152,9 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             "sculptLimitRowCount": self.sculptLimitRowCount,
             "sculptBrushFilterByName": self.sculptBrushFilterByName,
             "weightPaintHideBone": self.weightPaintHideBone,
+            "ghostColorFace": tuple(self.ghostColorFace),  # 値コピーしないとバグるっぽい
+            "ghostColorEdge": tuple(self.ghostColorEdge),  # 値コピーしないとバグるっぽい
+            "ghostColorVertex": tuple(self.ghostColorVertex),  # 値コピーしないとバグるっぽい
         }
 
     def dict_apply(self, dict):

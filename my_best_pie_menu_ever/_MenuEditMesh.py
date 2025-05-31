@@ -1,10 +1,12 @@
 if "bpy" in locals():
     import importlib
+    importlib.reload(_AddonPreferences)
     importlib.reload(_Util)
     importlib.reload(_UtilInput)
     importlib.reload(_UtilBlf)
     importlib.reload(g)
 else:
+    from . import _AddonPreferences
     from . import _Util
     from . import _UtilInput
     from . import _UtilBlf
@@ -23,7 +25,7 @@ from gpu_extras.batch import batch_for_shader
 
 def MenuPrimary(pie, context):
     box = pie.split().box()
-    box.label(text='Edit Mesh Primary')
+    box.label(text="Edit Mesh Primary")
     r = box.row(align=True)
     from ._MenuObject import LayoutSwitchSelectionOperator
     LayoutSwitchSelectionOperator(context, r)
@@ -1367,10 +1369,10 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
                 break
         for v in self.bm.verts:
             if v.select:
-                v[attr] = (1, 1, 1, 1)
+                v[attr] = (0, 0, 0, 1)
                 self.fixed_positions[v] = v.co.copy()
             else:
-                v[attr] = (0, 0, 0, 1)
+                v[attr] = (1, 1, 1, 1)
         bmesh.update_edit_mesh(self.obj_data)
         context.window_manager.modal_handler_add(self)
         g.force_cancel_piemenu_modal(context)
@@ -1401,7 +1403,7 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
             self.fixed_positions.clear()
             attr = self.bm.verts.layers.color[self.attr_name]
             for v in self.bm.verts:
-                if 1 == v[attr][0]:
+                if 0 == v[attr][0]:
                     self.fixed_positions[v] = v.co.copy()
             if 0 == len(self.fixed_positions):
                 return self.cancel(context)
@@ -1416,6 +1418,7 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
 
     class DrawModal(_Util.MPM_OT_ModalMonitor):
         def __init__(self):
+            super().__init__()
             self.handler2d = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")
             self.is_hover_cancel = False
             g.space_view_command_display_stack_sety("pin verts")
@@ -1501,6 +1504,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
         shader = None
 
         def __init__(self):
+            super().__init__()
             self.verts = []
             self.edges = []
             self.normals = []
@@ -1572,15 +1576,15 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             gpu.state.depth_test_set(self.depth_test)
             gpu.state.blend_set("ALPHA")
             shader.bind()
-            shader.uniform_float("color", (0.2, 0.4, 1.0, 0.5))
+            shader.uniform_float("color", _AddonPreferences.Accessor.get_ref().ghostColorFace)
             self.batch_f.draw(shader)
             # 辺
             gpu.state.line_width_set(2.0)
-            shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))
+            shader.uniform_float("color", _AddonPreferences.Accessor.get_ref().ghostColorEdge)
             self.batch_e.draw(shader)
             # 頂点
-            gpu.state.point_size_set(4.0)
-            shader.uniform_float("color", (1.0, 0.2, 0.2, 0.5))
+            gpu.state.point_size_set(5.0)
+            shader.uniform_float("color", _AddonPreferences.Accessor.get_ref().ghostColorVertex)
             self.batch_v.draw(shader)
             gpu.state.blend_set("NONE")
 

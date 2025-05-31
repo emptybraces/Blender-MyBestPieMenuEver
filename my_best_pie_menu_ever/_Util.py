@@ -192,9 +192,9 @@ class MPM_OT_ModalMonitor:
             return None
         self.count += 0.1
         # print(self.count)
-        if 60 < self.count:
-            self.cancel()
-            return None  # 終了
+        # if 60 < self.count:
+        #     self.cancel()
+        #     return None  # 終了
         return 0.1
 
     def cancel(self):
