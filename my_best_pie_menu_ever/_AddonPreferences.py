@@ -30,7 +30,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     sculptBrushFilterByName: StringProperty(name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
     weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="")
     ghostColorFace: FloatVectorProperty(name="GhostColor: Face", subtype="COLOR", size=4,
-                                        default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.5), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
+                                        default=(*colorsys.hsv_to_rgb(0.65, 0.2, 0.5), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
     ghostColorEdge: FloatVectorProperty(name="GhostColor: Edge", subtype="COLOR", size=4,
                                         default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.9), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
     ghostColorVertex: FloatVectorProperty(name="GhostColor: Vert", subtype="COLOR", size=4,

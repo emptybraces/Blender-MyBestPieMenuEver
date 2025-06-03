@@ -1343,14 +1343,11 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal == None and _Util.has_selected_verts(context)
+        return _Util.has_selected_verts(context)
 
     def invoke(self, context, event):
         # 頂点カラー表示
-        view = context.space_data
-        shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
-        shading.color_type = "VERTEX"
-
+        self.set_shading_color(context, "VERTEX")
         obj = context.edit_object
         self.fixed_positions = {}
         self.obj_data = obj.data
@@ -1369,14 +1366,16 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
                 break
         for v in self.bm.verts:
             if v.select:
-                v[attr] = (0, 0, 0, 1)
+                v[attr] = (0.3, 0.3, 0.3, 1)
                 self.fixed_positions[v] = v.co.copy()
             else:
                 v[attr] = (1, 1, 1, 1)
         bmesh.update_edit_mesh(self.obj_data)
-        context.window_manager.modal_handler_add(self)
+        cls = MPM_OT_EditMesh_PinSelectedVertsModal
+        if not cls.draw_modal:
+            context.window_manager.modal_handler_add(self)
+            cls.draw_modal = cls.DrawModal()
         g.force_cancel_piemenu_modal(context)
-        MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = MPM_OT_EditMesh_PinSelectedVertsModal.DrawModal()
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
@@ -1389,8 +1388,7 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
             return self.cancel(context)
         if cls.draw_modal.is_hover_cancel and _UtilInput.is_pressed_key("LEFTMOUSE"):
             return self.cancel(context)
-        # if event.type != "LEFTMOUSE" and event.type == "RET":
-        #     return {"PASS_THROUGH"}
+        # undo時にbm参照が失われるので例外キャッチで再作成
         try:
             for v, pos in self.fixed_positions.items():
                 v.co = pos
@@ -1401,9 +1399,12 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
             self.bm.verts.ensure_lookup_table()
             self.bm.edges.ensure_lookup_table()
             self.fixed_positions.clear()
-            attr = self.bm.verts.layers.color[self.attr_name]
+            attr = self.bm.verts.layers.color.get(self.attr_name, None)
+            # undoして属性追加がundoされたらNoneになる
+            if not attr:
+                return self.cancel(context)
             for v in self.bm.verts:
-                if 0 == v[attr][0]:
+                if v[attr][0] < 1:
                     self.fixed_positions[v] = v.co.copy()
             if 0 == len(self.fixed_positions):
                 return self.cancel(context)
@@ -1414,7 +1415,13 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         self.bm = None
         self.obj_data = None
         MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = None
+        self.set_shading_color(context, "MATERIAL")
         return {"CANCELLED"}
+
+    def set_shading_color(self, context, mode):
+        view = context.space_data
+        shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
+        shading.color_type = mode
 
     class DrawModal(_Util.MPM_OT_ModalMonitor):
         def __init__(self):
