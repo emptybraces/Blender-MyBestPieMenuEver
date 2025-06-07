@@ -85,7 +85,7 @@ def MenuPrimary(pie, context):
                 relative_asset_identifier=asset_id)
         is_depress = active_tool.use_brushes and current_brush.name == brush_name
         _Util.MPM_OT_CallbackOperator.operator(layout, brush_name, "_MenuSculpt.select_brush." + brush_name,
-                                               _select_brush, (context, "ESSENTIALS", "", "brushes\\essentials_brushes-mesh_sculpt.blend\\Brush\\" + brush_name), depress=is_depress)
+                                               _select_brush, (context, "ESSENTIALS", "", os.path.join("brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name)), depress=is_depress)
 
     def _callback_operator_select_tool(context, layout, label_name, tool_id):
         def _select_tool(context, tool_name):
@@ -195,7 +195,9 @@ def MenuPrimary(pie, context):
     smooth_brush = bpy.data.brushes.get("Smooth")
     if smooth_brush == None:
         blender_install_dir = os.path.dirname(bpy.app.binary_path)
-        with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_sculpt.blend", link=True, assets_only=True) as (data_from, data_to):
+        path = os.path.join(blender_install_dir, f"{bpy.app.version[0]}.{bpy.app.version[1]}",
+                            "datafiles", "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
+        with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
             for i in data_from.brushes:
                 if i == "Smooth":
                     data_to.brushes = [i]  # これでひとつだけロードしたことになる

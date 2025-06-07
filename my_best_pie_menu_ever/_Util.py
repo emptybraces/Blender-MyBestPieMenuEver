@@ -451,6 +451,72 @@ def lerp_inverse_segments_by_distance(points, idx):
     return idx_to_distance / total_distance
 
 
+def interp_catmull_rom(points, t):
+    def __calc(p0, p1, p2, p3, t):
+        t2 = t * t
+        t3 = t2 * t
+        return 0.5 * (
+            (2 * p1) +
+            (-p0 + p2) * t +
+            (2*p0 - 5*p1 + 4*p2 - p3) * t2 +
+            (-p0 + 3*p1 - 3*p2 + p3) * t3
+        )
+    count = len(points)
+    if count < 2:
+        raise ValueError("少なくとも2点必要です")
+    t = max(0.0, min(1.0, t))
+    # 区間数（例: 4点 → 3区間）
+    num_segments = count - 1
+
+    # t を区間にマッピング
+    segment_f = t * num_segments
+    segment_index = int(segment_f)
+    local_t = segment_f - segment_index
+
+    # インデックス補正（境界で止める）
+    i0 = max(segment_index - 1, 0)
+    i1 = segment_index
+    i2 = min(segment_index + 1, count - 1)
+    i3 = min(segment_index + 2, count - 1)
+    return __calc(points[i0], points[i1], points[i2], points[i3], local_t)
+
+
+def interp_linear(points, t):
+    count = len(points)
+    if count < 2:
+        raise ValueError("少なくとも2点必要です")
+
+    num_segments = count - 1
+    segment_f = t * num_segments
+    segment_index = int(segment_f)
+    local_t = segment_f - segment_index
+
+    i0 = segment_index
+    i1 = min(segment_index + 1, count - 1)
+
+    return points[i0].lerp(points[i1], local_t)
+
+
+def interp_slerp_quaternion(quats, t):
+    if len(quats) < 2:
+        raise ValueError("少なくとも2つのQuaternionが必要です")
+
+    t = max(0.0, min(1.0, t))  # クランプ
+    num_segments = len(quats) - 1
+
+    segment_f = t * num_segments
+    segment_index = int(segment_f)
+    local_t = segment_f - segment_index
+
+    i0 = segment_index
+    i1 = min(segment_index + 1, len(quats) - 1)
+
+    q0 = quats[i0].copy()
+    q1 = quats[i1]
+
+    return q0.slerp(q1, local_t)
+
+
 def replace_leading_underscores(string, replacement_char):
     count = 0
     while count < len(string) and string[count] == '_':

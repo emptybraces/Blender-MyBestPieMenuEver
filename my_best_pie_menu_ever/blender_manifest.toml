@@ -29,11 +29,13 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # v2.6.0
-# - [Object,EditMesh] ゴースト表示機能を実装。
+# - [Object/EditMesh] ゴースト表示機能を実装。
 # - [EditMesh] 頂点固定機能を実装。
 # - [EditMesh] エッジループのセンタリング機能を実装。
-# - [EditMesh] クリースレイヤ、ベベルウェイトレイヤのフィールドをスライダー化。
+# - [EditMesh] クリースレイヤ、ベベルウェイトレイヤのボタンをスライダー化。
+# - [Utility] ビューポートカメラ履歴アニメを滑らかにした。
 # - [Fix] 第2言語に切り替えたときに「新規データ」がオンになってしまっていたので常にオフするように修正。
+# - [Fix] blender4.4でWeightPaint,Sculptパイメニューを表示するとエラーが発生する。
 # v2.5.0
 # - [Weight] ウェイトが設定されている頂点以外をマスクするボタンを追加。
 # - [EditMesh] "Grow Edge Ring Selection"を追加。

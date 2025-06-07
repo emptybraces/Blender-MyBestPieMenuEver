@@ -730,16 +730,14 @@ class MPM_OT_Utility_ViewportCameraTransformRestorePanel(bpy.types.Operator):
         pos = [Vector(i.pos) for i in data]
         rot = [Quaternion(i.rot) for i in data]
         distance = [i.distance for i in data]
-        value, idx, t = _Util.lerp_segments_by_distance(pos, factor)
-        bpy.context.region_data.view_location = value
-        bpy.context.region_data.view_rotation = rot[idx].slerp(rot[idx+1], t)
-        bpy.context.region_data.view_distance = _Util.lerp(distance[idx], distance[idx+1], t)
+        bpy.context.region_data.view_location = _Util.interp_catmull_rom(pos, factor)
+        bpy.context.region_data.view_rotation = _Util.interp_slerp_quaternion(rot, factor)
+        bpy.context.region_data.view_distance = _Util.interp_catmull_rom(distance, factor)
 
 
 class MPM_OT_Utility_ViewportCameraTransformRestoreModal(bpy.types.Operator):
     bl_idname = "mpm.util_viewport_camera_transform_restore_modal"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
     target_pos: bpy.props.FloatVectorProperty(size=3)
     target_rot: bpy.props.FloatVectorProperty(size=4)
     target_distance: bpy.props.FloatProperty()

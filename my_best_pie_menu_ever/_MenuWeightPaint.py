@@ -94,7 +94,9 @@ def MenuPrimary(pie, context):
     if g.is_v4_3_later():
         blender_install_dir = os.path.dirname(bpy.app.binary_path)
         if bpy.data.brushes.get("Blur") == None:
-            with bpy.data.libraries.load(blender_install_dir + "\\4.3\\datafiles\\assets\\brushes\\essentials_brushes-mesh_weight.blend", link=True, assets_only=True) as (data_from, data_to):
+            path = os.path.join(blender_install_dir, f"{bpy.app.version[0]}.{bpy.app.version[1]}",
+                                "datafiles", "assets", "brushes", "essentials_brushes-mesh_weight.blend")
+            with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
                 for i in data_from.brushes:
                     if i == "Blur":
                         data_to.brushes = [i]  # これでひとつだけロードしたことになる

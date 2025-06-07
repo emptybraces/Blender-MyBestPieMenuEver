@@ -1545,7 +1545,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             for v in bm.verts:
                 if bpy.context.mode == "OBJECT" or v.select:
                     c.verts.append(obj.matrix_world @ v.co)
-                    c.normals.append(obj.matrix_world @ v.normal)
+                    c.normals.append(v.normal)  # obj.matrix_world @ v.normalとすると、ワールド原点をピボットになる。
                     vert_index_map[v] = cnt
                     cnt += 1
             for e in bm.edges:
