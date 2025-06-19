@@ -27,7 +27,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
     current_menu_idx = 0
     ROW_LIMIT = 30
     SHOW_STR_CNT = 20
-    WIDTH_PER_CHAR = 9
+    WIDTH_PER_CHAR = 8
     HOVER_SCALE = 1.2
 
     @classmethod
@@ -152,7 +152,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
     def draw_vgroups(self):
         obj = bpy.context.object
         x, y = self.get_items_start_position()
-        if obj.vertex_groups.active == None:
+        if 0 == len(obj.vertex_groups):
             _UtilBlf.draw_label(0, "No VertexGroups found.", x, y)
             return
         ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR

@@ -133,7 +133,8 @@ def draw_label_mousehover(fid, text, desc, x, y, mx, my, w=0, h=0, active=False,
         x = x - w / 2
     elif align == "right":
         x = x - w
-    is_in = x < mx < x + w and y < my < y + h
+    ofs = 2
+    is_in = x-ofs < mx < x + w + ofs and y-ofs < my < y + h + ofs
     if is_in and hover_scale != 1.0:
         blf.size(fid, FONT_SIZE_LABEL * hover_scale)  # dimensionsの前
     blf.enable(fid, blf.SHADOW)
@@ -157,7 +158,7 @@ def draw_label_mousehover(fid, text, desc, x, y, mx, my, w=0, h=0, active=False,
             elif 1.0 < time.time() - last_hover_time.get(key, 0):
                 blf.size(fid, FONT_SIZE_INFO)
                 ww, _ = blf.dimensions(fid, desc)
-                mx -= max(0, (mx + ww) - bpy.context.area.width)
+                mx -= max(0, (mx + ww + 50) - bpy.context.area.width)
                 blf.position(fid, mx, y - 15, 0)
                 blf.color(fid, *COLOR_NORMAL)
                 blf.draw(fid, desc)

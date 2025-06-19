@@ -49,7 +49,7 @@ class MPM_OT_SetterBase():
 class MPM_OT_SetPointer(bpy.types.Operator):
     bl_idname = "mpm.set_pointer"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     attrName: bpy.props.StringProperty()
     attrNameTarget: bpy.props.StringProperty()
     attrNameValue: bpy.props.StringProperty()
@@ -79,7 +79,7 @@ class MPM_OT_SetPointer(bpy.types.Operator):
 class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpm.util_set_bool"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     value: bpy.props.BoolProperty()
 
     @staticmethod
@@ -90,7 +90,7 @@ class MPM_OT_SetBool(MPM_OT_SetterBase, bpy.types.Operator):
 class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpm.util_set_invert"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     value: bpy.props.BoolProperty()
 
     @staticmethod
@@ -101,7 +101,7 @@ class MPM_OT_SetBoolToggle(MPM_OT_SetterBase, bpy.types.Operator):
 class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpm.util_set_int"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     value: bpy.props.IntProperty()
 
     @staticmethod
@@ -112,7 +112,7 @@ class MPM_OT_SetInt(MPM_OT_SetterBase, bpy.types.Operator):
 class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpm.util_set_single"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     value: bpy.props.FloatProperty()
 
     @staticmethod
@@ -123,7 +123,7 @@ class MPM_OT_SetSingle(MPM_OT_SetterBase, bpy.types.Operator):
 class MPM_OT_SetString(MPM_OT_SetterBase, bpy.types.Operator):
     bl_idname = "mpm.util_set_string"
     bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     value: bpy.props.StringProperty()
 
     @staticmethod

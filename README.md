@@ -4,7 +4,7 @@ This addon arranges things close together to make it easier to get at those that
 
 Pressing the W key opens a pie menu that consolidates shortcuts for favorite brushes, their parameters, and frequently used functions. The lower section contains utility functions, while the upper section is organized by mode. Working on my project and updating this addon as needed.
 
-Stable Blender version: v4.3.2
+Stable Blender version: v4.4.3
 
 https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 

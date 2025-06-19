@@ -1,12 +1,16 @@
 if "bpy" in locals():
     import importlib
-    importlib.reload(_Util)
     importlib.reload(_AddonPreferences)
+    importlib.reload(_Util)
+    importlib.reload(_UtilInput)
+    importlib.reload(_UtilBlf)
     importlib.reload(g)
     importlib.reload(_MenuPose)
 else:
-    from . import _Util
     from . import _AddonPreferences
+    from . import _Util
+    from . import _UtilInput
+    from . import _UtilBlf
     from . import g
     from . import _MenuPose
 import os
@@ -133,11 +137,23 @@ def DrawView3D(layout, context):
     col = row.column()
     # オブジェクトメニュー
     box = col.box()
-    r = box.row(align=True)
-    r.label(text="Active Object")
+    c = box.column()
+    c.label(text="Active")
+
+    r = c.row(align=True)
+    active_collec = context.view_layer.active_layer_collection
+    r.label(text=active_collec.name, icon="OUTLINER_COLLECTION")
+    _Util.layout_operator(r, MPM_OT_Utility_ActiveCollectionShowHide.bl_idname,
+                          icon="HIDE_ON" if active_collec.hide_viewport else "HIDE_OFF")
+
+    r = c.row(align=True)
     obj = context.object
     if obj:
+        r.label(text=obj.name, icon="OBJECT_DATAMODE")
         _Util.MPM_OT_SetBoolToggle.operator(r, "", obj, "hide_viewport", "HIDE_ON" if obj.hide_viewport else "HIDE_OFF")
+    else:
+        r.label(text="No Active Object", icon="OBJECT_DATAMODE")
+    _Util.layout_operator(r, MPM_OT_Utility_SelectionCycleSoloModal.bl_idname, icon="FILE_REFRESH")
 
     # アクティブオブジェクトがなければ空欄
     if obj:
@@ -794,6 +810,156 @@ class MPM_OT_Utility_OpenDirectory(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class MPM_OT_Utility_ActiveCollectionShowHide(bpy.types.Operator):
+    bl_idname = "mpm.util_active_collection_show_hide"
+    bl_label = ""
+    bl_description = "Show/Hide Active Collection"
+    last_collection = None
+
+    @classmethod
+    def poll(cls, context):
+        return cls.last_collection != None or context.scene.collection != context.view_layer.active_layer_collection.collection
+
+    def execute(self, context):
+        cls = MPM_OT_Utility_ActiveCollectionShowHide
+        c = context.view_layer.active_layer_collection
+        if cls.last_collection and context.scene.collection == c.collection:
+            c = cls.last_collection
+        c.hide_viewport = not c.hide_viewport
+        cls.last_collection = c
+        return {"FINISHED"}
+
+
+class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
+    bl_idname = "mpm.util_selection_cycle_solo_modal"
+    bl_label = ""
+    bl_description = "MouseWheel to isolate selected objects one by one"
+    index = 0
+    draw_modals = []
+    mx, my = 0.0, 0.0
+    current_hover_idx, current_focus_type = -1, ""
+    target_area = None
+
+    @classmethod
+    def poll(cls, context):
+        return 1 < len(context.selected_objects)
+
+    def invoke(self, context, event):
+        self.id = "cycle solo"
+        cls = MPM_OT_Utility_SelectionCycleSoloModal
+        cls.target_area = context.area
+        if not cls.draw_modals:
+            context.window_manager.modal_handler_add(self)
+        cls.draw_modals.append(MPM_OT_Utility_SelectionCycleSoloModal.DrawModal(context.selected_objects, self.id))
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context, event):
+        if context.area != self.target_area:
+            return {'PASS_THROUGH'}
+        # このモーダルは最後のDrawModalまで生存
+        cls = MPM_OT_Utility_SelectionCycleSoloModal
+        if not cls.draw_modals:
+            g.space_view_command_display_stack_remove(self.id)
+            return {"CANCELLED"}
+        cls.mx = event.mouse_x
+        cls.my = event.mouse_y
+        g.space_view_command_display_stack_sety(self.id, len(self.draw_modals) * (_UtilBlf.LABEL_SIZE_Y * 2))
+        context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
+        _UtilInput.update(event, "LEFTMOUSE", "RIGHTMOUSE", "ESC")
+        if 0 <= cls.current_hover_idx:
+            modal = cls.draw_modals[cls.current_hover_idx]
+            if cls.current_focus_type == "remove" and _UtilInput.is_pressed_key("LEFTMOUSE"):
+                modal.cancel()
+                cls.current_hover_idx = -1
+                return {"RUNNING_MODAL"}
+            elif cls.current_focus_type == "current_name":
+                if event.type == "WHEELUPMOUSE" or event.type == "WHEELDOWNMOUSE":
+                    modal.switch_solo(event.type == "WHEELUPMOUSE")
+                    return {"RUNNING_MODAL"}
+                elif _UtilInput.is_pressed_key("LEFTMOUSE"):
+                    modal.switch_all(True)
+                    return {"RUNNING_MODAL"}
+                elif _UtilInput.is_pressed_key("RIGHTMOUSE"):
+                    modal.switch_all(False)
+                    return {"RUNNING_MODAL"}
+        return {"PASS_THROUGH"}
+
+    def cancel(self, context):
+        context.area.tag_redraw()
+        MPM_OT_Utility_SelectionCycleSoloModal.draw_modal = None
+        return {"CANCELLED"}
+
+    class DrawModal(_Util.MPM_OT_ModalMonitor):
+        def __init__(self, selected_objects, id):
+            super().__init__()
+            self.handler2d = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")
+            self.id = id
+            self.selected_objects = list(selected_objects)
+            self.sel_index = 0
+            g.space_view_command_display_stack_sety(self.id)
+
+        def draw2d(self):
+            main_cls = MPM_OT_Utility_SelectionCycleSoloModal
+            if not self in main_cls.draw_modals:
+                self.cancel()
+                return
+            for i in reversed(range(len(self.selected_objects))):
+                try:
+                    _ = self.selected_objects[i].name  # 削除されたものは適当にアクセスして例外起こす
+                except ReferenceError:
+                    del self.selected_objects[i]
+                    self.sel_index = 0
+                    if len(self.selected_objects) <= 1:
+                        self.cancel()
+                        return
+            modal_idx = main_cls.draw_modals.index(self)
+            if main_cls.current_hover_idx == modal_idx and bpy.context.area == main_cls.target_area:
+                main_cls.current_hover_idx = -1
+                main_cls.current_focus_type = ""
+            # label
+            text = "Cycle Solo: "
+            w, h = _UtilBlf.draw_label_dimensions(0, text)
+            h *= 1.5
+            x, y = g.space_view_command_display_begin_pos(self.id)
+            y += h * modal_idx
+            if modal_idx == len(main_cls.draw_modals)-1:  # 最後だけ表示
+                _UtilBlf.draw_label(0, text, x, y, "right")
+            x += 10
+            current = self.selected_objects[self.sel_index]
+            if _UtilBlf.draw_label_mousehover(0, current.name, "mouse wheel: Next/Prev, LMB: Show all, RMB: Hide all",
+                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "current_name", align="left"):
+                main_cls.current_hover_idx = modal_idx
+                main_cls.current_focus_type = "current_name"
+            x += 150
+            if _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Cancelling",
+                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "remove", align="left"):
+                main_cls.current_hover_idx = modal_idx
+                main_cls.current_focus_type = "remove"
+
+        def switch_solo(self, isUp):
+            self.sel_index = self.sel_index+1 if isUp else self.sel_index-1
+            if self.sel_index < 0:
+                self.sel_index = len(self.selected_objects)-1
+            elif len(self.selected_objects) <= self.sel_index:
+                self.sel_index = 0
+            for i in range(len(self.selected_objects)):
+                self.selected_objects[i].hide_set(i != self.sel_index)
+
+        def switch_all(self, isShow):
+            self.sel_index = 0
+            for i in range(len(self.selected_objects)):
+                self.selected_objects[i].hide_set(not isShow)
+
+        def cancel(self):
+            super().cancel()
+            cls = MPM_OT_Utility_SelectionCycleSoloModal
+            if self.handler2d:
+                bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
+            self.handler2d = None
+            if self in cls.draw_modals:
+                cls.draw_modals.remove(self)
+
+
 # --------------------------------------------------------------------------------
 
 
@@ -817,6 +983,8 @@ classes = (
     MPM_OT_Utility_3DCursorPositionSetZero,
     MPM_OT_Utility_OpenDirectory,
     MPM_OT_Utility_AnimationEndFrameSyncCurrentAction,
+    MPM_OT_Utility_ActiveCollectionShowHide,
+    MPM_OT_Utility_SelectionCycleSoloModal,
 )
 
 
