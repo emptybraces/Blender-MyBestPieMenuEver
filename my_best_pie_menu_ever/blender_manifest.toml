@@ -29,7 +29,8 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # v2.7.0
-# - [Bugfix] SwitchObjectDataのVertexGroupリストがアクティブなVertexGroupがないときリストが取得できない。
+# - [Utility] 選択オブジェクトを一つ一つ表示する機能を追加。
+# - [EditMesh] ゴースト表示機能にアルファカラーフィールドを追加。
 # - [Bugfix] SwitchObjectDataのVertexGroupリストがアクティブなVertexGroupがないときリストが取得できない。
 # v2.6.0
 # - [Object/EditMesh] ゴースト表示機能を実装。

@@ -27,7 +27,7 @@ space_view_command_display_start_stack = []
 
 
 def space_view_command_display_begin_pos(id):
-    x = bpy.context.area.width * 0.8
+    x = bpy.context.area.width * 0.7
     y = _UtilBlf.LABEL_SIZE_Y * 4
     for i in space_view_command_display_start_stack:
         if i["id"] == id:

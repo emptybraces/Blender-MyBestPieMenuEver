@@ -126,11 +126,11 @@ def DrawView3D(layout, context):
     # _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetSolid.bl_idname, text="Ov+Solid")
     # _Util.layout_operator(r, MPM_OT_Utility_ViewportShadingSetMaterial.bl_idname, text="UnOv+Mat")
     # シェーディングカラー
-    r = c.row()
-    r.label(text="Shading Color")
-    _Util.MPM_OT_SetString.operator(r, "MAT", shading, "color_type", "MATERIAL", "MATERIAL", shading.color_type == "MATERIAL")
-    _Util.MPM_OT_SetString.operator(r, "OBJ", shading, "color_type", "OBJECT", "OBJECT_DATA", shading.color_type == "OBJECT")
-    _Util.MPM_OT_SetString.operator(r, "VCOL", shading, "color_type", "VERTEX", "VPAINT_HLT", shading.color_type == "VERTEX")
+    r1, r2 = _Util.layout_split_row2(c, 0.4)
+    r1.label(text="ShadingColor")
+    _Util.MPM_OT_SetString.operator(r2, "MAT", shading, "color_type", "MATERIAL", "NONE", shading.color_type == "MATERIAL")
+    _Util.MPM_OT_SetString.operator(r2, "OBJ", shading, "color_type", "OBJECT", "NONE", shading.color_type == "OBJECT")
+    _Util.MPM_OT_SetString.operator(r2, "VCOL", shading, "color_type", "VERTEX", "NONE", shading.color_type == "VERTEX")
 
     # -------------------------------
     # 次の列
@@ -182,10 +182,11 @@ def DrawView3D(layout, context):
         # コピー
         r = c.row(align=True)
         r.active = obj is not None and 1 < len(context.selected_objects)
-        r.label(text="Copy")
-        _Util.layout_operator(r, MPM_OT_Utility_CopyPosition.bl_idname)
-        _Util.layout_operator(r, MPM_OT_Utility_CopyRosition.bl_idname)
-        _Util.layout_operator(r, MPM_OT_Utility_CopyScale.bl_idname)
+        r1, r2 = _Util.layout_split_row2(r, 0.2)
+        r1.label(text="Copy")
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyPosition.bl_idname)
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
         # アーマチュア
         box = c.box()
         box.label(text="Armature")
@@ -917,7 +918,7 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
                 main_cls.current_hover_idx = -1
                 main_cls.current_focus_type = ""
             # label
-            text = "Cycle Solo: "
+            text = "Cycle Solo:"
             w, h = _UtilBlf.draw_label_dimensions(0, text)
             h *= 1.5
             x, y = g.space_view_command_display_begin_pos(self.id)

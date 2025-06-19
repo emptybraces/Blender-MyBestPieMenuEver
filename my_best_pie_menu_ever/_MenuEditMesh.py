@@ -177,12 +177,12 @@ def MenuPrimary(pie, context):
     # 法線
     _Util.layout_operator(c, "mesh.normals_make_consistent", isActive=has_selected_verts, icon="NORMALS_FACE").inside = False
     # マージ
-    rr = c.row(align=True)
-    rr.label(text="Merge")
-    _Util.layout_operator(rr, "mesh.merge", "Center", has_selected_verts).type = "CENTER"
-    _Util.layout_operator(rr, "mesh.merge", "Collapse", has_selected_verts).type = "COLLAPSE"
-    _Util.layout_operator(rr, "mesh.merge", "Cursor", has_selected_verts).type = "CURSOR"
-    _Util.layout_operator(rr, "mesh.remove_doubles", "Distance", has_selected_verts)
+    r1, r2 = _Util.layout_split_row2(c, 0.2)
+    r1.label(text="Merge")
+    _Util.layout_operator(r2, "mesh.merge", "Center", has_selected_verts).type = "CENTER"
+    _Util.layout_operator(r2, "mesh.merge", "Collapse", has_selected_verts).type = "COLLAPSE"
+    _Util.layout_operator(r2, "mesh.merge", "Cursor", has_selected_verts).type = "CURSOR"
+    _Util.layout_operator(r2, "mesh.remove_doubles", "Distance", has_selected_verts)
 
     _Util.layout_operator(c, "mesh.delete_loose", icon="X")
 
@@ -1500,9 +1500,15 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
                 if event.shift:
                     bpy.ops.mesh.reveal(select=False)
                 return {"RUNNING_MODAL"}
+            elif cls.current_focus_type == "alpha":
+                if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
+                    value = 0.1
+                    modal.alpha += value if event.type == "WHEELUPMOUSE" else -value
+                    modal.alpha = _Util.clamp(modal.alpha, 0.0, 1.0)
+                    return {"RUNNING_MODAL"}
             elif cls.current_focus_type == "extrude":
                 if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
-                    value = 0.05 if event.shift else 0.01
+                    value = 0.005 if event.shift else 0.001
                     modal.extrude_offset += value if event.type == "WHEELUPMOUSE" else -value
                     modal.make_batch()
                     return {"RUNNING_MODAL"}
@@ -1524,6 +1530,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             self.tris = []
             self.obj = None
             self.extrude_offset = 0.0001
+            self.alpha = 1.0
             self.batch_v = None
             self.batch_e = None
             self.batch_f = None
@@ -1584,15 +1591,19 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             gpu.state.depth_test_set(self.depth_test)
             gpu.state.blend_set("ALPHA")
             shader.bind()
-            shader.uniform_float("color", _AddonPreferences.Accessor.get_ref().ghostColorFace)
+
+            def _calc_color(baseColor):
+                color = (baseColor[0], baseColor[1], baseColor[2], baseColor[3] * self.alpha)
+                return color
+            shader.uniform_float("color", _calc_color(_AddonPreferences.Accessor.get_ref().ghostColorFace))
             self.batch_f.draw(shader)
             # 辺
             gpu.state.line_width_set(2.0)
-            shader.uniform_float("color", _AddonPreferences.Accessor.get_ref().ghostColorEdge)
+            shader.uniform_float("color", _calc_color(_AddonPreferences.Accessor.get_ref().ghostColorEdge))
             self.batch_e.draw(shader)
             # 頂点
             gpu.state.point_size_set(5.0)
-            shader.uniform_float("color", _AddonPreferences.Accessor.get_ref().ghostColorVertex)
+            shader.uniform_float("color", _calc_color(_AddonPreferences.Accessor.get_ref().ghostColorVertex))
             self.batch_v.draw(shader)
             gpu.state.blend_set("NONE")
 
@@ -1606,7 +1617,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
                 main_cls.current_hover_idx = -1
                 main_cls.current_focus_type = ""
             # label
-            text = "Ghost: "
+            text = "Ghost:"
             w, h = _UtilBlf.draw_label_dimensions(0, text)
             h *= 1.5
             x, y = g.space_view_command_display_begin_pos(self.id)
@@ -1628,6 +1639,12 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
                 main_cls.current_focus_type = "extrude"
             # remove button
             w, h = _UtilBlf.draw_label_dimensions(0, "-00.00")
+            x += 10 + w
+            if _UtilBlf.draw_label_mousehover(0, f"{self.alpha:.1f}", "mouse wheel: Adjust individual alpha",
+                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "alpha", align="left"):
+                main_cls.current_hover_idx = modal_idx
+                main_cls.current_focus_type = "alpha"
+            w, h = _UtilBlf.draw_label_dimensions(0, "0.0")
             x += 10 + w
             if _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Remove ghost.(shift: With unhide verts)",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "remove", align="left"):

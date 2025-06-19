@@ -149,11 +149,12 @@ def MenuPrimary(pie, context):
 
 def MirrorVertexGroup(layout):
     r = layout.row(align=True)
-    r.label(text="Create VGroup Mirror")
-    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromActive.bl_idname, "Active")
-    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromActiveTopology.bl_idname, "", icon="MOD_MIRROR")
-    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromSelectedBone.bl_idname, "Selected Bones")
-    _Util.layout_operator(r, MPM_OT_Weight_MirrorVGFromSelectedBoneTopology.bl_idname, "", icon="MOD_MIRROR")
+    r1, r2 = _Util.layout_split_row2(r, 0.4)
+    r1.label(text="Create VGroup Mirror")
+    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromActive.bl_idname, "Active")
+    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromActiveTopology.bl_idname, "", icon="MOD_MIRROR")
+    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromSelectedBone.bl_idname, "Selected Bones")
+    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromSelectedBoneTopology.bl_idname, "", icon="MOD_MIRROR")
 
 
 # --------------------------------------------------------------------------------

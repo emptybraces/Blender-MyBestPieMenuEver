@@ -155,7 +155,7 @@ def draw_label_mousehover(fid, text, desc, x, y, mx, my, w=0, h=0, active=False,
         if is_in:
             if last_hover_key != key or (last_hover_key == key and key not in last_hover_time):
                 last_hover_time[key] = time.time()
-            elif 1.0 < time.time() - last_hover_time.get(key, 0):
+            elif 0.3 < time.time() - last_hover_time.get(key, 0):
                 blf.size(fid, FONT_SIZE_INFO)
                 ww, _ = blf.dimensions(fid, desc)
                 mx -= max(0, (mx + ww + 50) - bpy.context.area.width)
