@@ -11,7 +11,7 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
 ### [Utility]
 
-![image](https://github.com/user-attachments/assets/fed1078c-08bf-4dd0-8c83-671f658e6dac)
+![image](https://github.com/user-attachments/assets/97e484b8-a8b5-47dc-bb8c-6073138471d5)
 
 ### [OBJECT Mode]
 
