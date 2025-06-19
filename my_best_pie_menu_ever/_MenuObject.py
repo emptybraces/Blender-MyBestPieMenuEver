@@ -28,15 +28,9 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED")
 
     # if imported
-    c = r.column(align=True)
-    enabled_addons = context.preferences.addons.keys()
-    if "wiggle_2" in enabled_addons:
-        box = c.box()
-        box.label(text="3rd Party Tool")
-        _Util.layout_operator(box, "wiggle.reset", "Wiggle2: ResetPhysics")
-    if any("auto_rig_pro" in i for i in enabled_addons):
-        from ._MenuPose import MPM_OT_Pose_ARP_SnapIKFK
-        _Util.layout_operator(box, MPM_OT_Pose_ARP_SnapIKFK.bl_idname)
+    from ._MenuPose import draw_layout_3rdparty
+    draw_layout_3rdparty(context, r)
+
 
 # --------------------------------------------------------------------------------
 

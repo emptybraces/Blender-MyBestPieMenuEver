@@ -29,15 +29,30 @@ def MenuPrimary(pie, context):
         box.popover(panel=MPM_PT_Pose_BoneCollectionPopover.bl_idname, icon="GROUP_BONE")
 
     # thirdparty shortcut
-    box = row.box()
+    draw_layout_3rdparty(context, row)
+
+# --------------------------------------------------------------------------------
+
+
+def draw_layout_3rdparty(context, layout):
+    box = layout.box()
     box.label(text="3rdParty Shortcut")
     enabled_addons = context.preferences.addons.keys()
     if "wiggle_2" in enabled_addons:
         _Util.layout_operator(box, "wiggle.reset", text="Wiggle2: ResetPhysics")
     if any("auto_rig_pro" in i for i in enabled_addons):
-        _Util.layout_operator(box, MPM_OT_Pose_ARP_SnapIKFK.bl_idname)  # if imported
-
-# --------------------------------------------------------------------------------
+        box.label(text="Auto-Rig Pro")
+        c = box.column(align=True)
+        # c.label(text="Auto-Rig Pro")
+        r = c.row(align=True)
+        r1, r2 = _Util.layout_split_row2(r, 0.3)
+        r1.label(text="Arms")
+        _Util.layout_operator(r2, MPM_OT_Pose_ARP_SnapIKFK.bl_idname, text="FK").type = "FK_Arm"
+        _Util.layout_operator(r2, MPM_OT_Pose_ARP_SnapIKFK.bl_idname, text="IK").type = "IK_Arm"
+        r1, r2 = _Util.layout_split_row2(r, 0.3)
+        r1.label(text="Legs")
+        _Util.layout_operator(r2, MPM_OT_Pose_ARP_SnapIKFK.bl_idname, text="FK").type = "FK_Leg"
+        _Util.layout_operator(r2, MPM_OT_Pose_ARP_SnapIKFK.bl_idname, text="IK").type = "IK_Leg"
 
 
 def draw_layout_bone_collection(layout, arm):
@@ -138,6 +153,7 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
     bl_idname = "mpm.pose_arp_snapikfk"
     bl_label = "AutoRigPro: Snap IK-FK"
     bl_options = {"REGISTER", "UNDO"}
+    type: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -151,25 +167,28 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
         arms = [i for i in bpy.context.selected_objects if i.type == "ARMATURE"]
         if 0 < len(arms) and current_mode != "POSE":
             bpy.ops.object.mode_set(mode="POSE")
-        for obj in arms:
-            if obj.type == "ARMATURE":
-                bpy.ops.pose.select_all(action="DESELECT")
-                bpy.context.object.data.bones.active = obj.pose.bones["c_hand_ik.l"].bone
-                bpy.ops.pose.arp_switch_snap()
-                bpy.ops.pose.select_all(action="DESELECT")
-                bpy.context.object.data.bones.active = obj.pose.bones["c_hand_ik.r"].bone
-                bpy.ops.pose.arp_switch_snap()
-                bpy.ops.pose.select_all(action="DESELECT")
-                bpy.context.object.data.bones.active = obj.pose.bones["c_foot_ik.r"].bone
-                bpy.ops.pose.arp_switch_snap()
-                bpy.ops.pose.select_all(action="DESELECT")
-                bpy.context.object.data.bones.active = obj.pose.bones["c_foot_ik.l"].bone
-                bpy.ops.pose.arp_switch_snap()
-                bpy.ops.pose.select_all(action="DESELECT")
-                break
+        for arm in arms:
+            _Util.select_active(arm)
+            if self.type == "FK_Arm":
+                self.convert(arm.pose.bones["c_hand_ik.l"].bone, bpy.ops.pose.arp_arm_fk_to_ik_)
+                self.convert(arm.pose.bones["c_hand_ik.r"].bone, bpy.ops.pose.arp_arm_fk_to_ik_)
+            elif self.type == "IK_Arm":
+                self.convert(arm.pose.bones["c_hand_fk.l"].bone, bpy.ops.pose.arp_arm_ik_to_fk_)
+                self.convert(arm.pose.bones["c_hand_fk.r"].bone, bpy.ops.pose.arp_arm_ik_to_fk_)
+            elif self.type == "FK_Leg":
+                self.convert(arm.pose.bones["c_foot_ik.l"].bone, bpy.ops.pose.arp_leg_fk_to_ik_)
+                self.convert(arm.pose.bones["c_foot_ik.r"].bone, bpy.ops.pose.arp_leg_fk_to_ik_)
+            elif self.type == "IK_Leg":
+                self.convert(arm.pose.bones["c_foot_fk.l"].bone, bpy.ops.pose.arp_leg_ik_to_fk_)
+                self.convert(arm.pose.bones["c_foot_fk.r"].bone, bpy.ops.pose.arp_leg_ik_to_fk_)
         if current_mode != "POSE":
             bpy.ops.object.mode_set(mode=current_mode)
         return {"FINISHED"}
+
+    def convert(self, bone, func):
+        bpy.ops.pose.select_all(action="DESELECT")
+        bone.select = True
+        func()
 
 
 # --------------------------------------------------------------------------------
