@@ -33,8 +33,10 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             cls.DrawerVGroup(context, event),
             cls.DrawerShapeKeys(context, event),
             cls.DrawerUVMap(context, event),
-            cls.DrawerColorAttribute(context, event)
+            cls.DrawerColorAttribute(context, event),
         ]
+        if _Util.get_armature(context.object):
+            self.menu_classes.append(cls.DrawerBoneCollection(context, event))
         self.current_menu = self.menu_classes[0]
         self.imx = self.mx = event.mouse_x
         self.imy = self.my = event.mouse_y
@@ -156,6 +158,30 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             _UtilBlf.draw_label(label, x + column * w, y + (-h * row),
                                 color=_UtilBlf.COLOR_HIGHLIGHT_ACTIVE if isHighlight else _UtilBlf.COLOR_LABEL)
 
+        def _draw_label_list(self, data, funcLabel):
+            x, y = self.get_items_start_position()
+            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
+            item_w *= self.SHOW_STR_CNT
+            item_h *= 2
+            self.current_hover_idx = -1
+
+            for i, bc in enumerate(data):
+                label = funcLabel(i, bc, False)
+                if self._find_mousehovered(i, label, x, y, item_w, item_h):
+                    self.current_hover_idx = i
+                    if self.current_active_idx != i:
+                        self.current_active_idx = i
+                    break
+            for i, bc in enumerate(data):
+                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
+                if self.current_active_idx == i:
+                    continue
+                self._draw_label(i, funcLabel(i, bc, False), x, y, item_w, item_h, False)
+            else:
+                if self.current_active_idx != -1:
+                    label = funcLabel(self.current_active_idx, data[self.current_active_idx], True)
+                    self._draw_label(self.current_active_idx, label, x, y, item_w, item_h, True)
+
     class DrawerVGroup(DrawerBase):
         name = "VertexGroup"
 
@@ -190,30 +216,10 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if 0 == len(obj.vertex_groups):
                 _UtilBlf.draw_label("No VertexGroups found.", x, y)
                 return
-            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
-            item_w *= self.SHOW_STR_CNT
-            item_h *= 2
-            self.current_hover_idx = -1
 
-            def __label(vg, is_fullname):
+            def __label(i, vg, is_fullname):
                 return vg.name if is_fullname else vg.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(vg.name) else "")
-
-            for i, vg in enumerate(obj.vertex_groups):
-                label = __label(vg, False)
-                if self._find_mousehovered(i, label, x, y, item_w, item_h):
-                    self.current_hover_idx = i
-                    if self.current_active_idx != i:
-                        self.current_active_idx = i
-                    break
-            for i, vg in enumerate(obj.vertex_groups):
-                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
-                if self.current_active_idx == i:
-                    continue
-                self._draw_label(i, __label(vg, False), x, y, item_w, item_h, False)
-            else:
-                if self.current_active_idx != -1:
-                    self._draw_label(self.current_active_idx, __label(
-                        obj.vertex_groups[self.current_active_idx], True), x, y, item_w, item_h, True)
+            self._draw_label_list(obj.vertex_groups, __label)
 
     class DrawerShapeKeys(DrawerBase):
         name = "Shapekeys"
@@ -270,33 +276,13 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if obj.data.shape_keys == None:
                 _UtilBlf.draw_label("No ShapeKeys found.", x, y)
                 return
-            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
-            item_w *= self.SHOW_STR_CNT
-            item_h *= 2
-            self.current_hover_idx = -1
 
-            def __label(sk, is_fullname):
+            def __label(i, sk, is_fullname):
                 label = sk.name if is_fullname else sk.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(sk.name) else "")
                 if 0 < i:
                     label += f"[{sk.value:.1f}]"
                 return label
-
-            for i, sk in enumerate(obj.data.shape_keys.key_blocks):
-                label = __label(sk, False)
-                if self._find_mousehovered(i, label, x, y, item_w, item_h):
-                    self.current_hover_idx = i
-                    if self.current_active_idx != i:
-                        self.current_active_idx = i
-                    break
-            for i, sk in enumerate(obj.data.shape_keys.key_blocks):
-                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
-                if self.current_active_idx == i:
-                    continue
-                self._draw_label(i, __label(sk, False), x, y, item_w, item_h, False)
-            else:
-                if self.current_active_idx != -1:
-                    self._draw_label(self.current_active_idx, __label(
-                        obj.data.shape_keys.key_blocks[self.current_active_idx], True), x, y, item_w, item_h, True)
+            self._draw_label_list(obj.data.shape_keys.key_blocks, __label)
 
     class DrawerUVMap(DrawerBase):
         name = "UV Map"
@@ -333,30 +319,10 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if obj.data.uv_layers.active == None:
                 _UtilBlf.draw_label("No UV Maps found.", x, y)
                 return
-            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
-            item_w *= self.SHOW_STR_CNT
-            item_h *= 2
-            self.current_hover_idx = -1
 
-            def __label(uv, is_fullname):
+            def __label(i, uv, is_fullname):
                 return uv.name if is_fullname else uv.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(uv.name) else "")
-
-            for i, uv in enumerate(obj.data.uv_layers):
-                label = __label(uv, False)
-                if self._find_mousehovered(i, label, x, y, item_w, item_h):
-                    self.current_hover_idx = i
-                    if self.current_active_idx != i:
-                        self.current_active_idx = i
-                    break
-            for i, uv in enumerate(obj.data.uv_layers):
-                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
-                if self.current_active_idx == i:
-                    continue
-                self._draw_label(i, __label(uv, False), x, y, item_w, item_h, False)
-            else:
-                if self.current_active_idx != -1:
-                    self._draw_label(self.current_active_idx, __label(
-                        obj.data.uv_layers[self.current_active_idx], True), x, y, item_w, item_h, True)
+            self._draw_label_list(obj.data.uv_layers, __label)
 
     class DrawerColorAttribute(DrawerBase):
         name = "ColorAttribute"
@@ -395,29 +361,48 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if obj.data.color_attributes and len(obj.data.color_attributes) == 0:
                 _UtilBlf.draw_label("No ColorAttributes found.", x, y)
                 return
-            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
-            item_w *= self.SHOW_STR_CNT
-            item_h *= 2
-            self.current_hover_idx = -1
 
-            def __label(ca, is_fullname):
+            def __label(i, ca, is_fullname):
                 return ca.name if is_fullname else ca.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(ca.name) else "")
-            for i, ca in enumerate(obj.data.color_attributes):
-                label = __label(ca, False)
-                if self._find_mousehovered(i, label, x, y, item_w, item_h):
-                    self.current_hover_idx = i
-                    if self.current_active_idx != i:
-                        self.current_active_idx = i
-                    break
-            for i, ca in enumerate(obj.data.color_attributes):
-                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
-                if self.current_active_idx == i:
-                    continue
-                self._draw_label(i, __label(ca, False), x, y, item_w, item_h, False)
-            else:
-                if self.current_active_idx != -1:
-                    self._draw_label(self.current_active_idx, __label(
-                        obj.data.color_attributes[self.current_active_idx], True), x, y, item_w, item_h, True)
+            self._draw_label_list(obj.data.color_attributes, __label)
+
+    class DrawerBoneCollection(DrawerBase):
+        name = "BoneCollection"
+
+        def __init__(self, context, event):
+            super().__init__(context, event)
+            self.prev_active_idx_ca = context.object.data.color_attributes.active_color_index
+            self.arm = _Util.get_armature(context.object)
+
+        def modal(self, context, event):
+            super().modal(context, event)
+            if self.current_active_idx != -1 and not self.arm.data.collections_all[self.current_active_idx].is_solo:
+                for i, bc in enumerate(self.arm.data.collections_all):
+                    bc.is_solo = i == self.current_active_idx
+
+        def on_cancelled(self, context):
+            for i, bc in enumerate(self.arm.data.collections_all):
+                bc.is_solo = False
+
+        def on_mode_change(self, context):
+            super().on_mode_change(context)
+
+        def draw_key_info(self, x, y):
+            w = _UtilBlf.draw_label_dimensions("Activate")[0]*2
+            _UtilBlf.draw_key_info("Activate", "| mousehover", x, y)
+            _UtilBlf.draw_key_info("Apply", "| left-click", x := x+w, y)
+            _UtilBlf.draw_key_info("Cancel", "| right-click, ESC", x := x+w, y)
+            _UtilBlf.draw_key_info("MovePanel", "| G", x := x+w, y)
+
+        def draw_list(self):
+            x, y = self.get_items_start_position()
+            if len(self.arm.data.collections_all) == 0:
+                _UtilBlf.draw_label("No BoneCollection found.", x, y)
+                return
+
+            def __label(i, bc, is_fullname):
+                return bc.name if is_fullname else bc.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(bc.name) else "")
+            self._draw_label_list(self.arm.data.collections_all, __label)
 
 
 # --------------------------------------------------------------------------------

@@ -99,7 +99,7 @@ def DrawView3D(layout, context):
     view = context.space_data
     shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
 
-    # オーバーレイ、ボー、
+    # オーバーレイ、最前面
     overlay = getattr(context.space_data, "overlay", None)
     r = c.row(align=True)
     r.enabled = overlay != None
@@ -161,7 +161,6 @@ def DrawView3D(layout, context):
         r = c.row(align=True)
         _Util.layout_prop(r, obj, "show_in_front")
         armature = _Util.get_armature(obj)
-        # _Util.MPM_OT_SetBoolToggle.operator(r, "", armature, "show_in_front", "BONE_DATA", isActive=armature != None)
         _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ShowInFrontArmature.bl_idname, "", armature != None,  getattr(
             armature, "show_in_front", False), "BONE_DATA").is_on = not getattr(armature, "show_in_front", False)
 
