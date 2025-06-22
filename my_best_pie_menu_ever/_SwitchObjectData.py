@@ -133,7 +133,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             self.reserved_mode = None
 
         def on_mode_change(self, context):
-            pass
+            self.reserved_mode = self.last_mode
 
         def modal(self, context, event):
             self.mx = event.mouse_x
@@ -241,7 +241,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         def on_mode_change(self, context):
             super().on_mode_change(context)
             self.current_active_idx = context.object.active_shape_key_index
-            self.reserved_mode = self.last_mode
+            self.reserved_mode = "EDIT"
 
         def on_mousewheel(self, context, up):
             if self.current_hover_idx <= 0:  # 先頭のBasisも操作しない
@@ -319,7 +319,6 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         def on_mode_change(self, context):
             super().on_mode_change(context)
             self.current_active_idx = context.object.data.uv_layers.active_index
-            self.reserved_mode = self.last_mode
 
         def draw_key_info(self, x, y):
             w = _UtilBlf.draw_label_dimensions("Activate")[0]*2
