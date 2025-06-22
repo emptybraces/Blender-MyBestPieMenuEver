@@ -29,9 +29,14 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # v2.7.0
+# - [Utility] アクティブコレクションの表示非表示ボタンを追加。
 # - [Utility] 選択オブジェクトを一つ一つ表示する機能を追加。
 # - [EditMesh] ゴースト表示機能にアルファカラーフィールドを追加。
-# - [Bugfix] SwitchObjectDataのVertexGroupリストがアクティブなVertexGroupがないときリストが取得できない。
+# - [SwitchObjectData] Gキーでパネルを移動できるようにした。
+# - [SwitchObjectData] 対象データ選択時、自動的に最適なモードに切り替わるようにした。
+# - [Bugfix] SwitchObjectData項目選択ロジックが不安定。
+# - [Bugfix] SwitchObjectData/Blendshapeで、頻繁に変更するとクラッシュする。
+# - [Bugfix] SwitchObjectData/VertexGroupで、アクティブなVertexGroupがないときリストが非表示になる。
 # v2.6.0
 # - [Object/EditMesh] ゴースト表示機能を実装。
 # - [EditMesh] 頂点固定機能を実装。

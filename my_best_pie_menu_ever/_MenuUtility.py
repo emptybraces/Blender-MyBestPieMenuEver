@@ -869,7 +869,7 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
         _UtilInput.update(event, "LEFTMOUSE", "RIGHTMOUSE", "ESC")
         if 0 <= cls.current_hover_idx:
             modal = cls.draw_modals[cls.current_hover_idx]
-            if cls.current_focus_type == "remove" and _UtilInput.is_pressed_key("LEFTMOUSE"):
+            if cls.current_focus_type == "remove" and _UtilInput.is_keydown("LEFTMOUSE"):
                 modal.cancel()
                 cls.current_hover_idx = -1
                 return {"RUNNING_MODAL"}
@@ -877,10 +877,10 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
                 if event.type == "WHEELUPMOUSE" or event.type == "WHEELDOWNMOUSE":
                     modal.switch_solo(event.type == "WHEELUPMOUSE")
                     return {"RUNNING_MODAL"}
-                elif _UtilInput.is_pressed_key("LEFTMOUSE"):
+                elif _UtilInput.is_keydown("LEFTMOUSE"):
                     modal.switch_all(True)
                     return {"RUNNING_MODAL"}
-                elif _UtilInput.is_pressed_key("RIGHTMOUSE"):
+                elif _UtilInput.is_keydown("RIGHTMOUSE"):
                     modal.switch_all(False)
                     return {"RUNNING_MODAL"}
         return {"PASS_THROUGH"}
@@ -919,20 +919,20 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
                 main_cls.current_focus_type = ""
             # label
             text = "Cycle Solo:"
-            w, h = _UtilBlf.draw_label_dimensions(0, text)
+            w, h = _UtilBlf.draw_label_dimensions(text)
             h *= 1.5
             x, y = g.space_view_command_display_begin_pos(self.id)
             y += h * modal_idx
             if modal_idx == len(main_cls.draw_modals)-1:  # 最後だけ表示
-                _UtilBlf.draw_label(0, text, x, y, "right")
+                _UtilBlf.draw_label(text, x, y, "right")
             x += 10
             current = self.selected_objects[self.sel_index]
-            if _UtilBlf.draw_label_mousehover(0, current.name, "mouse wheel: Next/Prev, LMB: Show all, RMB: Hide all",
+            if _UtilBlf.draw_label_mousehover(current.name, "mouse wheel: Next/Prev, LMB: Show all, RMB: Hide all",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "current_name", align="left"):
                 main_cls.current_hover_idx = modal_idx
                 main_cls.current_focus_type = "current_name"
             x += 150
-            if _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Cancelling",
+            if _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "remove", align="left"):
                 main_cls.current_hover_idx = modal_idx
                 main_cls.current_focus_type = "remove"

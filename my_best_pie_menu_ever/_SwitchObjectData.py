@@ -23,31 +23,27 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
     bl_label = "Switch Object Data"
     bl_description = ""
 
-    current_item_idx = -1
-    current_menu_idx = 0
-    ROW_LIMIT = 30
-    SHOW_STR_CNT = 20
-    WIDTH_PER_CHAR = 8
-    HOVER_SCALE = 1.2
-
     @classmethod
     def poll(self, context):
         return context.object != None and context.object.type == "MESH"
 
     def invoke(self, context, event):
-        self.imx = event.mouse_x
-        self.imy = event.mouse_y
-        self.mx = event.mouse_x
-        self.my = event.mouse_y
-        self.prev_active_idx_vg = context.object.vertex_groups.active_index
-        self.prev_active_idx_uv = context.object.data.uv_layers.active_index
-        self.prev_active_idx_ca = context.object.data.color_attributes.active_color_index
-        self.prev_active_idx_sk = context.object.active_shape_key_index
-        self.prev_sk_values = [key.value for key in context.object.data.shape_keys.key_blocks] if context.object.data.shape_keys else []
-        self.update_mode(self.current_menu_idx)
+        cls = MPM_OT_SwitchObjectDataModal
+        self.menu_classes = [
+            cls.DrawerVGroup(context, event),
+            cls.DrawerShapeKeys(context, event),
+            cls.DrawerUVMap(context, event),
+            cls.DrawerColorAttribute(context, event)
+        ]
+        self.current_menu = self.menu_classes[0]
+        self.imx = self.mx = event.mouse_x
+        self.imy = self.my = event.mouse_y
+        self.is_move_mode = False
+        self.last_mode = context.object.mode
+        bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
         self.timer = context.window_manager.event_timer_add(0.01, window=context.window)
         context.window_manager.modal_handler_add(self)
-        self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
+        self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")
         g.force_cancel_piemenu_modal(context)
         return {"RUNNING_MODAL"}
 
@@ -55,19 +51,26 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mx = event.mouse_x
         self.my = event.mouse_y
-        _UtilInput.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W")
-        if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
-            self.on_mousewheel and self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
-        elif _UtilInput.is_pressed_key("MIDDLEMOUSE"):
-            self.on_middle_click and self.on_middle_click(context)
-        elif _UtilInput.is_pressed_key("LEFTMOUSE", "SPACE"):
+        self.current_menu.modal(context, event)
+        _UtilInput.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W", "G")
+        if _UtilInput.is_keydown("LEFTMOUSE", "SPACE"):
             return self.finished(context)
-        elif _UtilInput.is_pressed_key("RIGHTMOUSE", "ESC"):
+        elif _UtilInput.is_keydown("RIGHTMOUSE", "ESC"):
             return self.cancelled(context)
-        elif _UtilInput.is_pressed_key("W"):
+        elif _UtilInput.is_keydown("W"):
             ret = self.finished(context)
             bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
             return ret
+        elif _UtilInput.is_keydown("G"):
+            self.is_move_mode = True
+        elif _UtilInput.is_keyup(event, "G"):
+            self.is_move_mode = False
+        if self.is_move_mode:
+            self.imx = event.mouse_x
+            self.imy = event.mouse_y
+            for menu in self.menu_classes:
+                menu.imx = event.mouse_x
+                menu.imy = event.mouse_y
         return {"RUNNING_MODAL"}
 
     def finished(self, context):
@@ -75,18 +78,9 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         return {"FINISHED"}
 
     def cancelled(self, context):
+        self.current_menu.on_cancelled(context)
         self.release(context)
-        if -1 < self.prev_active_idx_vg:
-            context.object.vertex_groups.active_index = self.prev_active_idx_vg
-        for i, v in enumerate(self.prev_sk_values):
-            if (i < len(context.object.data.shape_keys.key_blocks)):
-                context.object.data.shape_keys.key_blocks[i].value = v
-        if -1 < self.prev_active_idx_uv:
-            context.object.data.uv_layers.active_index = self.prev_active_idx_uv
-            context.object.data.uv_layers.active.active_render = True
-        if -1 < self.prev_active_idx_ca:
-            context.object.data.color_attributes.active_color_index = self.prev_active_idx_ca
-            context.object.data.color_attributes.render_color_index = self.prev_active_idx_ca
+        bpy.ops.object.mode_set(mode=self.last_mode)
         return {"CANCELLED"}
 
     def release(self, context):
@@ -98,189 +92,335 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             context.window_manager.event_timer_remove(self.timer)
             self.timer = None
 
-    def draw_label(self):
+    def draw2d(self):
+        if not self.current_menu:
+            return
         self.draw_menu()
-        self.draw_func()
+        self.current_menu.draw_list()
 
     def draw_menu(self):
-        menues = ["VertexGroup", "ShapeKeys", "UV Map", "ColorAttributes"]
         x = self.imx - bpy.context.area.x
         y = self.imy - bpy.context.area.y + 50
-        WIDTH = 90
-        HEIGHT = 20
-        WIDTH_SLASH = 20
-        for i, menu in enumerate(menues):
+        menu_sep = " | "
+        menu_sep_width = _UtilBlf.draw_label_dimensions(menu_sep)[0]
+        for i, menu in enumerate(self.menu_classes):
             if 0 < i:
-                _UtilBlf.draw_label(0, "/", x, y)
-                x += WIDTH_SLASH
-            if _UtilBlf.draw_label_mousehover(0, menu, "", x, y, self.mx, self.my, WIDTH, HEIGHT, self.current_menu_idx == i, align="center"):
-                if self.current_menu_idx != i:
-                    self.update_mode(i)
-            x += WIDTH
-        x = self.imx - bpy.context.area.x + 10 + self.current_menu_idx * (WIDTH + WIDTH_SLASH)
+                _UtilBlf.draw_label(menu_sep, x, y)
+                x += menu_sep_width
+            w, h = _UtilBlf.draw_label_dimensions(menu.name)
+            if _UtilBlf.draw_label_mousehover(menu.name, "", x, y, self.mx, self.my, w, h, self.current_menu == menu, align="left"):
+                if self.current_menu != menu:
+                    self.current_menu = menu
+                    menu.on_mode_change(bpy.context)
+            x += w
+        x = self.imx - bpy.context.area.x + 10  # + self.current_menu_idx * (WIDTH + slash_width)
         y -= 30
-        _UtilBlf.draw_key_info(0, "Activate", "| mousehover", x, y)
-        x += 90
-        if self.current_menu_idx == 1:
-            _UtilBlf.draw_key_info(0, "Adjust", "| middle-click,\n  mousewheel", x, y)
-            x += 90
-        _UtilBlf.draw_key_info(0, "Apply", "| left-click", x, y)
-        x += 80
-        _UtilBlf.draw_key_info(0, "Cancel", "| right-click, ESC", x, y)
+        self.current_menu.draw_key_info(x, y)
         x = self.imx - bpy.context.area.x
         y -= 40
-        _UtilBlf.draw_separator(0, "_____________________________", x, y)
+        _UtilBlf.draw_separator("_____________________________", x, y)
 
-    def update_mode(self, i):
-        self.current_menu_idx = i
-        self.on_middle_click = None
-        self.on_mousewheel = None
-        if i == 0:
-            self.draw_func = self.draw_vgroups
-        elif i == 1:
-            self.draw_func = self.draw_shapekeys
-            self.on_mousewheel = self.on_mousewheel_shapekey
-            self.on_middle_click = self.on_middleclick_shapekey
-        elif i == 2:
-            self.draw_func = self.draw_uv
-        elif i == 3:
-            self.draw_func = self.draw_attributes
+    class DrawerBase:
+        ROW_LIMIT = 40
+        SHOW_STR_CNT = 20
 
-    def get_items_start_position(self):
-        return self.imx - bpy.context.area.x, self.imy - bpy.context.area.y - 50
+        def __init__(self, context, event):
+            self.current_hover_idx = -1
+            self.current_active_idx = -1
+            self.imx = self.mx = event.mouse_x
+            self.imy = self.my = event.mouse_y
+            self.last_mode = context.object.mode
+            self.reserved_mode = None
 
-    def draw_vgroups(self):
-        obj = bpy.context.object
-        x, y = self.get_items_start_position()
-        if 0 == len(obj.vertex_groups):
-            _UtilBlf.draw_label(0, "No VertexGroups found.", x, y)
-            return
-        ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR
-        ITEM_HEIGHT = 20
-        active_idx = obj.vertex_groups.active_index
-        tmp_current_idx = self.current_item_idx
-        self.current_item_idx = -1
+        def on_mode_change(self, context):
+            pass
 
-        def __draw(i,  is_fullname):
-            vg = obj.vertex_groups[i]
+        def modal(self, context, event):
+            self.mx = event.mouse_x
+            self.my = event.mouse_y
+            if self.reserved_mode:
+                bpy.ops.object.mode_set(mode=self.reserved_mode)
+                self.reserved_mode = None
+
+        def get_items_start_position(self):
+            return self.imx - bpy.context.area.x, self.imy - bpy.context.area.y - 50
+
+        def _find_mousehovered(self, i, label, x, y, w, h):
             column = int(i / self.ROW_LIMIT)
             row = i % self.ROW_LIMIT
-            label = vg.name if is_fullname else vg.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(vg.name) else "")
-            if _UtilBlf.draw_label_mousehover(0, label, "", x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
-                self.current_item_idx = i
-                if active_idx != i:
-                    obj.vertex_groups.active_index = i
+            return _UtilBlf.is_mousehover_label(label, x + column * w, y + (-h * row), self.mx, self.my, w, h)
 
-        for i, vg in enumerate(obj.vertex_groups):
-            # 最後に描画する
-            if tmp_current_idx != -1 and tmp_current_idx == i:
-                continue
-            __draw(i, False)
-        else:
-            if tmp_current_idx != -1:
-                __draw(tmp_current_idx, True)
-
-    def draw_shapekeys(self):
-        obj = bpy.context.object
-        x, y = self.get_items_start_position()
-        if obj.data.shape_keys == None:
-            _UtilBlf.draw_label(0, "No ShapeKeys found.", x, y)
-            return
-        ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR + 40
-        ITEM_HEIGHT = 20
-        active_idx = obj.active_shape_key_index
-        tmp_current_idx = self.current_item_idx
-        self.current_item_idx = -1
-
-        def __draw(i, is_fullname):
-            sk = obj.data.shape_keys.key_blocks[i]
+        def _draw_label(self, i, label, x, y, w, h, isHighlight):
             column = int(i / self.ROW_LIMIT)
             row = i % self.ROW_LIMIT
-            label = sk.name if is_fullname else sk.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(sk.name) else "")
-            if 0 < i:
-                label += f"[{sk.value:.1f}]"
-            if _UtilBlf.draw_label_mousehover(0, label, "", x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
-                self.current_item_idx = i
-                if active_idx != i:
-                    obj.active_shape_key_index = i
+            _UtilBlf.draw_label(label, x + column * w, y + (-h * row),
+                                color=_UtilBlf.COLOR_HIGHLIGHT_ACTIVE if isHighlight else _UtilBlf.COLOR_LABEL)
 
-        for i, sk in enumerate(obj.data.shape_keys.key_blocks):
-            # 最後に描画する
-            if tmp_current_idx != -1 and tmp_current_idx == i:
-                continue
-            __draw(i, False)
-        else:
-            if tmp_current_idx != -1:
-                __draw(tmp_current_idx, True)
+    class DrawerVGroup(DrawerBase):
+        name = "VertexGroup"
 
-    def on_mousewheel_shapekey(self, context, up):
-        if self.current_item_idx <= 0:  # 先頭のBasisも操作しない
-            return
-        sk = context.object.data.shape_keys.key_blocks[self.current_item_idx]
-        sk.value += 0.1 if up else -0.1
-        sk.value = _Util.clamp(round(sk.value, 1), 0.0, 1.0)
+        def __init__(self, context, event):
+            super().__init__(context, event)
+            self.prev_active_idx_vg = context.object.vertex_groups.active_index
 
-    def on_middleclick_shapekey(self, context):
-        if self.current_item_idx <= 0:  # 先頭のBasisも操作しない
-            return
-        sk = context.object.data.shape_keys.key_blocks[self.current_item_idx]
-        sk.value = 0 if 0 < sk.value else 1
+        def modal(self, context, event):
+            super().modal(context, event)
+            if self.current_active_idx != -1 and context.object.vertex_groups.active_index != self.current_active_idx:
+                context.object.vertex_groups.active_index = self.current_active_idx
 
-    def draw_uv(self):
-        obj = bpy.context.object
-        x, y = self.get_items_start_position()
-        if obj.data.uv_layers.active == None:
-            _UtilBlf.draw_label(0, "No UV Maps found.", x, y)
-            return
-        ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR
-        ITEM_HEIGHT = 20
-        active_idx = obj.data.uv_layers.active_index
-        self.current_item_idx = -1
-        for i, uv in enumerate(obj.data.uv_layers):
-            column = int(i / self.ROW_LIMIT)
-            row = i % self.ROW_LIMIT
-            label = uv.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(uv.name) else "")
-            if _UtilBlf.draw_label_mousehover(0, label, "", x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i, self.HOVER_SCALE):
-                self.current_item_idx = i
-                if active_idx != i:
-                    obj.data.uv_layers.active_index = i
-                    obj.data.uv_layers.active.active_render = True
+        def on_cancelled(self, context):
+            if -1 < self.prev_active_idx_vg:
+                context.object.vertex_groups.active_index = self.prev_active_idx_vg
 
-    def draw_attributes(self):
-        obj = bpy.context.object
-        x, y = self.get_items_start_position()
-        if obj.data.color_attributes and len(obj.data.color_attributes) == 0:
-            _UtilBlf.draw_label(0, "No ColorAttributes found.", x, y)
-            return
-        ITEM_WIDTH = self.SHOW_STR_CNT * self.WIDTH_PER_CHAR
-        ITEM_HEIGHT = 20
-        active_idx = obj.data.color_attributes.active_color_index
-        tmp_current_idx = self.current_item_idx
-        self.current_item_idx = -1
+        def on_mode_change(self, context):
+            super().on_mode_change(context)
+            self.current_active_idx = context.object.vertex_groups.active_index
+            self.reserved_mode = "WEIGHT_PAINT"
 
-        def __draw(i,  is_fullname):
-            ca = obj.data.color_attributes[i]
-            column = int(i / self.ROW_LIMIT)
-            row = i % self.ROW_LIMIT
-            label = ca.name if is_fullname else ca.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(ca.name) else "")
-            if _UtilBlf.draw_label_mousehover(0, label, "", x + column * ITEM_WIDTH, y + (-ITEM_HEIGHT * row),
-                                              self.mx, self.my, ITEM_WIDTH, ITEM_HEIGHT, active_idx == i):
-                self.current_item_idx = i
-                if active_idx != i:
-                    obj.data.color_attributes.active_color_index = i
-                    obj.data.color_attributes.render_color_index = i
+        def draw_key_info(self, x, y):
+            w = _UtilBlf.draw_label_dimensions("Activate")[0]*2
+            _UtilBlf.draw_key_info("Activate", "| mousehover", x, y)
+            _UtilBlf.draw_key_info("Apply", "| left-click", x := x+w, y)
+            _UtilBlf.draw_key_info("Cancel", "| right-click, ESC", x := x+w, y)
+            _UtilBlf.draw_key_info("MovePanel", "| G", x := x+w, y)
 
-        for i, ca in enumerate(obj.data.color_attributes):
-            # 最後に描画する
-            if tmp_current_idx != -1 and tmp_current_idx == i:
-                continue
-            __draw(i, False)
-        else:
-            if tmp_current_idx != -1:
-                __draw(tmp_current_idx, True)
+        def draw_list(self):
+            obj = bpy.context.object
+            x, y = self.get_items_start_position()
+            if 0 == len(obj.vertex_groups):
+                _UtilBlf.draw_label("No VertexGroups found.", x, y)
+                return
+            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
+            item_w *= self.SHOW_STR_CNT
+            item_h *= 2
+            self.current_hover_idx = -1
+
+            def __label(vg, is_fullname):
+                return vg.name if is_fullname else vg.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(vg.name) else "")
+
+            for i, vg in enumerate(obj.vertex_groups):
+                label = __label(vg, False)
+                if self._find_mousehovered(i, label, x, y, item_w, item_h):
+                    self.current_hover_idx = i
+                    if self.current_active_idx != i:
+                        self.current_active_idx = i
+                    break
+            for i, vg in enumerate(obj.vertex_groups):
+                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
+                if self.current_active_idx == i:
+                    continue
+                self._draw_label(i, __label(vg, False), x, y, item_w, item_h, False)
+            else:
+                if self.current_active_idx != -1:
+                    self._draw_label(self.current_active_idx, __label(
+                        obj.vertex_groups[self.current_active_idx], True), x, y, item_w, item_h, True)
+
+    class DrawerShapeKeys(DrawerBase):
+        name = "Shapekeys"
+
+        def __init__(self, context, event):
+            super().__init__(context, event)
+            self.prev_active_idx_sk = context.object.active_shape_key_index
+            self.prev_sk_values = [key.value for key in context.object.data.shape_keys.key_blocks] if context.object.data.shape_keys else []
+
+        def modal(self, context, event):
+            super().modal(context, event)
+            if self.current_active_idx != -1 and context.object.active_shape_key_index != self.current_active_idx:
+                context.object.active_shape_key_index = self.current_active_idx
+            # 分かりずらいのでここで_UtilInput.updateしない。元でまとめてやる
+            if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
+                self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
+            elif _UtilInput.is_keydown("MIDDLEMOUSE"):
+                self.on_middleclick(context)
+
+        def on_cancelled(self, context):
+            for i, v in enumerate(self.prev_sk_values):
+                if (i < len(context.object.data.shape_keys.key_blocks)):
+                    context.object.data.shape_keys.key_blocks[i].value = v
+
+        def on_mode_change(self, context):
+            super().on_mode_change(context)
+            self.current_active_idx = context.object.active_shape_key_index
+            self.reserved_mode = self.last_mode
+
+        def on_mousewheel(self, context, up):
+            if self.current_hover_idx <= 0:  # 先頭のBasisも操作しない
+                return
+            sk = context.object.data.shape_keys.key_blocks[self.current_hover_idx]
+            sk.value += 0.1 if up else -0.1
+            sk.value = _Util.clamp(round(sk.value, 1), 0.0, 1.0)
+
+        def on_middleclick(self, context):
+            if self.current_hover_idx <= 0:  # 先頭のBasisも操作しない
+                return
+            sk = context.object.data.shape_keys.key_blocks[self.current_hover_idx]
+            sk.value = 0 if 0 < sk.value else 1
+
+        def draw_key_info(self, x, y):
+            w = _UtilBlf.draw_label_dimensions("Activate")[0]*2
+            _UtilBlf.draw_key_info("Activate", "| mousehover", x, y)
+            _UtilBlf.draw_key_info("Adjust", "| middle-click,\n  mousewheel",  x := x + w, y)
+            _UtilBlf.draw_key_info("Apply", "| left-click",  x := x + w, y)
+            _UtilBlf.draw_key_info("Cancel", "| right-click, ESC",  x := x + w, y)
+            _UtilBlf.draw_key_info("MovePanel", "| G",  x := x + w, y)
+
+        def draw_list(self):
+            obj = bpy.context.object
+            x, y = self.get_items_start_position()
+            if obj.data.shape_keys == None:
+                _UtilBlf.draw_label("No ShapeKeys found.", x, y)
+                return
+            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
+            item_w *= self.SHOW_STR_CNT
+            item_h *= 2
+            self.current_hover_idx = -1
+
+            def __label(sk, is_fullname):
+                label = sk.name if is_fullname else sk.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(sk.name) else "")
+                if 0 < i:
+                    label += f"[{sk.value:.1f}]"
+                return label
+
+            for i, sk in enumerate(obj.data.shape_keys.key_blocks):
+                label = __label(sk, False)
+                if self._find_mousehovered(i, label, x, y, item_w, item_h):
+                    self.current_hover_idx = i
+                    if self.current_active_idx != i:
+                        self.current_active_idx = i
+                    break
+            for i, sk in enumerate(obj.data.shape_keys.key_blocks):
+                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
+                if self.current_active_idx == i:
+                    continue
+                self._draw_label(i, __label(sk, False), x, y, item_w, item_h, False)
+            else:
+                if self.current_active_idx != -1:
+                    self._draw_label(self.current_active_idx, __label(
+                        obj.data.shape_keys.key_blocks[self.current_active_idx], True), x, y, item_w, item_h, True)
+
+    class DrawerUVMap(DrawerBase):
+        name = "UV Map"
+
+        def __init__(self, context, event):
+            super().__init__(context, event)
+            self.prev_active_idx_uv = context.object.data.uv_layers.active_index
+
+        def modal(self, context, event):
+            super().modal(context, event)
+            if self.current_active_idx != -1 and context.object.data.uv_layers.active_index != self.current_active_idx:
+                context.object.data.uv_layers.active_index = self.current_active_idx
+                context.object.data.uv_layers.active.active_render = True
+
+        def on_cancelled(self, context):
+            if -1 < self.prev_active_idx_uv:
+                context.object.data.uv_layers.active_index = self.prev_active_idx_uv
+                context.object.data.uv_layers.active.active_render = True
+
+        def on_mode_change(self, context):
+            super().on_mode_change(context)
+            self.current_active_idx = context.object.data.uv_layers.active_index
+            self.reserved_mode = self.last_mode
+
+        def draw_key_info(self, x, y):
+            w = _UtilBlf.draw_label_dimensions("Activate")[0]*2
+            _UtilBlf.draw_key_info("Activate", "| mousehover", x, y)
+            _UtilBlf.draw_key_info("Apply", "| left-click", x := x+w, y)
+            _UtilBlf.draw_key_info("Cancel", "| right-click, ESC", x := x+w, y)
+            _UtilBlf.draw_key_info("MovePanel", "| G", x := x+w, y)
+
+        def draw_list(self):
+            obj = bpy.context.object
+            x, y = self.get_items_start_position()
+            if obj.data.uv_layers.active == None:
+                _UtilBlf.draw_label("No UV Maps found.", x, y)
+                return
+            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
+            item_w *= self.SHOW_STR_CNT
+            item_h *= 2
+            self.current_hover_idx = -1
+
+            def __label(uv, is_fullname):
+                return uv.name if is_fullname else uv.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(uv.name) else "")
+
+            for i, uv in enumerate(obj.data.uv_layers):
+                label = __label(uv, False)
+                if self._find_mousehovered(i, label, x, y, item_w, item_h):
+                    self.current_hover_idx = i
+                    if self.current_active_idx != i:
+                        self.current_active_idx = i
+                    break
+            for i, uv in enumerate(obj.data.uv_layers):
+                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
+                if self.current_active_idx == i:
+                    continue
+                self._draw_label(i, __label(uv, False), x, y, item_w, item_h, False)
+            else:
+                if self.current_active_idx != -1:
+                    self._draw_label(self.current_active_idx, __label(
+                        obj.data.uv_layers[self.current_active_idx], True), x, y, item_w, item_h, True)
+
+    class DrawerColorAttribute(DrawerBase):
+        name = "ColorAttribute"
+
+        def __init__(self, context, event):
+            super().__init__(context, event)
+            self.prev_active_idx_ca = context.object.data.color_attributes.active_color_index
+
+        def modal(self, context, event):
+            super().modal(context, event)
+            if self.current_active_idx != -1 and context.object.data.color_attributes.active_color_index != self.current_active_idx:
+                context.object.data.color_attributes.active_color_index = self.current_active_idx
+                context.object.data.color_attributes.render_color_index = self.current_active_idx
+
+        def on_cancelled(self, context):
+            if -1 < self.prev_active_idx_ca:
+                context.object.data.color_attributes.active_color_index = self.prev_active_idx_ca
+                context.object.data.color_attributes.render_color_index = self.prev_active_idx_ca
+
+        def on_mode_change(self, context):
+            super().on_mode_change(context)
+            self.current_active_idx = context.object.data.color_attributes.active_color_index
+            self.reserved_mode = "VERTEX_PAINT"
+
+        def draw_key_info(self, x, y):
+            w = _UtilBlf.draw_label_dimensions("Activate")[0]*2
+            _UtilBlf.draw_key_info("Activate", "| mousehover", x, y)
+            _UtilBlf.draw_key_info("Apply", "| left-click", x := x+w, y)
+            _UtilBlf.draw_key_info("Cancel", "| right-click, ESC", x := x+w, y)
+            _UtilBlf.draw_key_info("MovePanel", "| G", x := x+w, y)
+
+        def draw_list(self):
+
+            obj = bpy.context.object
+            x, y = self.get_items_start_position()
+            if obj.data.color_attributes and len(obj.data.color_attributes) == 0:
+                _UtilBlf.draw_label("No ColorAttributes found.", x, y)
+                return
+            item_w, item_h = _UtilBlf.draw_label_dimensions("a")
+            item_w *= self.SHOW_STR_CNT
+            item_h *= 2
+            self.current_hover_idx = -1
+
+            def __label(ca, is_fullname):
+                return ca.name if is_fullname else ca.name[:self.SHOW_STR_CNT] + (".." if self.SHOW_STR_CNT < len(ca.name) else "")
+            for i, ca in enumerate(obj.data.color_attributes):
+                label = __label(ca, False)
+                if self._find_mousehovered(i, label, x, y, item_w, item_h):
+                    self.current_hover_idx = i
+                    if self.current_active_idx != i:
+                        self.current_active_idx = i
+                    break
+            for i, ca in enumerate(obj.data.color_attributes):
+                # 名前を全表示するものは最後に描画しないと、ほかのラベルに被って見えない。
+                if self.current_active_idx == i:
+                    continue
+                self._draw_label(i, __label(ca, False), x, y, item_w, item_h, False)
+            else:
+                if self.current_active_idx != -1:
+                    self._draw_label(self.current_active_idx, __label(
+                        obj.data.color_attributes[self.current_active_idx], True), x, y, item_w, item_h, True)
+
+
 # --------------------------------------------------------------------------------
 
 

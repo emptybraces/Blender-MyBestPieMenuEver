@@ -1028,13 +1028,13 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         self.mouse_pos.x = _Util.lerp(self.mouse_pos.x, event.mouse_x, 0.05)
         self.mouse_pos.y = _Util.lerp(self.mouse_pos.y, event.mouse_y, 0.05)
         _UtilInput.update(event, "X", "Y", "Z", "LEFTMOUSE", "RET", "RIGHTMOUSE", "ESC", "SPACE", "RET")
-        if _UtilInput.is_pressed_key("X"):
+        if _UtilInput.is_keydown("X"):
             self.dir = Vector((-1 if self.dir[0] == 1 else 1, 0, 0))
             return self.execute(context)
-        if _UtilInput.is_pressed_key("Y"):
+        if _UtilInput.is_keydown("Y"):
             self.dir = Vector((0, -1 if self.dir[1] == 1 else 1, 0))
             return self.execute(context)
-        if _UtilInput.is_pressed_key("Z"):
+        if _UtilInput.is_keydown("Z"):
             if event.alt:
                 context.space_data.shading.show_xray = not context.space_data.shading.show_xray
             else:
@@ -1046,9 +1046,9 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         elif event.type == "WHEELDOWNMOUSE":
             context.region_data.view_distance += 0.5
             return {"RUNNING_MODAL"}
-        if _UtilInput.is_pressed_key("LEFTMOUSE", "RET"):
+        if _UtilInput.is_keydown("LEFTMOUSE", "RET"):
             return self.cancel(context)
-        if _UtilInput.is_pressed_key("RIGHTMOUSE", "ESC", "SPACE", "RET"):
+        if _UtilInput.is_keydown("RIGHTMOUSE", "ESC", "SPACE", "RET"):
             self.is_reverting = True
             self.start_time = time.time()
             return {"RUNNING_MODAL"}
@@ -1068,11 +1068,10 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
     def draw_label(self):
         if self.is_reverting:
             return
-        fid = 0  # デフォルトのフォントを使用
         x = _Util.clamp(self.mouse_pos.x - bpy.context.area.x, 0, bpy.context.area.width)
         y = _Util.clamp(self.mouse_pos.y - bpy.context.area.y, 0, bpy.context.area.height)
-        _UtilBlf.animate_clipping(fid, x, 500, self.timer.time_duration)
-        _UtilBlf.draw_title(fid, "Align view to edge normal side", x, y)
+        _UtilBlf.animate_clipping(x, 500, self.timer.time_duration)
+        _UtilBlf.draw_title("Align view to edge normal side", x, y)
         text = ""
         if self.dir[0] != 0:
             text = "+X" if self.dir[0] == 1 else "-X"
@@ -1081,11 +1080,11 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         elif self.dir[2] != 0:
             text = "+Z" if self.dir[2] == 1 else "-Z"
 
-        _UtilBlf.draw_field(fid, "Direction = ", text, "| press X, Y, Z, twice to invert", x, y, 0)
-        _UtilBlf.draw_field(fid, "Wireframe = ", str(bpy.context.space_data.shading.show_xray), "| press ALT + Z", x, y, 1)
-        _UtilBlf.draw_field(fid, "Zoom", None, "| mousewheel", x, y, 2)
-        _UtilBlf.draw_field(fid, "Cancel", None, "| right click", x + 100, y, 2)
-        _UtilBlf.draw_field(fid, "Finish", None, "| left click", x + 200, y, 2)
+        _UtilBlf.draw_field("Direction = ", text, "| press X, Y, Z, twice to invert", x, y, 0)
+        _UtilBlf.draw_field("Wireframe = ", str(bpy.context.space_data.shading.show_xray), "| press ALT + Z", x, y, 1)
+        _UtilBlf.draw_field("Zoom", None, "| mousewheel", x, y, 2)
+        _UtilBlf.draw_field("Cancel", None, "| right click", x + 100, y, 2)
+        _UtilBlf.draw_field("Finish", None, "| left click", x + 200, y, 2)
 
 
 class MPM_OT_EditMesh_GrowEdgeRingSelection(bpy.types.Operator):
@@ -1387,7 +1386,7 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         _UtilInput.update(event, "LEFTMOUSE", "ESC")
         if context.object.mode != "EDIT":  # モード変更でキャンセル
             return self.cancel(context)
-        if cls.draw_modal.is_hover_cancel and _UtilInput.is_pressed_key("LEFTMOUSE"):
+        if cls.draw_modal.is_hover_cancel and _UtilInput.is_keydown("LEFTMOUSE"):
             return self.cancel(context)
         # undo時にbm参照が失われるので例外キャッチで再作成
         try:
@@ -1439,8 +1438,8 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
                 return
             # label
             x, y = g.space_view_command_display_begin_pos(self.id)
-            _UtilBlf.draw_label(0, "Pin Selected Verts: ", x, y, "right")
-            self.is_hover_cancel = _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Cancelling pin verts.",
+            _UtilBlf.draw_label("Pin Selected Verts: ", x, y, "right")
+            self.is_hover_cancel = _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling pin verts.",
                                                                   x, y, cls.mx, cls.my, active=self.is_hover_cancel, align="left")
 
         def cancel(self):
@@ -1491,10 +1490,10 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
         _UtilInput.update(event, "LEFTMOUSE", "RIGHTMOUSE")
         if 0 <= cls.current_hover_idx:
             modal = cls.draw_modals[cls.current_hover_idx]
-            if cls.current_focus_type == "depth_test" and _UtilInput.is_pressed_key("LEFTMOUSE"):
+            if cls.current_focus_type == "depth_test" and _UtilInput.is_keydown("LEFTMOUSE"):
                 modal.depth_test = "LESS_EQUAL" if modal.depth_test != "LESS_EQUAL" else "ALWAYS"
                 return {"RUNNING_MODAL"}
-            elif cls.current_focus_type == "remove" and _UtilInput.is_pressed_key("LEFTMOUSE"):
+            elif cls.current_focus_type == "remove" and _UtilInput.is_keydown("LEFTMOUSE"):
                 modal.cancel()
                 cls.current_hover_idx = -1
                 if event.shift:
@@ -1512,7 +1511,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
                     modal.extrude_offset += value if event.type == "WHEELUPMOUSE" else -value
                     modal.make_batch()
                     return {"RUNNING_MODAL"}
-                elif _UtilInput.is_pressed_key("RIGHTMOUSE"):
+                elif _UtilInput.is_keydown("RIGHTMOUSE"):
                     modal.extrude_offset = 0
                     modal.make_batch()
                     return {"RUNNING_MODAL"}
@@ -1618,35 +1617,35 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
                 main_cls.current_focus_type = ""
             # label
             text = "Ghost:"
-            w, h = _UtilBlf.draw_label_dimensions(0, text)
+            w, h = _UtilBlf.draw_label_dimensions(text)
             h *= 1.5
             x, y = g.space_view_command_display_begin_pos(self.id)
             y += h * modal_idx
             if modal_idx == len(main_cls.draw_modals)-1:  # 最後だけ表示
-                _UtilBlf.draw_label(0, text, x, y, "right")
+                _UtilBlf.draw_label(text, x, y, "right")
             # depth test button
             x += 10
-            if _UtilBlf.draw_label_mousehover(0, self.depth_test, "left click: Change depth test mode.",
+            if _UtilBlf.draw_label_mousehover(self.depth_test, "left click: Change depth test mode.",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "depth_test", align="left"):
                 main_cls.current_hover_idx = modal_idx
                 main_cls.current_focus_type = "depth_test"
             # extrude value
-            w, h = _UtilBlf.draw_label_dimensions(0, "LESS_EQUAL")
+            w, h = _UtilBlf.draw_label_dimensions("LESS_EQUAL")
             x += 10 + w
-            if _UtilBlf.draw_label_mousehover(0, f"{self.extrude_offset:.3f}", "mouse wheel: Adjust extrusion distance.(shift: Increase amount)",
+            if _UtilBlf.draw_label_mousehover(f"{self.extrude_offset:.3f}", "mouse wheel: Adjust extrusion distance.(shift: Increase amount)",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "extrude", align="left"):
                 main_cls.current_hover_idx = modal_idx
                 main_cls.current_focus_type = "extrude"
             # remove button
-            w, h = _UtilBlf.draw_label_dimensions(0, "-00.00")
+            w, h = _UtilBlf.draw_label_dimensions("-00.00")
             x += 10 + w
-            if _UtilBlf.draw_label_mousehover(0, f"{self.alpha:.1f}", "mouse wheel: Adjust individual alpha",
+            if _UtilBlf.draw_label_mousehover(f"{self.alpha:.1f}", "mouse wheel: Adjust individual alpha",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "alpha", align="left"):
                 main_cls.current_hover_idx = modal_idx
                 main_cls.current_focus_type = "alpha"
-            w, h = _UtilBlf.draw_label_dimensions(0, "0.0")
+            w, h = _UtilBlf.draw_label_dimensions("0.0")
             x += 10 + w
-            if _UtilBlf.draw_label_mousehover(0, "[X]", "left click: Remove ghost.(shift: With unhide verts)",
+            if _UtilBlf.draw_label_mousehover("[X]", "left click: Remove ghost.(shift: With unhide verts)",
                                               x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "remove", align="left"):
                 main_cls.current_hover_idx = modal_idx
                 main_cls.current_focus_type = "remove"

@@ -26,9 +26,14 @@ def update(event, *keys):
 
 
 @staticmethod
-def is_pressed_key(*keys):
+def is_keydown(*keys):
     for key in keys:
         is_current, is_prev = key_pressed_dict.get(key, (False, False))
         if is_current and not is_prev:
             return True
     return False
+
+
+@staticmethod
+def is_keyup(event, key):
+    return event.type == key and event.value == "RELEASE"

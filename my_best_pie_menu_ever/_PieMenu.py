@@ -140,7 +140,7 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
             return
         x = _Util.clamp(self._init_mouse_pos.x - bpy.context.area.x, 0, bpy.context.area.width)
         y = _Util.clamp(self._init_mouse_pos.y - bpy.context.area.y - 44, 0, bpy.context.area.height)
-        _UtilBlf.draw_label(0, "Holding Shift while clicking keeps this PIE open for sequential button presses!",
+        _UtilBlf.draw_label("Holding Shift while clicking keeps this PIE open for sequential button presses!",
                             x, y, "center")
 
 
