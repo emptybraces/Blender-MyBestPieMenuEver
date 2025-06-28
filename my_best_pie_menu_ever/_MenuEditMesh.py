@@ -29,7 +29,9 @@ has_active_vgroup = False
 def MenuPrimary(pie, context):
     global has_selected_verts, has_selected_edges, has_active_vgroup
     has_selected_verts = _Util.has_selected_verts(context)
+    has_seletted_verts2 = _Util.has_selected_verts_least_two(context)
     has_selected_edges = _Util.has_selected_edges(context)
+    has_selected_edges2 = _Util.has_selected_edges_least_two(context)
     has_active_vgroup = _Util.has_active_vgroup(context)
     box = pie.split().box()
     box.label(text="Edit Mesh Primary")
@@ -138,7 +140,9 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", isActive=has_selected_edges, icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", isActive=has_selected_edges, icon="REMOVE").is_clear = True
     # bridge edge loops
-    _Util.layout_operator(c, "mesh.bridge_edge_loops", "Bridge Edge Loops(Marge)", has_selected_edges).use_merge = True
+    rr = c.row(align=True)
+    _Util.layout_operator(rr, "mesh.bridge_edge_loops", "Bridge Edge Loops(Marge)", has_selected_edges).use_merge = True
+    _Util.layout_operator(rr, MPM_OT_EditMesh_BridgeEdgeLoopsMerge.bl_idname, isActive=has_selected_edges2, icon="MOD_MIRROR")
     # ボーンアーマチュア作成
     _Util.layout_operator(c, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
@@ -177,13 +181,19 @@ def MenuPrimary(pie, context):
     # 法線
     _Util.layout_operator(c, "mesh.normals_make_consistent", isActive=has_selected_verts, icon="NORMALS_FACE").inside = False
     # マージ
-    r1, r2 = _Util.layout_split_row2(c, 0.2)
+    r1, r2 = _Util.layout_split_row2(c, 0.15, True, True, False)
     r1.label(text="Merge")
-    _Util.layout_operator(r2, "mesh.merge", "Center", has_selected_verts).type = "CENTER"
-    _Util.layout_operator(r2, "mesh.merge", "Collapse", has_selected_verts).type = "COLLAPSE"
-    _Util.layout_operator(r2, "mesh.merge", "Cursor", has_selected_verts).type = "CURSOR"
-    _Util.layout_operator(r2, "mesh.remove_doubles", "Distance", has_selected_verts)
+    r3 = r2.row(align=True)
+    _Util.layout_operator(r3, "mesh.merge", "Center", has_seletted_verts2).type = "CENTER"
+    _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_seletted_verts2, icon="MOD_MIRROR").mode = "CENTER"
+    r3 = r2.row(align=True)
+    _Util.layout_operator(r3, "mesh.merge", "Collapse", has_seletted_verts2).type = "COLLAPSE"
+    _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_seletted_verts2, icon="MOD_MIRROR").mode = "COLLAPSE"
+    r3 = r2.row(align=True)
+    _Util.layout_operator(r3, "mesh.merge", "Cursor", has_seletted_verts2).type = "CURSOR"
+    _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_seletted_verts2, icon="MOD_MIRROR").mode = "CURSOR"
 
+    _Util.layout_operator(r2, "mesh.remove_doubles", "Distance", has_seletted_verts2)
     _Util.layout_operator(c, "mesh.delete_loose", icon="X")
 
 # --------------------------------------------------------------------------------
@@ -354,8 +364,7 @@ class MPM_OT_EditMesh_HideVerts(bpy.types.Operator):
     bl_idname = "mpm.editmesh_hide_verts"
     bl_label = ""
     bl_options = {"REGISTER", "UNDO"}
-    bl_description = """Hides the selected vertex.
-Option1: Invert."""
+    bl_description = """Hides the selected vertex. Option1: Invert."""
     mode: bpy.props.EnumProperty(name="Mode", items=[("Hide", "Hide", ""), ("Hide Other", "Hide Other", "")])
 
     @classmethod
@@ -466,6 +475,84 @@ class MPM_OT_EditMesh_MirrorSharp(bpy.types.Operator):
         bpy.ops.mesh.mark_sharp(clear=self.is_clear)
         context.object.data.use_mirror_topology = mirror_settings
         return {"FINISHED"}
+
+# --------------------------------------------------------------------------------
+
+
+class MPM_OT_EditMesh_Merge(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_merge"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    mode: bpy.props.EnumProperty(name="Mode", items=[("CENTER", "At Center", ""), ("FIRST", "At First", ""),
+                                 ("LAST", "At Last", ""), ("AT_CURSOR", "At Cursor", ""), ("COLLAPSE", "Collapse", "")])
+
+    def execute(self, context):
+        return bpy.ops.mesh.merge(type=self.mode)
+
+
+class MPM_OT_EditMesh_MirrorMerge(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_mirror_merge"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    mode: bpy.props.EnumProperty(name="Mode", items=[("CENTER", "At Center", ""), ("FIRST", "At First", ""),
+                                 ("LAST", "At Last", ""), ("CURSOR", "At Cursor", ""), ("COLLAPSE", "Collapse", "")])
+    axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
+    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
+
+    def execute(self, context):
+        obj = context.object
+        bm = bmesh.from_edit_mesh(obj.data)
+        selected = [v for v in bm.verts if v.select]
+        mirror_v = _Util.find_mirror_vertex(bm, selected, self.axis, self.threshold)
+        bpy.ops.mesh.merge(type=self.mode)
+        selected = [v for v in bm.verts if v.select]
+        _Util.unselected_bm(bm)
+        for i in mirror_v:
+            i.select = True
+        if self.mode == "CURSOR":
+            cursor_pos_bk = bpy.context.scene.cursor.location.copy()
+            cursor_pos = obj.matrix_world.inverted() @ bpy.context.scene.cursor.location
+            if self.axis == "X":
+                cursor_pos.x *= -1
+            elif self.axis == "Y":
+                cursor_pos.y *= -1
+            else:
+                cursor_pos.z *= -1
+            context.scene.cursor.location = cursor_pos
+        if 0 < len(mirror_v):
+            bpy.ops.mesh.merge(type=self.mode)
+        if self.mode == "CURSOR":
+            context.scene.cursor.location = cursor_pos_bk
+        for i in selected:
+            i.select = True
+        bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
+
+
+class MPM_OT_EditMesh_BridgeEdgeLoopsMerge(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_bridge_edge_loops_merge"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+    axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
+    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
+
+    def execute(self, context):
+        obj = context.object
+        bm = bmesh.from_edit_mesh(obj.data)
+        selected = [v for v in bm.edges if v.select]
+        mirror_e = _Util.find_mirror_edges_fast(bm, selected, self.axis, self.threshold)
+        bpy.ops.mesh.bridge_edge_loops(use_merge=True)
+        selected = [v for v in bm.edges if v.select]
+        _Util.unselected_bm(bm)
+        for i in mirror_e:
+            i.select = True
+        if 0 < len(mirror_e):
+            bpy.ops.mesh.bridge_edge_loops(use_merge=True)
+        for i in selected:
+            i.select = True
+        bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
+
 
 # --------------------------------------------------------------------------------
 
@@ -1678,6 +1765,9 @@ classes = (
     MPM_OT_EditMesh_GenterateBonesAlongSelectedEdgeInternal,
     MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal,
     MPM_OT_EditMesh_MirrorBy3DCursor,
+    MPM_OT_EditMesh_Merge,
+    MPM_OT_EditMesh_BridgeEdgeLoopsMerge,
+    MPM_OT_EditMesh_MirrorMerge,
     MPM_OT_EditMesh_GrowEdgeRingSelection,
     MPM_OT_EditMesh_CenteringEdgeLoop,
     MPM_OT_EditMesh_PinSelectedVertsModal,

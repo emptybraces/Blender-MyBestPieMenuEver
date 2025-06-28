@@ -234,6 +234,27 @@ def has_selected_verts(context):
         return obj and obj.type == "MESH" and any(v.select for v in obj.data.vertices)
 
 
+def has_selected_verts_least_two(context):
+    verts = None
+    count = 0
+    if context.mode == "EDIT_MESH":
+        obj = context.edit_object
+        if not obj or obj.type != "MESH":
+            return False
+        verts = bmesh.from_edit_mesh(obj.data).verts
+    else:
+        obj = context.active_object
+        if not obj or obj.type != "MESH":
+            return False
+        verts = obj.data.vertices
+    for v in verts:
+        if v.select:
+            count += 1
+            if count >= 2:
+                return True
+    return False
+
+
 def has_selected_edges(context):
     if context.mode == "EDIT_MESH":
         obj = context.edit_object
@@ -241,6 +262,27 @@ def has_selected_edges(context):
     else:
         obj = context.active_object
         return obj and obj.type == "MESH" and any(v.select for v in obj.data.edges)
+
+
+def has_selected_edges_least_two(context):
+    edges = None
+    count = 0
+    if context.mode == "EDIT_MESH":
+        obj = context.edit_object
+        if not obj or obj.type != "MESH":
+            return False
+        edges = bmesh.from_edit_mesh(obj.data).edges
+    else:
+        obj = context.active_object
+        if not obj or obj.type != "MESH":
+            return False
+        edges = obj.data.edges
+    for e in edges:
+        if e.select:
+            count += 1
+            if count >= 2:
+                return True
+    return False
 
 
 def has_active_vgroup(context):
@@ -300,10 +342,10 @@ def layout_for_mirror(layout):
     return row, sub
 
 
-def layout_split_row2(layout, factor1):
-    split = layout.row().split(factor=factor1, align=True)
-    c1 = split.row(align=True)
-    rest = split.row(align=True)
+def layout_split_row2(layout, factor1, alignSplit=True, align1=True, align2=True):
+    split = layout.row().split(factor=factor1, align=alignSplit)
+    c1 = split.row(align=align1)
+    rest = split.row(align=align2)
     return c1, rest
 
 
@@ -539,8 +581,13 @@ def view_rotation(view_dir, up_dir):
 
 
 def edge_center_point(edge):
-    v1, v2 = edge.verts
-    return (v2.co + v1.co) / 2
+    return (edge.verts[0].co + edge.verts[1].co) / 2
+
+
+def edge_center_length(co1, co2):
+    center = (co1 + co2) * 0.5
+    length = (co1 - co2).length
+    return center, length
 
 
 def get_any_view3d_space():
@@ -563,6 +610,103 @@ def find_keymap(keymapName, itemName):
     km = kc.keymaps.get(keymapName)
     kmi = km.keymap_items.get(itemName) if km != None else None
     return (km, kmi)
+
+
+def sign(v: float) -> int:
+    return 1 if v > 0 else -1 if v < 0 else 0
+
+
+def find_mirror_vertex(bm, verts, axis="X", threshold=1e-5):
+    axis_index = 0 if axis == "X" else 1 if axis == "Y" else 2
+    mirror_positions = []
+    for v in verts:
+        co = v.co.copy()
+        co[axis_index] *= -1
+        mirror_positions.append((co, sign(co[axis_index])))
+
+    r = []
+    for v in bm.verts:
+        v_sign = sign(v.co[axis_index])
+        for i in reversed(range(len(mirror_positions))):
+            mirror_co, mirror_sign = mirror_positions[i]
+            if v_sign != mirror_sign:
+                continue
+            if (v.co - mirror_co).length < threshold:
+                r.append(v)
+                del mirror_positions[i]
+                break
+    return r
+
+
+def find_mirror_edges(bm, edges, axis="X", threshold=1e-5):
+    axis_index = 0 if axis == "X" else 1 if axis == "Y" else 2
+    mirror_positions = []
+    for e in edges:
+        co1 = e.verts[0].co.copy()
+        co2 = e.verts[1].co.copy()
+        co1[axis_index] *= -1
+        co2[axis_index] *= -1
+        mirror_positions.append((co1, co2))
+    r = []
+    for e in bm.edges:
+        ev1 = e.verts[0].co
+        ev2 = e.verts[1].co
+
+        for i in reversed(range(len(mirror_positions))):
+            mc1, mc2 = mirror_positions[i]
+            if sign(ev1[axis_index]) != sign(mc1[axis_index]) and \
+               sign(ev2[axis_index]) != sign(mc2[axis_index]):
+                continue
+            dest_center, dest_length = edge_center_length(ev1, ev2)
+            mirrir_center, mirrir_length = edge_center_length(mc1, mc2)
+            if (dest_center - mirrir_center).length < threshold and abs(dest_length - mirrir_length) < threshold:
+                r.append(e)
+                del mirror_positions[i]
+                break
+    return r
+
+
+def find_mirror_edges_fast(bm, edges, axis="X", threshold=1e-5, precision=5):
+    def _hash_key(center: Vector, length: float, precision=5):
+        return (
+            round(center.x, precision),
+            round(center.y, precision),
+            round(center.z, precision),
+            round(length, precision)
+        )
+    axis_index = 0 if axis == "X" else 1 if axis == "Y" else 2
+    mirror_dict = {}
+    for e in edges:
+        co1 = e.verts[0].co.copy()
+        co2 = e.verts[1].co.copy()
+        co1[axis_index] *= -1
+        co2[axis_index] *= -1
+        center, length = edge_center_length(co1, co2)
+        key = _hash_key(center, length, precision)
+        mirror_dict[key] = e
+
+    r = []
+    for e in bm.edges:
+        ev1 = e.verts[0].co
+        ev2 = e.verts[1].co
+        center, length = edge_center_length(ev1, ev2)
+        key = _hash_key(center, length, precision)
+        if key in mirror_dict:
+            r.append(e)
+            del mirror_dict[key]  # 重複防止
+    return r
+
+
+def unselected_bm(bm, v=True, e=True, f=True):
+    if v:
+        for i in bm.verts:
+            i.select = False
+    if e:
+        for i in bm.edges:
+            i.select = False
+    if f:
+        for i in bm.faces:
+            i.select = False
 
 
 class Temp:

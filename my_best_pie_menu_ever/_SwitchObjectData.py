@@ -53,8 +53,13 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mx = event.mouse_x
         self.my = event.mouse_y
-        self.current_menu.modal(context, event)
         _UtilInput.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W", "G")
+        ret = self.current_menu.modal(context, event)
+        if ret:
+            return ret
+        # 通常のカメラ移動はスルー
+        if event.type == "MIDDLEMOUSE" or event.type == "WHEELUPMOUSE" or event.type == "WHEELDOWNMOUSE":
+            return {"PASS_THROUGH"}
         if _UtilInput.is_keydown("LEFTMOUSE", "SPACE"):
             return self.finished(context)
         elif _UtilInput.is_keydown("RIGHTMOUSE", "ESC"):
@@ -76,11 +81,14 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         return {"RUNNING_MODAL"}
 
     def finished(self, context):
+        for i in self.menu_classes:
+            i.on_close(context, False)
         self.release(context)
         return {"FINISHED"}
 
     def cancelled(self, context):
-        self.current_menu.on_cancelled(context)
+        for i in self.menu_classes:
+            i.on_close(context, True)
         self.release(context)
         bpy.ops.object.mode_set(mode=self.last_mode)
         return {"CANCELLED"}
@@ -143,6 +151,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if self.reserved_mode:
                 bpy.ops.object.mode_set(mode=self.reserved_mode)
                 self.reserved_mode = None
+            return None
 
         def get_items_start_position(self):
             return self.imx - bpy.context.area.x, self.imy - bpy.context.area.y - 50
@@ -193,10 +202,12 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             super().modal(context, event)
             if self.current_active_idx != -1 and context.object.vertex_groups.active_index != self.current_active_idx:
                 context.object.vertex_groups.active_index = self.current_active_idx
+            return None
 
-        def on_cancelled(self, context):
-            if -1 < self.prev_active_idx_vg:
-                context.object.vertex_groups.active_index = self.prev_active_idx_vg
+        def on_close(self, context, is_cancel):
+            if is_cancel:
+                if -1 < self.prev_active_idx_vg:
+                    context.object.vertex_groups.active_index = self.prev_active_idx_vg
 
         def on_mode_change(self, context):
             super().on_mode_change(context)
@@ -234,15 +245,19 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if self.current_active_idx != -1 and context.object.active_shape_key_index != self.current_active_idx:
                 context.object.active_shape_key_index = self.current_active_idx
             # 分かりずらいのでここで_UtilInput.updateしない。元でまとめてやる
-            if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
-                self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
-            elif _UtilInput.is_keydown("MIDDLEMOUSE"):
-                self.on_middleclick(context)
+            if -1 != self.current_hover_idx:
+                if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
+                    self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
+                elif _UtilInput.is_keydown("MIDDLEMOUSE"):
+                    self.on_middleclick(context)
+                return {"RUNNING_MODAL"}
+            return None
 
-        def on_cancelled(self, context):
-            for i, v in enumerate(self.prev_sk_values):
-                if (i < len(context.object.data.shape_keys.key_blocks)):
-                    context.object.data.shape_keys.key_blocks[i].value = v
+        def on_close(self, context, is_cancel):
+            if is_cancel:
+                for i, v in enumerate(self.prev_sk_values):
+                    if (i < len(context.object.data.shape_keys.key_blocks)):
+                        context.object.data.shape_keys.key_blocks[i].value = v
 
         def on_mode_change(self, context):
             super().on_mode_change(context)
@@ -296,11 +311,13 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if self.current_active_idx != -1 and context.object.data.uv_layers.active_index != self.current_active_idx:
                 context.object.data.uv_layers.active_index = self.current_active_idx
                 context.object.data.uv_layers.active.active_render = True
+            return None
 
-        def on_cancelled(self, context):
-            if -1 < self.prev_active_idx_uv:
-                context.object.data.uv_layers.active_index = self.prev_active_idx_uv
-                context.object.data.uv_layers.active.active_render = True
+        def on_close(self, context, is_cancel):
+            if is_cancel:
+                if -1 < self.prev_active_idx_uv:
+                    context.object.data.uv_layers.active_index = self.prev_active_idx_uv
+                    context.object.data.uv_layers.active.active_render = True
 
         def on_mode_change(self, context):
             super().on_mode_change(context)
@@ -336,11 +353,13 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if self.current_active_idx != -1 and context.object.data.color_attributes.active_color_index != self.current_active_idx:
                 context.object.data.color_attributes.active_color_index = self.current_active_idx
                 context.object.data.color_attributes.render_color_index = self.current_active_idx
+            return None
 
-        def on_cancelled(self, context):
-            if -1 < self.prev_active_idx_ca:
-                context.object.data.color_attributes.active_color_index = self.prev_active_idx_ca
-                context.object.data.color_attributes.render_color_index = self.prev_active_idx_ca
+        def on_close(self, context, is_cancel):
+            if is_cancel:
+                if -1 < self.prev_active_idx_ca:
+                    context.object.data.color_attributes.active_color_index = self.prev_active_idx_ca
+                    context.object.data.color_attributes.render_color_index = self.prev_active_idx_ca
 
         def on_mode_change(self, context):
             super().on_mode_change(context)
@@ -379,8 +398,9 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             if self.current_active_idx != -1 and not self.arm.data.collections_all[self.current_active_idx].is_solo:
                 for i, bc in enumerate(self.arm.data.collections_all):
                     bc.is_solo = i == self.current_active_idx
+            return None
 
-        def on_cancelled(self, context):
+        def on_close(self, context, is_cancel):
             for i, bc in enumerate(self.arm.data.collections_all):
                 bc.is_solo = False
 

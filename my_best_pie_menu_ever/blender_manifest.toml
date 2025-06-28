@@ -29,9 +29,12 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # v2.7.0
+# - [Pose] Auto-Rig Pro　IKFKスイッチ機能を更新。
 # - [Utility] アクティブコレクションの表示非表示ボタンを追加。
 # - [Utility] 選択オブジェクトを一つ一つ表示する機能を追加。
 # - [EditMesh] ゴースト表示機能にアルファカラーフィールドを追加。
+# - [EditMesh] 頂点マージミラー機能の追加。
+# - [EditMesh] エッジループ(マージ)のミラー機能の追加。
 # - [SwitchObjectData] Gキーでパネルを移動できるようにした。
 # - [SwitchObjectData] 対象データ選択時、自動的に最適なモードに切り替わるようにした。
 # - [Bugfix] SwitchObjectData項目選択ロジックが不安定。
