@@ -327,9 +327,10 @@ def layout_prop(layout, target, prop, text=None, isActive=None, expand=False, to
         layout.label(text="None")
 
 
-def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon="NONE"):
+def layout_operator(layout, opid, text=None, isActive=None, depress=False, icon="NONE", scale_x=1.0):
     if isActive != None:
         layout = layout.row()
+        layout.scale_x = scale_x
         layout.enabled = isActive
     return layout.operator(opid, text=text, depress=depress, icon=icon)
 

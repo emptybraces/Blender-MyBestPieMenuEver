@@ -15,22 +15,23 @@ from bpy.app.translations import (
 
 def PieMenuDraw_ChangeModeLast(layout, context):
     # print(context.scene.mpm_prop.PrevModeName)
+    row = layout.row()
     if context.scene.mpm_prop.PrevModeName == "OBJECT":
-        DrawOperatorObjectMode(layout, context)
+        DrawOperatorObjectMode(row, context)
     elif context.scene.mpm_prop.PrevModeName == "EDIT_MESH" or context.scene.mpm_prop.PrevModeName == "EDIT_ARMATURE":
-        DrawOperatorEditMode(layout, context)
+        DrawOperatorEditMode(row, context)
     elif context.scene.mpm_prop.PrevModeName == "SCULPT":
-        DrawOperatorSculptMode(layout, context)
+        DrawOperatorSculptMode(row, context)
     elif context.scene.mpm_prop.PrevModeName == "POSE":
-        DrawOperatorPoseMode(layout, context)
+        DrawOperatorPoseMode(row, context)
     elif context.scene.mpm_prop.PrevModeName == "PAINT_WEIGHT":
-        DrawOperatorWeightPaintMode(layout, context)
+        DrawOperatorWeightPaintMode(row, context)
     elif context.scene.mpm_prop.PrevModeName == "PAINT_TEXTURE":
-        DrawOperatorTexturePaintMode(layout, context)
+        DrawOperatorTexturePaintMode(row, context)
     elif context.scene.mpm_prop.PrevModeName == "PAINT_VERTEX":
-        DrawOperatorVertexPaintMode(layout, context)
+        DrawOperatorVertexPaintMode(row, context)
     else:
-        layout.separator()  # これで空白を描画して、位置を調整してる
+        row.separator()  # これで空白を描画して、位置を調整してる
 
 
 def draw_pie_menu(layout, context):
@@ -60,7 +61,7 @@ def DrawOperatorObjectMode(layout, context):
     object_mode = "OBJECT" if context.active_object is None else context.mode
     # print(bpy.types.Object.bl_rna.properties["mode"].enum_items[object_mode].name)
     op = _Util.layout_operator(layout,  MPM_OT_ChangeMode.bl_idname, "Object", icon="OBJECT_DATA",
-                               isActive=object_mode != "OBJECT", depress=object_mode == "OBJECT")
+                               isActive=object_mode != "OBJECT", depress=object_mode == "OBJECT", scale_x=1.2)
     op.mode = "OBJECT"
 
 
@@ -71,6 +72,7 @@ def DrawOperatorEditMode(layout, context):
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
 
     r = layout.row(align=True)
+    r.scale_x = 1.2
     r.enabled = object_mode != "EDIT_MESH" and active_type_is_mesh or active_type_is_armature
     depress_comp = "EDIT_MESH" if active_type_is_mesh else "EDIT_ARMATURE"
     op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, iface_("Edit", act_mode_i18n_context),
@@ -86,6 +88,7 @@ def DrawOperatorSculptMode(layout, context):
     active_type_is_mesh = context.active_object != None and context.active_object.type == "MESH"
 
     r = layout.row(align=True)
+    r.scale_x = 1.2
     r.enabled = object_mode != "SCULPT" and active_type_is_mesh
     op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, "Sculpt", icon="SCULPTMODE_HLT", depress=object_mode == "SCULPT")
     if active_type_is_mesh:
@@ -96,7 +99,9 @@ def DrawOperatorSculptMode(layout, context):
 
 def DrawOperatorPoseMode(layout, context):
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
-    _Util.layout_operator(layout, MPM_OT_ChangeModePose.bl_idname, text=iface_("Pose", act_mode_i18n_context), icon="POSE_HLT")
+    r = layout.row()
+    r.scale_x = 1.2
+    _Util.layout_operator(r, MPM_OT_ChangeModePose.bl_idname, text=iface_("Pose", act_mode_i18n_context), icon="POSE_HLT")
 
 
 def DrawOperatorWeightPaintMode(layout, context):
@@ -106,6 +111,7 @@ def DrawOperatorWeightPaintMode(layout, context):
     armature = _Util.get_armature(active_obj)
 
     r = layout.row(align=True)
+    r.scale_x = 1.2
     op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, "Weight Paint", icon="WPAINT_HLT",
                                isActive=object_mode != "PAINT_WEIGHT" and active_type_is_mesh, depress=object_mode == "PAINT_WEIGHT")
     if active_type_is_mesh:
@@ -120,6 +126,7 @@ def DrawOperatorTexturePaintMode(layout, context):
     act_mode_i18n_context = bpy.types.Object.bl_rna.properties["mode"].translation_context
 
     r = layout.row()
+    r.scale_x = 1.2
     r.enabled = object_mode != "PAINT_TEXTURE" and active_type_is_mesh
     op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, iface_("Texture Paint", act_mode_i18n_context),
                                icon="TPAINT_HLT", depress=object_mode == "PAINT_TEXTURE")
@@ -132,6 +139,7 @@ def DrawOperatorVertexPaintMode(layout, context):
     active_type_is_mesh = context.active_object != None and context.active_object.type == "MESH"
 
     r = layout.row()
+    r.scale_x = 1.2
     r.enabled = object_mode != "PAINT_VERTEX" and active_type_is_mesh
     op = _Util.layout_operator(r,  MPM_OT_ChangeMode.bl_idname, "Vertex Paint", icon="VPAINT_HLT", depress=object_mode == "PAINT_VERTEX")
     if active_type_is_mesh:
@@ -150,7 +158,7 @@ def DrawImageEditor(layout, context):
 class MPM_OT_ChangeUITypeUV(bpy.types.Operator):
     bl_idname = "mpm.mode_change_ui_type_uv"
     bl_label = "UV Editor"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
@@ -164,7 +172,7 @@ class MPM_OT_ChangeUITypeUV(bpy.types.Operator):
 class MPM_OT_ChangeUITypeImage(bpy.types.Operator):
     bl_idname = "mpm.mode_change_ui_type_image"
     bl_label = "Image Editor"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
@@ -177,8 +185,8 @@ class MPM_OT_ChangeUITypeImage(bpy.types.Operator):
 
 class MPM_OT_ChangeMode(bpy.types.Operator):
     bl_idname = "mpm.mode_change_mode"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_label = "Change Mode"
+    bl_options = {"UNDO"}
     mode: bpy.props.StringProperty()
 
     def execute(self, context):
@@ -189,8 +197,8 @@ class MPM_OT_ChangeMode(bpy.types.Operator):
 
 class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
     bl_idname = "mpm.mode_change_with_armature"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_label = "Change Mode with Armature"
+    bl_options = {"UNDO"}
     mode: bpy.props.StringProperty()
 
     @classmethod
@@ -214,8 +222,8 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
 
 class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
     bl_idname = "mpm.mode_change_sculptmode_with_mask"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_label = "Change Sculpt Mode with Mask"
+    bl_options = {"UNDO"}
     bl_description = "Switches to sculpt mode with the selected vertices as masks"
 
     @classmethod
@@ -237,8 +245,8 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
 
 class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
     bl_idname = "mpm.mode_change_sculptmode_with_facesets"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_label = "Change Sculpt Mode with FaceSets"
+    bl_options = {"UNDO"}
     bl_description = "Switches to sculpt mode with the selected vertices as facesets"
 
     @classmethod
@@ -261,8 +269,8 @@ class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
 
 class MPM_OT_ChangeModePose(bpy.types.Operator):
     bl_idname = "mpm.mode_change_posemode"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
+    bl_label = "Change Mode to Pose"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
