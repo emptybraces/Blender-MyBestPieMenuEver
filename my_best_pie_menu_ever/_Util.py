@@ -1,3 +1,10 @@
+if "bpy" in locals():
+    import importlib
+    importlib.reload(_UtilBlf)
+    importlib.reload(g)
+else:
+    from . import _UtilBlf
+    from . import g
 import bpy
 import bmesh
 import math
@@ -177,7 +184,39 @@ class MPM_OT_CallPanel(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_ModalMonitor:
+class MPM_StackableViewportUI:
+    mx, my = 0.0, 0.0
+
+    def init_draw_class_instance(self, context, is_multiple, id, drawModalCls):
+        self.id = id
+        if not (modals := stackable_draw_modals.get(self.id)):
+            context.window_manager.modal_handler_add(self)
+            if modals is None:
+                stackable_draw_modals[self.id] = []
+            if not is_multiple:
+                stackable_draw_modals[self.id].append(drawModalCls(self.id))
+        if is_multiple:
+            stackable_draw_modals[self.id].append(drawModalCls(self.id))
+        g.force_cancel_piemenu_modal(context)
+
+    def modal(self, context, event):
+        context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
+        cls = self.__class__
+        cls.mx = event.mouse_x
+        cls.my = event.mouse_y
+        modals = stackable_draw_modals.get(self.id)
+        if not modals:
+            g.space_view_command_display_stack_remove(self.id)
+            return self.cancel(context)
+        g.space_view_command_display_stack_sety(self.id, (len(modals)-1) * (_UtilBlf.LABEL_SIZE_Y * 2))
+        return {}
+
+    def cancel(self, context):
+        return {"CANCELLED"}
+
+
+class MPM_ModalMonitor:
+
     def __init__(self):
         self.interrupt = False
         self.count = 0.0
@@ -204,6 +243,33 @@ class MPM_OT_ModalMonitor:
 
     def on_loadpre(self, a, b):
         self.cancel()
+
+
+class MPM_StackableModalMonitor(MPM_ModalMonitor):
+    def __init__(self, id):
+        super().__init__()
+        self.id = id
+        self.is_current_modal = False
+        self.current_focus_type = ""
+        self.target_area = bpy.context.area
+
+    def try_cancel(self):
+        if not self in stackable_draw_modals.get(self.id, []):
+            self.cancel()
+            return True
+
+    def prepare_current_state(self):
+        if self.is_current_modal and bpy.context.area == self.target_area:
+            self.is_current_modal = False
+            self.current_focus_type = ""
+
+    def cancel(self):
+        super().cancel()
+        if self in stackable_draw_modals.get(self.id, []):
+            stackable_draw_modals[self.id].remove(self)
+
+
+stackable_draw_modals: dict[str, list[MPM_ModalMonitor]] = {}
 
 # --------------------------------------------------------------------------------
 

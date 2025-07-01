@@ -37,6 +37,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         ]
         if _Util.get_armature(context.object):
             self.menu_classes.append(cls.DrawerBoneCollection(context, event))
+        self.input = _UtilInput.Monitor()
         self.current_menu = self.menu_classes[0]
         self.imx = self.mx = event.mouse_x
         self.imy = self.my = event.mouse_y
@@ -53,24 +54,24 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mx = event.mouse_x
         self.my = event.mouse_y
-        _UtilInput.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W", "G")
+        self.input.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W", "G")
         ret = self.current_menu.modal(context, event)
         if ret:
             return ret
         # 通常のカメラ移動はスルー
         if event.type == "MIDDLEMOUSE" or event.type == "WHEELUPMOUSE" or event.type == "WHEELDOWNMOUSE":
             return {"PASS_THROUGH"}
-        if _UtilInput.is_keydown("LEFTMOUSE", "SPACE"):
+        if self.input.is_keydown("LEFTMOUSE", "SPACE"):
             return self.finished(context)
-        elif _UtilInput.is_keydown("RIGHTMOUSE", "ESC"):
+        elif self.input.is_keydown("RIGHTMOUSE", "ESC"):
             return self.cancelled(context)
-        elif _UtilInput.is_keydown("W"):
+        elif self.input.is_keydown("W"):
             ret = self.finished(context)
             bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
             return ret
-        elif _UtilInput.is_keydown("G"):
+        elif self.input.is_keydown("G"):
             self.is_move_mode = True
-        elif _UtilInput.is_keyup(event, "G"):
+        elif self.input.is_keyup(event, "G"):
             self.is_move_mode = False
         if self.is_move_mode:
             self.imx = event.mouse_x
@@ -244,11 +245,11 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             super().modal(context, event)
             if self.current_active_idx != -1 and context.object.active_shape_key_index != self.current_active_idx:
                 context.object.active_shape_key_index = self.current_active_idx
-            # 分かりずらいのでここで_UtilInput.updateしない。元でまとめてやる
+            # 分かりずらいのでここでself.input.updateしない。元でまとめてやる
             if -1 != self.current_hover_idx:
                 if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
                     self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
-                elif _UtilInput.is_keydown("MIDDLEMOUSE"):
+                elif self.input.is_keydown("MIDDLEMOUSE"):
                     self.on_middleclick(context)
                 return {"RUNNING_MODAL"}
             return None

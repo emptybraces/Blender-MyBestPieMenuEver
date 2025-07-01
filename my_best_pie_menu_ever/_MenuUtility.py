@@ -846,6 +846,7 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
 
     def invoke(self, context, event):
         self.id = "cycle solo"
+        self.input = _UtilInput.Monitor()
         cls = MPM_OT_Utility_SelectionCycleSoloModal
         cls.target_area = context.area
         if not cls.draw_modals:
@@ -865,10 +866,10 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
         cls.my = event.mouse_y
         g.space_view_command_display_stack_sety(self.id, len(self.draw_modals) * (_UtilBlf.LABEL_SIZE_Y * 2))
         context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
-        _UtilInput.update(event, "LEFTMOUSE", "RIGHTMOUSE", "ESC")
+        self.input.update(event, "LEFTMOUSE", "RIGHTMOUSE", "ESC")
         if 0 <= cls.current_hover_idx:
             modal = cls.draw_modals[cls.current_hover_idx]
-            if cls.current_focus_type == "remove" and _UtilInput.is_keydown("LEFTMOUSE"):
+            if cls.current_focus_type == "remove" and self.input.is_keydown("LEFTMOUSE"):
                 modal.cancel()
                 cls.current_hover_idx = -1
                 return {"RUNNING_MODAL"}
@@ -876,10 +877,10 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
                 if event.type == "WHEELUPMOUSE" or event.type == "WHEELDOWNMOUSE":
                     modal.switch_solo(event.type == "WHEELUPMOUSE")
                     return {"RUNNING_MODAL"}
-                elif _UtilInput.is_keydown("LEFTMOUSE"):
+                elif self.input.is_keydown("LEFTMOUSE"):
                     modal.switch_all(True)
                     return {"RUNNING_MODAL"}
-                elif _UtilInput.is_keydown("RIGHTMOUSE"):
+                elif self.input.is_keydown("RIGHTMOUSE"):
                     modal.switch_all(False)
                     return {"RUNNING_MODAL"}
         return {"PASS_THROUGH"}
@@ -889,7 +890,7 @@ class MPM_OT_Utility_SelectionCycleSoloModal(bpy.types.Operator):
         MPM_OT_Utility_SelectionCycleSoloModal.draw_modal = None
         return {"CANCELLED"}
 
-    class DrawModal(_Util.MPM_OT_ModalMonitor):
+    class DrawModal(_Util.MPM_ModalMonitor):
         def __init__(self, selected_objects, id):
             super().__init__()
             self.handler2d = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")

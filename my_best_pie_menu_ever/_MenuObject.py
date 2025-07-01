@@ -22,7 +22,7 @@ def MenuPrimary(pie, context):
     c = r.column(align=True)
 
     from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
-    MirrorVertexGroup(c)
+    MirrorVertexGroup(c, "VGroup Mirror")
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
     from ._MenuEditMesh import MPM_OT_EditMesh_Ghost
     _Util.layout_operator(c, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED")

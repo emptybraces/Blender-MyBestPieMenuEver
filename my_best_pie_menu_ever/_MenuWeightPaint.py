@@ -1,12 +1,10 @@
 if "bpy" in locals():
     import importlib
     importlib.reload(_Util)
-    importlib.reload(_UtilInput)
     importlib.reload(_AddonPreferences)
     importlib.reload(g)
 else:
     from . import _Util
-    from . import _UtilInput
     from . import _AddonPreferences
     from . import g
 import bpy
@@ -137,7 +135,7 @@ def MenuPrimary(pie, context):
     _Util.layout_operator(r, MPM_OT_Weight_SetWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
     _Util.layout_operator(r, MPM_OT_Weight_RemoveWeight.bl_idname).is_mask = False
     _Util.layout_operator(r, MPM_OT_Weight_RemoveWeight.bl_idname, "", icon="MOD_MASK").is_mask = True
-    MirrorVertexGroup(c)
+    MirrorVertexGroup(c, "VGroup Mirror")
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
     r = c.row(align=True)
     _Util.layout_operator(r, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, icon="MOD_MASK").is_invert = False
@@ -147,10 +145,11 @@ def MenuPrimary(pie, context):
 # --------------------------------------------------------------------------------
 
 
-def MirrorVertexGroup(layout):
+def MirrorVertexGroup(layout, label, factor=0.3):
     r = layout.row(align=True)
-    r1, r2 = _Util.layout_split_row2(r, 0.4)
-    r1.label(text="Create VGroup Mirror")
+    r1, r2 = _Util.layout_split_row2(r, factor)
+    r1.label(text=label)
+    r1.scale_x = 0.9
     _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromActive.bl_idname, "Active")
     _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromActiveTopology.bl_idname, "", icon="MOD_MIRROR")
     _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromSelectedBone.bl_idname, "Selected Bones")

@@ -73,102 +73,112 @@ def MenuPrimary(pie, context):
     # 選択
     box = c.box()
     box.label(text="Selection", icon="ZOOM_SELECTED")
-    c = box.column(align=True)
-    rr = c.row(align=True)
+    cc = box.column(align=True)
+    rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.select_mirror", "Mirror").extend = False
     _Util.layout_operator(rr, "mesh.select_mirror", "", icon="ADD").extend = True
-    _Util.layout_operator(c, "mesh.shortest_path_select", "Shortest Path").edge_mode = "SELECT"
-    op = _Util.layout_operator(c, "mesh.select_face_by_sides", "Ngons")
+    op = _Util.layout_operator(cc, "mesh.select_face_by_sides", "Ngons")
     op.number = 4
     op.type = "GREATER"
     # 辺リングの拡張選択
-    _Util.layout_operator(c, MPM_OT_EditMesh_GrowEdgeRingSelection.bl_idname, icon="EDGESEL")
+    _Util.layout_operator(cc, MPM_OT_EditMesh_GrowEdgeRingSelection.bl_idname, icon="EDGESEL")
 
     # UV
     box = c.box()
     box.label(text="UV", icon="UV")
-    c = box.column(align=True)
-    rr = c.row(align=True)
+    cc = box.column(align=True)
+    rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.mark_seam", isActive=has_selected_verts).clear = False
     _Util.layout_operator(rr, "mesh.mark_seam", "", has_selected_verts, icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(rr)
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", has_selected_verts, icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSeam.bl_idname, "", has_selected_verts, icon="REMOVE").is_clear = True
-    _Util.layout_operator(c, "uv.unwrap", isActive=has_selected_verts)
+    _Util.layout_operator(cc, "uv.unwrap", isActive=has_selected_verts)
+    # 法線
+    box = c.box()
+    box.label(text="Normal", icon="NORMALS_FACE")
+    cc = box.column(align=True)
+    _Util.layout_operator(cc, "mesh.normals_make_consistent", isActive=has_selected_verts).inside = False
 
     # 頂点メニュー
-    c2 = r.column()
-    box = c2.box()
+    c = r.column()
+    box = c.box()
     box.label(text="Vertex", icon="VERTEXSEL")
-    c = box.column(align=True)
-    rr = c.row(align=True)
+    cc = box.column(align=True)
+    rr = cc.row(align=True)
     _Util.layout_prop(rr, context.scene, "mpm_editmesh_vertcrease", "Crease", has_selected_verts)
     _Util.layout_prop(rr, context.scene, "mpm_editmesh_vertbevel", "Bevel", has_selected_verts)
 
     # 非表示
-    rr = c.row(align=True)
+    rr = cc.row(align=True)
     _Util.layout_operator(rr, MPM_OT_EditMesh_HideVerts.bl_idname, "Hide", icon="HIDE_ON").mode = "Hide"
     _Util.layout_operator(rr, MPM_OT_EditMesh_HideVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Hide Other"
     _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "Show", icon="HIDE_OFF").mode = "Show"
     _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "", icon="SELECT_EXTEND").mode = "Show Only"
     _Util.layout_operator(rr, MPM_OT_EditMesh_ShowVerts.bl_idname, "", icon="SELECT_SUBTRACT").mode = "Show Selected"
     # 3Dカーソルミラー
-    rr1, rr2 = _Util.layout_split_row2(c, 0.6)
+    rr1, rr2 = _Util.layout_split_row2(cc, 0.6)
     rr1.label(text="3DCursor Mirror", icon="PIVOT_CURSOR")
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "X").axis = "x"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Y").axis = "y"
     _Util.layout_operator(rr2, MPM_OT_EditMesh_MirrorBy3DCursor.bl_idname, "Z").axis = "z"
-    _Util.layout_operator(c, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname)
-    rr = c.row(align=True)
+    # 接続
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, "mesh.vert_connect", isActive=has_selected_verts2)
+    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorVertConnect.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR")
+    # 固定
+    _Util.layout_operator(cc, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname)
+    # ゴースト
+    rr = cc.row(align=True)
     _Util.layout_operator(rr, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED").with_hide = False
     _Util.layout_operator(rr, MPM_OT_EditMesh_Ghost.bl_idname, "", icon="HIDE_ON").with_hide = True
 
     # Edgeメニュー
-    box = c2.box()
+    box = c.box()
     box.label(text="Edge", icon="EDGESEL")
-    c = box.column(align=True)
+    cc = box.column(align=True)
 
     # クリーズ
-    rr = c.row(align=True)
+    rr = cc.row(align=True)
     _Util.layout_prop(rr, context.scene, "mpm_editmesh_edgecrease", "Crease", has_selected_edges)
     _Util.layout_prop(rr, context.scene, "mpm_editmesh_edgebevel", "Bevel", has_selected_edges)
     # シャープ
-    rr = c.row(align=True)
+    rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.mark_sharp", isActive=has_selected_edges).clear = False
     _Util.layout_operator(rr, "mesh.mark_sharp", "", isActive=has_selected_edges, icon="REMOVE").clear = True
     row, sub = _Util.layout_for_mirror(rr)
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", isActive=has_selected_edges, icon="ADD").is_clear = False
     _Util.layout_operator(sub, MPM_OT_EditMesh_MirrorSharp.bl_idname, "", isActive=has_selected_edges, icon="REMOVE").is_clear = True
     # bridge edge loops
-    rr = c.row(align=True)
+    rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.bridge_edge_loops", "Bridge Edge Loops(Marge)", has_selected_edges).use_merge = True
     _Util.layout_operator(rr, MPM_OT_EditMesh_BridgeEdgeLoopsMerge.bl_idname, isActive=has_selected_edges2, icon="MOD_MIRROR")
     # ボーンアーマチュア作成
-    _Util.layout_operator(c, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
+    _Util.layout_operator(cc, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
-    _Util.layout_operator(c, MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
+    _Util.layout_operator(cc, MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal.bl_idname, icon="VIEW_CAMERA")
     # エッジループのセンタリング
-    _Util.layout_operator(c, MPM_OT_EditMesh_CenteringEdgeLoop.bl_idname)
+    _Util.layout_operator(cc, MPM_OT_EditMesh_CenteringEdgeLoop.bl_idname)
 
     # VertexGroupメニュー
     c = r.column()
     box = c.box()
     box.label(text="Vertex Group", icon="GROUP_VERTEX")
-    c = box.column(align=True)
-    rr = c.row(align=True)
+    cc = box.column(align=True)
+    rr = cc.row(align=True)
+    rr.scale_x = 0.9
     _Util.layout_operator(rr, MPM_OT_VertexGroupSelectPanel.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupNewPanel.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupAdd.bl_idname)
     _Util.layout_operator(rr, MPM_OT_VertexGroupRemove.bl_idname)
     from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
-    MirrorVertexGroup(c)
-    _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
-
+    MirrorVertexGroup(cc, "Mirror", 0.2)
+    _Util.layout_operator(cc, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
     # Applyメニュー
     box = c.box()
     box.label(text="Apply", icon="CHECKMARK")
-    c = box.column(align=True)
-    rr = c.row(align=False)
+    cc = box.column(align=True)
+    rr = cc.row(align=False)
     rr.label(text="Symmetrize", icon="MOD_MIRROR")
     op = _Util.layout_operator(rr, "mesh.symmetry_snap", "+X to -X", has_selected_verts)
     op.direction = 'POSITIVE_X'
@@ -177,13 +187,12 @@ def MenuPrimary(pie, context):
     op.direction = 'NEGATIVE_X'
     op.factor = 1
     # 頂点ミラー複製
-    _Util.layout_operator(c, MPM_OT_EditMesh_DuplicateMirror.bl_idname, isActive=has_selected_verts, icon="SEQ_STRIP_DUPLICATE")
-    # 法線
-    _Util.layout_operator(c, "mesh.normals_make_consistent", isActive=has_selected_verts, icon="NORMALS_FACE").inside = False
+    _Util.layout_operator(cc, MPM_OT_EditMesh_DuplicateMirror.bl_idname, isActive=has_selected_verts, icon="SEQ_STRIP_DUPLICATE")
     # マージ
-    r1, r2 = _Util.layout_split_row2(c, 0.15, True, True, False)
-    r1.label(text="Merge")
+    cc.label(text="Merge")
+    r2 = cc.row()
     r3 = r2.row(align=True)
+    r2.scale_x = 0.9
     _Util.layout_operator(r3, "mesh.merge", "Center", has_selected_verts2).type = "CENTER"
     _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR").mode = "CENTER"
     r3 = r2.row(align=True)
@@ -192,14 +201,8 @@ def MenuPrimary(pie, context):
     r3 = r2.row(align=True)
     _Util.layout_operator(r3, "mesh.merge", "Cursor", has_selected_verts2).type = "CURSOR"
     _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR").mode = "CURSOR"
-
     _Util.layout_operator(r2, "mesh.remove_doubles", "Distance", has_selected_verts2)
-    _Util.layout_operator(c, "mesh.delete_loose", icon="X")
-    # 接続
-    rr = c.row(align=True)
-    _Util.layout_operator(rr, "mesh.vert_connect", isActive=has_selected_verts2)
-    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorVertConnect.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR")
-
+    _Util.layout_operator(cc, "mesh.delete_loose", icon="X")
 
 # --------------------------------------------------------------------------------
 
@@ -1054,6 +1057,7 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         return has_selected_edges
 
     def invoke(self, context, event):
+        self.input = _UtilInput.Monitor()
         self.is_reverting = False
         self.mouse_pos.x = event.mouse_x
         self.mouse_pos.y = event.mouse_y
@@ -1143,14 +1147,14 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         context.area.tag_redraw()
         self.mouse_pos.x = _Util.lerp(self.mouse_pos.x, event.mouse_x, 0.05)
         self.mouse_pos.y = _Util.lerp(self.mouse_pos.y, event.mouse_y, 0.05)
-        _UtilInput.update(event, "X", "Y", "Z", "LEFTMOUSE", "RET", "RIGHTMOUSE", "ESC", "SPACE", "RET")
-        if _UtilInput.is_keydown("X"):
+        self.input.update(event, "X", "Y", "Z", "LEFTMOUSE", "RET", "RIGHTMOUSE", "ESC", "SPACE", "RET")
+        if self.input.is_keydown("X"):
             self.dir = Vector((-1 if self.dir[0] == 1 else 1, 0, 0))
             return self.execute(context)
-        if _UtilInput.is_keydown("Y"):
+        if self.input.is_keydown("Y"):
             self.dir = Vector((0, -1 if self.dir[1] == 1 else 1, 0))
             return self.execute(context)
-        if _UtilInput.is_keydown("Z"):
+        if self.input.is_keydown("Z"):
             if event.alt:
                 context.space_data.shading.show_xray = not context.space_data.shading.show_xray
             else:
@@ -1162,9 +1166,9 @@ class MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal(bpy.types.Operator):
         elif event.type == "WHEELDOWNMOUSE":
             context.region_data.view_distance += 0.5
             return {"RUNNING_MODAL"}
-        if _UtilInput.is_keydown("LEFTMOUSE", "RET"):
+        if self.input.is_keydown("LEFTMOUSE", "RET"):
             return self.cancel(context)
-        if _UtilInput.is_keydown("RIGHTMOUSE", "ESC", "SPACE", "RET"):
+        if self.input.is_keydown("RIGHTMOUSE", "ESC", "SPACE", "RET"):
             self.is_reverting = True
             self.start_time = time.time()
             return {"RUNNING_MODAL"}
@@ -1449,7 +1453,7 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
+class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.types.Operator):
     bl_idname = "mpm.editmesh_pin_selected_verts_modal"
     bl_label = "Pin Selected"
     bl_description = ""
@@ -1462,6 +1466,8 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         return has_selected_verts
 
     def invoke(self, context, event):
+        super().init_draw_class_instance(context, False, "pin verts", self.DrawModal)
+        self.input = _UtilInput.Monitor()
         # 頂点カラー表示
         self.set_shading_color(context, "VERTEX")
         obj = context.edit_object
@@ -1487,23 +1493,26 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
             else:
                 v[attr] = (1, 1, 1, 1)
         bmesh.update_edit_mesh(self.obj_data)
-        cls = MPM_OT_EditMesh_PinSelectedVertsModal
-        if not cls.draw_modal:
-            context.window_manager.modal_handler_add(self)
-            cls.draw_modal = cls.DrawModal("pin verts")
-        g.force_cancel_piemenu_modal(context)
+        # cls = MPM_OT_EditMesh_PinSelectedVertsModal
+        # if not cls.draw_modal:
+        #     context.window_manager.modal_handler_add(self)
+        #     cls.draw_modal = cls.DrawModal(self.id)
+        # g.force_cancel_piemenu_modal(context)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        cls = MPM_OT_EditMesh_PinSelectedVertsModal
-        cls.mx = event.mouse_x
-        cls.my = event.mouse_y
-        context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
-        _UtilInput.update(event, "LEFTMOUSE", "ESC")
+        # cls.mx = event.mouse_x
+        # cls.my = event.mouse_y
+        # context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
+        if "CANCELLED" in super().modal(context, event):
+            return self.cancel(context)
+        self.input.update(event, "LEFTMOUSE", "ESC")
         if context.object.mode != "EDIT":  # モード変更でキャンセル
             return self.cancel(context)
-        if cls.draw_modal.is_hover_cancel and _UtilInput.is_keydown("LEFTMOUSE"):
-            return self.cancel(context)
+        if self.input.is_keydown("LEFTMOUSE"):
+            modal = _Util.stackable_draw_modals[self.id][0]
+            if modal.is_current_modal and modal.current_focus_type == "remove":
+                return self.cancel(context)
         # undo時にbm参照が失われるので例外キャッチで再作成
         try:
             for v, pos in self.fixed_positions.items():
@@ -1527,10 +1536,12 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         return {"PASS_THROUGH"}
 
     def cancel(self, context):
+        super().cancel(context)
         context.area.tag_redraw()
         self.bm = None
         self.obj_data = None
-        MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = None
+        # MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = None
+        _Util.stackable_draw_modals[self.id][0].cancel()
         self.set_shading_color(context, "MATERIAL")
         return {"CANCELLED"}
 
@@ -1539,31 +1550,38 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(bpy.types.Operator):
         shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
         shading.color_type = mode
 
-    class DrawModal(_Util.MPM_OT_ModalMonitor):
+    class DrawModal(_Util.MPM_StackableModalMonitor):
         def __init__(self, id):
-            super().__init__()
-            self.id = id
+            super().__init__(id)
+            # self.id = id
             self.handler2d = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")
-            self.is_hover_cancel = False
-            g.space_view_command_display_stack_sety(self.id)
+            # self.is_hover_cancel = False
+            # g.space_view_command_display_stack_sety(self.id)
 
         def draw2d(self):
-            cls = MPM_OT_EditMesh_PinSelectedVertsModal
-            if cls.draw_modal == None:
-                self.cancel()
+            if self.try_cancel():
                 return
+            parent = MPM_OT_EditMesh_PinSelectedVertsModal
+            # if cls.draw_modal == None:
+            #     self.cancel()
+            #     return
+            self.prepare_current_state()
             # label
             x, y = g.space_view_command_display_begin_pos(self.id)
             _UtilBlf.draw_label("Pin Selected Verts: ", x, y, "right")
-            self.is_hover_cancel = _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling pin verts.",
-                                                                  x, y, cls.mx, cls.my, active=self.is_hover_cancel, align="left")
+            # self.is_hover_cancel = _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling pin verts.",
+            #                                                       x, y, cls.mx, cls.my, active=self.is_hover_cancel, align="left")
+            if _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling pin verts.",
+                                              x, y, parent.mx, parent.my, active=self.is_current_modal, align="left"):
+                self.is_current_modal = True
+                self.current_focus_type = "remove"
 
         def cancel(self):
             super().cancel()
             if self.handler2d:
                 bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
             self.handler2d = None
-            g.space_view_command_display_stack_remove(self.id)
+            # g.space_view_command_display_stack_remove(self.id)
 
 
 class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
@@ -1584,6 +1602,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
 
     def invoke(self, context, event):
         self.id = "ghost"
+        self.input = _UtilInput.Monitor()
         cls = MPM_OT_EditMesh_Ghost
         cls.target_area = context.area
         if not cls.draw_modals:
@@ -1591,6 +1610,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
         cls.draw_modals.append(MPM_OT_EditMesh_Ghost.DrawModal(context.active_object, self.id))
         if self.with_hide:
             bpy.ops.mesh.hide(unselected=False)
+        g.force_cancel_piemenu_modal(context)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
@@ -1603,13 +1623,13 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
         context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
         cls.mx = event.mouse_x
         cls.my = event.mouse_y
-        _UtilInput.update(event, "LEFTMOUSE", "RIGHTMOUSE")
+        self.input.update(event, "LEFTMOUSE", "RIGHTMOUSE")
         if 0 <= cls.current_hover_idx:
             modal = cls.draw_modals[cls.current_hover_idx]
-            if cls.current_focus_type == "depth_test" and _UtilInput.is_keydown("LEFTMOUSE"):
+            if cls.current_focus_type == "depth_test" and self.input.is_keydown("LEFTMOUSE"):
                 modal.depth_test = "LESS_EQUAL" if modal.depth_test != "LESS_EQUAL" else "ALWAYS"
                 return {"RUNNING_MODAL"}
-            elif cls.current_focus_type == "remove" and _UtilInput.is_keydown("LEFTMOUSE"):
+            elif cls.current_focus_type == "remove" and self.input.is_keydown("LEFTMOUSE"):
                 modal.cancel()
                 cls.current_hover_idx = -1
                 if event.shift:
@@ -1627,13 +1647,13 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
                     modal.extrude_offset += value if event.type == "WHEELUPMOUSE" else -value
                     modal.make_batch()
                     return {"RUNNING_MODAL"}
-                elif _UtilInput.is_keydown("RIGHTMOUSE"):
+                elif self.input.is_keydown("RIGHTMOUSE"):
                     modal.extrude_offset = 0
                     modal.make_batch()
                     return {"RUNNING_MODAL"}
         return {"PASS_THROUGH"}
 
-    class DrawModal(_Util.MPM_OT_ModalMonitor):
+    class DrawModal(_Util.MPM_ModalMonitor):
         shader = None
 
         def __init__(self, obj, id):
