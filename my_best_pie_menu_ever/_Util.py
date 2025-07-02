@@ -187,16 +187,16 @@ class MPM_OT_CallPanel(bpy.types.Operator):
 class MPM_StackableViewportUI:
     mx, my = 0.0, 0.0
 
-    def init_draw_class_instance(self, context, is_multiple, id, drawModalCls):
+    def init_draw_class_instance(self, context, is_multiple, id, funcDrawModalInstantiate):
         self.id = id
         if not (modals := stackable_draw_modals.get(self.id)):
             context.window_manager.modal_handler_add(self)
             if modals is None:
                 stackable_draw_modals[self.id] = []
             if not is_multiple:
-                stackable_draw_modals[self.id].append(drawModalCls(self.id))
+                stackable_draw_modals[self.id].append(funcDrawModalInstantiate())
         if is_multiple:
-            stackable_draw_modals[self.id].append(drawModalCls(self.id))
+            stackable_draw_modals[self.id].append(funcDrawModalInstantiate())
         g.force_cancel_piemenu_modal(context)
 
     def modal(self, context, event):
@@ -206,12 +206,13 @@ class MPM_StackableViewportUI:
         cls.my = event.mouse_y
         modals = stackable_draw_modals.get(self.id)
         if not modals:
-            g.space_view_command_display_stack_remove(self.id)
             return self.cancel(context)
-        g.space_view_command_display_stack_sety(self.id, (len(modals)-1) * (_UtilBlf.LABEL_SIZE_Y * 2))
+        g.space_view_command_display_stack_height(self.id, (len(modals)-1) * (_UtilBlf.LABEL_SIZE_Y * 2))
         return {}
 
     def cancel(self, context):
+        g.space_view_command_display_stack_remove(self.id)
+        context.area.tag_redraw()
         return {"CANCELLED"}
 
 

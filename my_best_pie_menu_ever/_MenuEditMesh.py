@@ -1456,17 +1456,15 @@ class MPM_OT_EditMesh_CenteringEdgeLoop(bpy.types.Operator):
 class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.types.Operator):
     bl_idname = "mpm.editmesh_pin_selected_verts_modal"
     bl_label = "Pin Selected"
-    bl_description = ""
+    bl_description = "Pins the selected vertices in place"
     attr_name = "mpm_tmp_vcolor"
-    draw_modal = None
-    mx, my = 0.0, 0.0
 
     @classmethod
     def poll(self, context):
         return has_selected_verts
 
     def invoke(self, context, event):
-        super().init_draw_class_instance(context, False, "pin verts", self.DrawModal)
+        super().init_draw_class_instance(context, False, "pin_verts", lambda: self.DrawModal(self.id))
         self.input = _UtilInput.Monitor()
         # 頂点カラー表示
         self.set_shading_color(context, "VERTEX")
@@ -1493,17 +1491,9 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.t
             else:
                 v[attr] = (1, 1, 1, 1)
         bmesh.update_edit_mesh(self.obj_data)
-        # cls = MPM_OT_EditMesh_PinSelectedVertsModal
-        # if not cls.draw_modal:
-        #     context.window_manager.modal_handler_add(self)
-        #     cls.draw_modal = cls.DrawModal(self.id)
-        # g.force_cancel_piemenu_modal(context)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        # cls.mx = event.mouse_x
-        # cls.my = event.mouse_y
-        # context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
         if "CANCELLED" in super().modal(context, event):
             return self.cancel(context)
         self.input.update(event, "LEFTMOUSE", "ESC")
@@ -1537,7 +1527,6 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.t
 
     def cancel(self, context):
         super().cancel(context)
-        context.area.tag_redraw()
         self.bm = None
         self.obj_data = None
         # MPM_OT_EditMesh_PinSelectedVertsModal.draw_modal = None
@@ -1553,26 +1542,18 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.t
     class DrawModal(_Util.MPM_StackableModalMonitor):
         def __init__(self, id):
             super().__init__(id)
-            # self.id = id
             self.handler2d = bpy.types.SpaceView3D.draw_handler_add(self.draw2d, (), "WINDOW", "POST_PIXEL")
-            # self.is_hover_cancel = False
-            # g.space_view_command_display_stack_sety(self.id)
 
         def draw2d(self):
             if self.try_cancel():
                 return
-            parent = MPM_OT_EditMesh_PinSelectedVertsModal
-            # if cls.draw_modal == None:
-            #     self.cancel()
-            #     return
             self.prepare_current_state()
+            parent = MPM_OT_EditMesh_PinSelectedVertsModal
             # label
             x, y = g.space_view_command_display_begin_pos(self.id)
             _UtilBlf.draw_label("Pin Selected Verts: ", x, y, "right")
-            # self.is_hover_cancel = _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling pin verts.",
-            #                                                       x, y, cls.mx, cls.my, active=self.is_hover_cancel, align="left")
             if _UtilBlf.draw_label_mousehover("[X]", "left click: Cancelling pin verts.",
-                                              x, y, parent.mx, parent.my, active=self.is_current_modal, align="left"):
+                                              x, y, parent.mx, parent.my, active=self.is_current_modal and self.current_focus_type == "remove", align="left"):
                 self.is_current_modal = True
                 self.current_focus_type = "remove"
 
@@ -1581,18 +1562,13 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.t
             if self.handler2d:
                 bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
             self.handler2d = None
-            # g.space_view_command_display_stack_remove(self.id)
 
 
-class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
+class MPM_OT_EditMesh_Ghost(_Util.MPM_StackableViewportUI, bpy.types.Operator):
     bl_idname = "mpm.editmesh_ghost"
     bl_label = "Add Ghost of Selection"
     bl_description = "Add a ghost of the current selection. Listed below the viewport — click 'X' to remove."
     with_hide:  bpy.props.BoolProperty()
-    mx, my = 0.0, 0.0
-    current_hover_idx, current_focus_type = -1, ""
-    draw_modals = []
-    target_area = None
 
     @classmethod
     def poll(self, context):
@@ -1601,63 +1577,50 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
         return context.mode == "OBJECT" and context.object and context.object.type == "MESH"
 
     def invoke(self, context, event):
-        self.id = "ghost"
+        super().init_draw_class_instance(context, True, "ghost_mesh", lambda: self.DrawModal(context.active_object, self.id))
         self.input = _UtilInput.Monitor()
-        cls = MPM_OT_EditMesh_Ghost
-        cls.target_area = context.area
-        if not cls.draw_modals:
-            context.window_manager.modal_handler_add(self)
-        cls.draw_modals.append(MPM_OT_EditMesh_Ghost.DrawModal(context.active_object, self.id))
         if self.with_hide:
             bpy.ops.mesh.hide(unselected=False)
-        g.force_cancel_piemenu_modal(context)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
         # このモーダルは最後のDrawModalまで生存
-        cls = MPM_OT_EditMesh_Ghost
-        if not cls.draw_modals:
-            g.space_view_command_display_stack_remove(self.id)
-            return {"CANCELLED"}
-        g.space_view_command_display_stack_sety(self.id, len(self.draw_modals) * (_UtilBlf.LABEL_SIZE_Y * 2))
-        context.area.tag_redraw()  # draw2dを毎フレーム呼ぶため。
-        cls.mx = event.mouse_x
-        cls.my = event.mouse_y
+        if "CANCELLED" in super().modal(context, event):
+            return self.cancel(context)
         self.input.update(event, "LEFTMOUSE", "RIGHTMOUSE")
-        if 0 <= cls.current_hover_idx:
-            modal = cls.draw_modals[cls.current_hover_idx]
-            if cls.current_focus_type == "depth_test" and self.input.is_keydown("LEFTMOUSE"):
-                modal.depth_test = "LESS_EQUAL" if modal.depth_test != "LESS_EQUAL" else "ALWAYS"
-                return {"RUNNING_MODAL"}
-            elif cls.current_focus_type == "remove" and self.input.is_keydown("LEFTMOUSE"):
-                modal.cancel()
-                cls.current_hover_idx = -1
-                if event.shift:
-                    bpy.ops.mesh.reveal(select=False)
-                return {"RUNNING_MODAL"}
-            elif cls.current_focus_type == "alpha":
-                if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
-                    value = 0.1
-                    modal.alpha += value if event.type == "WHEELUPMOUSE" else -value
-                    modal.alpha = _Util.clamp(modal.alpha, 0.0, 1.0)
+        for modal in _Util.stackable_draw_modals[self.id]:
+            if modal.is_current_modal:
+                if self.input.is_keydown("LEFTMOUSE") and modal.current_focus_type == "depth_test":
+                    modal.depth_test = "LESS_EQUAL" if modal.depth_test != "LESS_EQUAL" else "ALWAYS"
                     return {"RUNNING_MODAL"}
-            elif cls.current_focus_type == "extrude":
-                if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
-                    value = 0.005 if event.shift else 0.001
-                    modal.extrude_offset += value if event.type == "WHEELUPMOUSE" else -value
-                    modal.make_batch()
+                elif self.input.is_keydown("LEFTMOUSE") and modal.current_focus_type == "remove":
+                    modal.cancel()
+                    if event.shift:
+                        bpy.ops.mesh.reveal(select=False)
                     return {"RUNNING_MODAL"}
-                elif self.input.is_keydown("RIGHTMOUSE"):
-                    modal.extrude_offset = 0
-                    modal.make_batch()
-                    return {"RUNNING_MODAL"}
+                elif modal.current_focus_type == "alpha":
+                    if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
+                        value = 0.1
+                        modal.alpha += value if event.type == "WHEELUPMOUSE" else -value
+                        modal.alpha = _Util.clamp(modal.alpha, 0.0, 1.0)
+                        return {"RUNNING_MODAL"}
+                elif modal.current_focus_type == "extrude":
+                    if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
+                        value = 0.005 if event.shift else 0.001
+                        modal.extrude_offset += value if event.type == "WHEELUPMOUSE" else -value
+                        modal.make_batch()
+                        return {"RUNNING_MODAL"}
+                    elif self.input.is_keydown("RIGHTMOUSE"):
+                        modal.extrude_offset = 0
+                        modal.make_batch()
+                        return {"RUNNING_MODAL"}
         return {"PASS_THROUGH"}
 
-    class DrawModal(_Util.MPM_ModalMonitor):
+    class DrawModal(_Util.MPM_StackableModalMonitor):
         shader = None
 
         def __init__(self, obj, id):
-            super().__init__()
+            super().__init__(id)
             self.id = id
             self.verts = []
             self.edges = []
@@ -1672,8 +1635,8 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             self.handler3d = None
             self.handler2d = None
             self.depth_test = "LESS_EQUAL"
-            if MPM_OT_EditMesh_Ghost.DrawModal.shader is None:
-                MPM_OT_EditMesh_Ghost.DrawModal.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+            if self.__class__.shader is None:
+                self.__class__.shader = gpu.shader.from_builtin("UNIFORM_COLOR")
             self.Obj = obj
             # 常に編集モードでの編集後のメッシュ情報が欲しいため、一時メッシュを取得する
             depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -1689,7 +1652,7 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             for v in bm.verts:
                 if bpy.context.mode == "OBJECT" or v.select:
                     self.verts.append(obj.matrix_world @ v.co)
-                    self.normals.append(v.normal)  # obj.matrix_world @ v.normalとすると、ワールド原点をピボットになる。
+                    self.normals.append(v.normal.copy())  # obj.matrix_world @ v.normalとすると、ワールド原点をピボットになる。
                     vert_index_map[v] = cnt
                     cnt += 1
             for e in bm.edges:
@@ -1712,12 +1675,12 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
 
         def make_batch(self):
             verts = [(v + n * self.extrude_offset) for v, n in zip(self.verts, self.normals)]
-            self.batch_v = batch_for_shader(MPM_OT_EditMesh_Ghost.DrawModal.shader, "POINTS", {"pos": verts})
-            self.batch_e = batch_for_shader(MPM_OT_EditMesh_Ghost.DrawModal.shader, "LINES", {"pos": verts}, indices=self.edges)
-            self.batch_f = batch_for_shader(MPM_OT_EditMesh_Ghost.DrawModal.shader, "TRIS", {"pos": verts}, indices=self.tris)
+            self.batch_v = batch_for_shader(self.__class__.shader, "POINTS", {"pos": verts})
+            self.batch_e = batch_for_shader(self.__class__.shader, "LINES", {"pos": verts}, indices=self.edges)
+            self.batch_f = batch_for_shader(self.__class__.shader, "TRIS", {"pos": verts}, indices=self.tris)
 
         def draw3d(self):
-            shader = MPM_OT_EditMesh_Ghost.DrawModal.shader
+            shader = self.__class__.shader
             if not shader:
                 self.cancel()
                 return
@@ -1743,48 +1706,46 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             gpu.state.blend_set("NONE")
 
         def draw2d(self):
-            main_cls = MPM_OT_EditMesh_Ghost
-            if not self in main_cls.draw_modals:
-                self.cancel()
+            if self.try_cancel():
                 return
-            modal_idx = main_cls.draw_modals.index(self)
-            if main_cls.current_hover_idx == modal_idx and bpy.context.area == main_cls.target_area:
-                main_cls.current_hover_idx = -1
-                main_cls.current_focus_type = ""
+            self.prepare_current_state()
+            parent = MPM_OT_EditMesh_Ghost
+            modals = _Util.stackable_draw_modals[self.id]
+            modal_idx = modals.index(self)
             # label
             text = "Ghost:"
             w, h = _UtilBlf.draw_label_dimensions(text)
             h *= 1.5
             x, y = g.space_view_command_display_begin_pos(self.id)
             y += h * modal_idx
-            if modal_idx == len(main_cls.draw_modals)-1:  # 最後だけ表示
+            if modal_idx == len(modals)-1:  # 最後だけ表示
                 _UtilBlf.draw_label(text, x, y, "right")
             # depth test button
             x += 10
             if _UtilBlf.draw_label_mousehover(self.depth_test, "left click: Change depth test mode.",
-                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "depth_test", align="left"):
-                main_cls.current_hover_idx = modal_idx
-                main_cls.current_focus_type = "depth_test"
+                                              x, y, parent.mx, parent.my, active=self.is_current_modal and self.current_focus_type == "depth_test", align="left"):
+                self.is_current_modal = True
+                self.current_focus_type = "depth_test"
             # extrude value
             w, h = _UtilBlf.draw_label_dimensions("LESS_EQUAL")
             x += 10 + w
             if _UtilBlf.draw_label_mousehover(f"{self.extrude_offset:.3f}", "mouse wheel: Adjust extrusion distance.(shift: Increase amount)",
-                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "extrude", align="left"):
-                main_cls.current_hover_idx = modal_idx
-                main_cls.current_focus_type = "extrude"
+                                              x, y, parent.mx, parent.my, active=self.is_current_modal and self.current_focus_type == "extrude", align="left"):
+                self.is_current_modal = True
+                self.current_focus_type = "extrude"
             # remove button
             w, h = _UtilBlf.draw_label_dimensions("-00.00")
             x += 10 + w
             if _UtilBlf.draw_label_mousehover(f"{self.alpha:.1f}", "mouse wheel: Adjust individual alpha",
-                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "alpha", align="left"):
-                main_cls.current_hover_idx = modal_idx
-                main_cls.current_focus_type = "alpha"
+                                              x, y, parent.mx, parent.my, active=self.is_current_modal and self.current_focus_type == "alpha", align="left"):
+                self.is_current_modal = True
+                self.current_focus_type = "alpha"
             w, h = _UtilBlf.draw_label_dimensions("0.0")
             x += 10 + w
             if _UtilBlf.draw_label_mousehover("[X]", "left click: Remove ghost.(shift: With unhide verts)",
-                                              x, y, main_cls.mx, main_cls.my, active=main_cls.current_hover_idx == modal_idx and main_cls.current_focus_type == "remove", align="left"):
-                main_cls.current_hover_idx = modal_idx
-                main_cls.current_focus_type = "remove"
+                                              x, y, parent.mx, parent.my, active=self.is_current_modal and self.current_focus_type == "remove", align="left"):
+                self.is_current_modal = True
+                self.current_focus_type = "remove"
 
         def cancel(self):
             # print("cancel")
@@ -1795,8 +1756,6 @@ class MPM_OT_EditMesh_Ghost(bpy.types.Operator):
             if self.handler2d:
                 bpy.types.SpaceView3D.draw_handler_remove(self.handler2d, "WINDOW")
             self.handler2d = None
-            if self in MPM_OT_EditMesh_Ghost.draw_modals:
-                MPM_OT_EditMesh_Ghost.draw_modals.remove(self)
 
 
 # --------------------------------------------------------------------------------

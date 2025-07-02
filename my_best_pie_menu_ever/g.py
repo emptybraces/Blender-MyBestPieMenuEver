@@ -33,11 +33,11 @@ def space_view_command_display_begin_pos(id):
         if i["id"] == id:
             return (x, y)
         y += i["y"]
-        y += 10  # スペース
+        y += _UtilBlf.LABEL_SIZE_Y*2  # スペース
     return (x, 0)
 
 
-def space_view_command_display_stack_sety(id, y=0):
+def space_view_command_display_stack_height(id, y=0):
     global space_view_command_display_start_stack
     if y == 0:
         y = _UtilBlf.LABEL_SIZE_Y
