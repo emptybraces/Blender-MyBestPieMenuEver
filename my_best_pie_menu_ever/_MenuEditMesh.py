@@ -152,7 +152,7 @@ def MenuPrimary(pie, context):
     # bridge edge loops
     rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.bridge_edge_loops", "Bridge Edge Loops(Marge)", has_selected_edges).use_merge = True
-    _Util.layout_operator(rr, MPM_OT_EditMesh_BridgeEdgeLoopsMerge.bl_idname, isActive=has_selected_edges2, icon="MOD_MIRROR")
+    _Util.layout_operator(rr, MPM_OT_EditMesh_BridgeEdgeLoopsMerge.bl_idname, "", isActive=has_selected_edges2, icon="MOD_MIRROR")
     # ボーンアーマチュア作成
     _Util.layout_operator(cc, MPM_OT_EditMesh_GenterateBonesAlongSelectedEdge.bl_idname, icon="BONE_DATA")
     # 法線サイドへビューポートカメラを移動
@@ -189,20 +189,16 @@ def MenuPrimary(pie, context):
     # 頂点ミラー複製
     _Util.layout_operator(cc, MPM_OT_EditMesh_DuplicateMirror.bl_idname, isActive=has_selected_verts, icon="SEQ_STRIP_DUPLICATE")
     # マージ
-    cc.label(text="Merge")
-    r2 = cc.row()
-    r3 = r2.row(align=True)
-    r2.scale_x = 0.9
-    _Util.layout_operator(r3, "mesh.merge", "Center", has_selected_verts2).type = "CENTER"
-    _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR").mode = "CENTER"
-    r3 = r2.row(align=True)
-    _Util.layout_operator(r3, "mesh.merge", "Collapse", has_selected_verts2).type = "COLLAPSE"
-    _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR").mode = "COLLAPSE"
-    r3 = r2.row(align=True)
-    _Util.layout_operator(r3, "mesh.merge", "Cursor", has_selected_verts2).type = "CURSOR"
-    _Util.layout_operator(r3, MPM_OT_EditMesh_MirrorMerge.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR").mode = "CURSOR"
-    _Util.layout_operator(r2, "mesh.remove_doubles", "Distance", has_selected_verts2)
-    _Util.layout_operator(cc, "mesh.delete_loose", icon="X")
+    r1, r2 = _Util.layout_split_row2(cc, 0.3)
+    r1.label(text="Mirror Merge")
+    _Util.layout_operator(r2, MPM_OT_EditMesh_MirrorMerge.bl_idname, "Center", isActive=has_selected_verts2).mode = "CENTER"
+    _Util.layout_operator(r2, MPM_OT_EditMesh_MirrorMerge.bl_idname, "Collapse", isActive=has_selected_verts2).mode = "COLLAPSE"
+    _Util.layout_operator(r2, MPM_OT_EditMesh_MirrorMerge.bl_idname, "Cursor", isActive=has_selected_verts2).mode = "CURSOR"
+    # 削除
+    # cc.label(text="Remove")
+    rr = cc.row(align=True)
+    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorDissolve.bl_idname, isActive=has_selected_verts)
+    _Util.layout_operator(rr, "mesh.delete_loose", icon="X")
 
 # --------------------------------------------------------------------------------
 
@@ -487,20 +483,9 @@ class MPM_OT_EditMesh_MirrorSharp(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_EditMesh_Merge(bpy.types.Operator):
-    bl_idname = "mpm.editmesh_merge"
-    bl_label = ""
-    bl_options = {"REGISTER", "UNDO"}
-    mode: bpy.props.EnumProperty(name="Mode", items=[("CENTER", "At Center", ""), ("FIRST", "At First", ""),
-                                 ("LAST", "At Last", ""), ("AT_CURSOR", "At Cursor", ""), ("COLLAPSE", "Collapse", "")])
-
-    def execute(self, context):
-        return bpy.ops.mesh.merge(type=self.mode)
-
-
 class MPM_OT_EditMesh_MirrorMerge(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_merge"
-    bl_label = ""
+    bl_label = "Mirror Merge"
     bl_options = {"REGISTER", "UNDO"}
     mode: bpy.props.EnumProperty(name="Mode", items=[("CENTER", "At Center", ""), ("FIRST", "At First", ""),
                                  ("LAST", "At Last", ""), ("CURSOR", "At Cursor", ""), ("COLLAPSE", "Collapse", "")])
@@ -540,7 +525,7 @@ class MPM_OT_EditMesh_MirrorMerge(bpy.types.Operator):
 
 class MPM_OT_EditMesh_BridgeEdgeLoopsMerge(bpy.types.Operator):
     bl_idname = "mpm.editmesh_bridge_edge_loops_merge"
-    bl_label = ""
+    bl_label = "Mirror BridgeEdgeLoops"
     bl_options = {"REGISTER", "UNDO"}
     axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
@@ -564,7 +549,7 @@ class MPM_OT_EditMesh_BridgeEdgeLoopsMerge(bpy.types.Operator):
 
 class MPM_OT_EditMesh_MirrorVertConnect(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_vert_connect"
-    bl_label = ""
+    bl_label = "Mirror Verts Connect"
     bl_options = {"REGISTER", "UNDO"}
     axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
     threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
@@ -585,6 +570,20 @@ class MPM_OT_EditMesh_MirrorVertConnect(bpy.types.Operator):
         bmesh.update_edit_mesh(obj.data)
         return {"FINISHED"}
 
+
+class MPM_OT_EditMesh_MirrorDissolve(bpy.types.Operator):
+    bl_idname = "mpm.editmesh_mirror_dissolve"
+    bl_label = "Mirror Dissolve"
+    bl_options = {"REGISTER", "UNDO"}
+    use_verts: bpy.props.BoolProperty(name="use_verts")
+    use_face_split: bpy.props.BoolProperty(name="use_face_split")
+    use_boundary_tear: bpy.props.BoolProperty(name="use_boundary_tear")
+
+    def execute(self, context):
+        bpy.ops.mesh.select_mirror(extend=True)
+        bpy.ops.mesh.dissolve_mode(use_verts=self.use_verts, use_face_split=self.use_face_split, use_boundary_tear=self.use_boundary_tear)
+
+        return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
 
@@ -1773,9 +1772,9 @@ classes = (
     MPM_OT_EditMesh_GenterateBonesAlongSelectedEdgeInternal,
     MPM_OT_EditMesh_AlignViewToEdgeNormalSideModal,
     MPM_OT_EditMesh_MirrorBy3DCursor,
-    MPM_OT_EditMesh_Merge,
     MPM_OT_EditMesh_BridgeEdgeLoopsMerge,
     MPM_OT_EditMesh_MirrorMerge,
+    MPM_OT_EditMesh_MirrorDissolve,
     MPM_OT_EditMesh_MirrorVertConnect,
     MPM_OT_EditMesh_GrowEdgeRingSelection,
     MPM_OT_EditMesh_CenteringEdgeLoop,
