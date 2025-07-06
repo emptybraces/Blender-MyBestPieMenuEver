@@ -86,7 +86,6 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
-        bpy.ops.mpm.weight_modal_monitor("INVOKE_DEFAULT")
         # km, kmi = _Util.find_keymap("3D View", MPM_OT_OpenPieMenuModal.bl_idname)
         # if kmi != None:
         #     self._shortcutKey = kmi.type

@@ -5,9 +5,7 @@ else:
     from . import _Util
 import bpy
 import bmesh
-from bpy.app.translations import (
-    pgettext_iface as iface_,
-)
+from bpy.app.translations import pgettext_iface as iface_
 # --------------------------------------------------------------------------------
 # モード切り替えメニュー
 # --------------------------------------------------------------------------------

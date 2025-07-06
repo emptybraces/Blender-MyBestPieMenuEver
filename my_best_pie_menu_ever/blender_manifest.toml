@@ -43,6 +43,7 @@ files = "Import/export FBX from/to disk"
 # - [Bugfix] SwitchObjectData/Blendshapeで、頻繁に変更するとクラッシュする。
 # - [Bugfix] SwitchObjectData/VertexGroupで、アクティブなVertexGroupがないときリストが非表示になる。
 # - [Bugfix] モード変更ボタンのテキスト見切れ。
+# - [Bugfix] ウェイトペイント時のボーン非表示処理が動かない
 # v2.6.0
 # - [Object/EditMesh] ゴースト表示機能を実装。
 # - [EditMesh] 頂点固定機能を実装。

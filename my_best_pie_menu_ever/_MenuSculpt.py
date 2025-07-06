@@ -175,7 +175,7 @@ def MenuPrimary(pie, context):
     box.label(text="Stroke", icon="STROKE")
     rr = box.row(align=True)
     cc = rr.column(align=True)
-    for i in _Util.enum_values(current_brush, "stroke_method"):
+    for i in _Util.enum_identifier(current_brush, "stroke_method"):
         if bpy.app.version < (4, 2, 9):
             is_use = current_brush.stroke_method == i
             _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=i != current_brush, depress=is_use)
@@ -487,7 +487,7 @@ def MenuPrimary_v4_2(pie, context):
     box.label(text="Stroke", icon="STROKE")
     rr = box.row(align=True)
     cc = rr.column(align=True)
-    for i in _Util.enum_values(current_brush, "stroke_method"):
+    for i in _Util.enum_identifier(current_brush, "stroke_method"):
         is_use = current_brush.stroke_method == i
         _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=i != current_brush, depress=is_use)
         if (cnt := cnt+1) % limit_rows == 0:

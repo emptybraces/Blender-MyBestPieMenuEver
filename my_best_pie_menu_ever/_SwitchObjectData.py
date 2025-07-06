@@ -55,7 +55,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         self.mx = event.mouse_x
         self.my = event.mouse_y
         self.input.update(event, "MIDDLEMOUSE", "LEFTMOUSE", "SPACE", "RIGHTMOUSE", "ESC", "W", "G")
-        ret = self.current_menu.modal(context, event)
+        ret = self.current_menu.modal(context, event, self.input)
         if ret:
             return ret
         # 通常のカメラ移動はスルー
@@ -146,7 +146,7 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
         def on_mode_change(self, context):
             self.reserved_mode = self.last_mode
 
-        def modal(self, context, event):
+        def modal(self, context, event, input):
             self.mx = event.mouse_x
             self.my = event.mouse_y
             if self.reserved_mode:
@@ -199,8 +199,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             super().__init__(context, event)
             self.prev_active_idx_vg = context.object.vertex_groups.active_index
 
-        def modal(self, context, event):
-            super().modal(context, event)
+        def modal(self, context, event, input):
+            super().modal(context, event, input)
             if self.current_active_idx != -1 and context.object.vertex_groups.active_index != self.current_active_idx:
                 context.object.vertex_groups.active_index = self.current_active_idx
             return None
@@ -241,15 +241,15 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             self.prev_active_idx_sk = context.object.active_shape_key_index
             self.prev_sk_values = [key.value for key in context.object.data.shape_keys.key_blocks] if context.object.data.shape_keys else []
 
-        def modal(self, context, event):
-            super().modal(context, event)
+        def modal(self, context, event, input):
+            super().modal(context, event, input)
             if self.current_active_idx != -1 and context.object.active_shape_key_index != self.current_active_idx:
                 context.object.active_shape_key_index = self.current_active_idx
             # 分かりずらいのでここでself.input.updateしない。元でまとめてやる
             if -1 != self.current_hover_idx:
                 if event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"}:
                     self.on_mousewheel(context, event.type == "WHEELUPMOUSE")
-                elif self.input.is_keydown("MIDDLEMOUSE"):
+                elif input.is_keydown("MIDDLEMOUSE"):
                     self.on_middleclick(context)
                 return {"RUNNING_MODAL"}
             return None
@@ -307,8 +307,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             super().__init__(context, event)
             self.prev_active_idx_uv = context.object.data.uv_layers.active_index
 
-        def modal(self, context, event):
-            super().modal(context, event)
+        def modal(self, context, event, input):
+            super().modal(context, event, input)
             if self.current_active_idx != -1 and context.object.data.uv_layers.active_index != self.current_active_idx:
                 context.object.data.uv_layers.active_index = self.current_active_idx
                 context.object.data.uv_layers.active.active_render = True
@@ -349,8 +349,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             super().__init__(context, event)
             self.prev_active_idx_ca = context.object.data.color_attributes.active_color_index
 
-        def modal(self, context, event):
-            super().modal(context, event)
+        def modal(self, context, event, input):
+            super().modal(context, event, input)
             if self.current_active_idx != -1 and context.object.data.color_attributes.active_color_index != self.current_active_idx:
                 context.object.data.color_attributes.active_color_index = self.current_active_idx
                 context.object.data.color_attributes.render_color_index = self.current_active_idx
@@ -394,8 +394,8 @@ class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):
             self.prev_active_idx_ca = context.object.data.color_attributes.active_color_index
             self.arm = _Util.get_armature(context.object)
 
-        def modal(self, context, event):
-            super().modal(context, event)
+        def modal(self, context, event, input):
+            super().modal(context, event, input)
             if self.current_active_idx != -1 and not self.arm.data.collections_all[self.current_active_idx].is_solo:
                 for i, bc in enumerate(self.arm.data.collections_all):
                     bc.is_solo = i == self.current_active_idx

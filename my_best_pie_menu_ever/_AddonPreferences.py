@@ -12,6 +12,11 @@ import colorsys
 addon_keymaps = []
 
 
+def weightPaintHideBone_on_update(self, context):
+    from ._MenuWeightPaint import HideBoneOnPaint_on_update
+    HideBoneOnPaint_on_update(self.weightPaintHideBone)
+
+
 class MT_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
     secondLanguage: StringProperty(name="Second Language", default="ja_JP", description="Set the second language for the language switch button")
@@ -28,7 +33,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5,
                                      description="Specify the line count for displaying brushes")
     sculptBrushFilterByName: StringProperty(name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
-    weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="")
+    weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="", update=weightPaintHideBone_on_update)
     ghostColorFace: FloatVectorProperty(name="GhostColor: Face", subtype="COLOR", size=4,
                                         default=(*colorsys.hsv_to_rgb(0.65, 0.2, 0.5), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
     ghostColorEdge: FloatVectorProperty(name="GhostColor: Edge", subtype="COLOR", size=4,
@@ -56,7 +61,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_shift_brush)
 
     def __get_blend_names(self, context):
-        return [(i.lower(), i.lower(), "") for i in _Util.enum_values(bpy.types.Brush, "blend")]
+        return [(i.lower(), i.lower(), "") for i in _Util.enum_identifier(bpy.types.Brush, "blend")]
 
     def __select_dropdown_blend_names(self, value):
         value = self.__get_blend_names(None)[value][1]

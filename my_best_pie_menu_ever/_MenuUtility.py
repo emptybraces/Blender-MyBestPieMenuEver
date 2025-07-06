@@ -21,6 +21,8 @@ import math
 from time import time
 from mathutils import Vector, Quaternion
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d
+from bpy.app.translations import pgettext_iface as iface_
+
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
@@ -76,22 +78,22 @@ def DrawView3D(layout, context):
     for item in bpy.types.TransformOrientationSlot.bl_rna.properties["type"].enum_items:
         _Util.MPM_OT_SetString.operator(r, "", context.scene.transform_orientation_slots[0], "type", item.identifier,
                                         item.icon, context.scene.transform_orientation_slots[0].type == item.identifier)
-    r = c.row(align=True)
+    s = c.split(factor=0.7)
+    _, r = s.row(), s.row()
     _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Reset.bl_idname, text="Reset")
-    _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Cursor.bl_idname, text="Cursor")
+    # _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Cursor.bl_idname, text="Cursor")
 
     # 3Dカーソル
-    r = c.row(align=True)
-    r.label(text="3D Cursor")
-    _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
-    _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
-    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
-    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
-    r = r.row(align=True)
-    r.scale_x = 0.7
-    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="X0").mode = "x"
-    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Y0").mode = "y"
-    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Z0").mode = "z"
+    s = c.split(factor=0.25)
+    r1, r2 = s.row(align=True), s.row(align=True)
+    r1.label(text="3D Cursor")
+    _Util.layout_operator(r2, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
+    _Util.layout_operator(r2, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
+    _Util.layout_operator(r2, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
+    _Util.layout_operator(r2, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
+    _Util.layout_operator(r2, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="X0").mode = "x"
+    _Util.layout_operator(r2, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Y0").mode = "y"
+    _Util.layout_operator(r2, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Z0").mode = "z"
     # 設定
     box = col.box()
     box.label(text="Settings")
@@ -332,7 +334,7 @@ class MPM_OT_Utility_ChangeLanguage(bpy.types.Operator):
 
 class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
     bl_idname = "mpm.util_pivot_orientation_set_reset"
-    bl_label = ""
+    bl_label = "Pivot & Orientation Reset"
     bl_description = "Pivit=Origin, Orientation=Global"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -344,7 +346,7 @@ class MPM_OT_Utility_PivotOrientationSet_Reset(bpy.types.Operator):
 
 class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
     bl_idname = "mpm.util_pivot_orientation_set_cursor"
-    bl_label = ""
+    bl_label = "Pivot & Orientation Cursor"
     bl_description = "Pivit=Cursor, Orientation=Cursor"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -853,7 +855,7 @@ class MPM_OT_Utility_SelectionCycleSoloModal(_Util.MPM_StackableViewportUI, bpy.
         self.input.update(event, "LEFTMOUSE", "RIGHTMOUSE", "ESC")
         for modal in _Util.stackable_draw_modals[self.id]:
             if modal.is_current_modal:
-                print(modal.current_focus_type, self.input.is_keydown("LEFTMOUSE"))
+                # print(modal.current_focus_type, self.input.is_keydown("LEFTMOUSE"))
                 if modal.current_focus_type == "remove" and self.input.is_keydown("LEFTMOUSE"):
                     modal.cancel()
                     return {"RUNNING_MODAL"}

@@ -146,7 +146,7 @@ def MenuPrimary(pie, context):
         box = r.box()
         box.label(text="Stroke", icon="STROKE")
         cc = box.column(align=True)
-        for i in _Util.enum_values(current_brush, "stroke_method"):
+        for i in _Util.enum_identifier(current_brush, "stroke_method"):
             is_use = current_brush.stroke_method == i
             _Util.MPM_OT_SetterBase.operator(cc, _Util.MPM_OT_SetString.bl_idname, i, current_brush, "stroke_method", i, depress=is_use)
 
@@ -173,7 +173,7 @@ def MenuPrimary(pie, context):
     cc = rrr.column(align=True)
     default_blends = ["mix", "screen", "overlay", "erase_alpha"]
     if g_is_filter_set_mode_enter or not g_is_filter_mode:
-        for i in _Util.enum_values(current_brush, "blend"):
+        for i in _Util.enum_identifier(current_brush, "blend"):
             if g_is_filter_set_mode_enter:
                 _blend_filter_operator(context, cc, i, i, i.lower() in blend_filter_names)
                 if (cnt := cnt+1) % 12 == 0:
@@ -185,7 +185,7 @@ def MenuPrimary(pie, context):
                                                      "blend", i, depress=current_brush.blend == i)
     # フィルターモード
     else:
-        for i in _Util.enum_values(current_brush, "blend"):
+        for i in _Util.enum_identifier(current_brush, "blend"):
             if blend_filter_names:
                 if i.lower() not in blend_filter_names:
                     continue  # 表示しない
@@ -534,7 +534,7 @@ def MenuPrimary_v4_2(pie, context):
     bb.label(text="Stroke")
     rrr = bb.row(align=True)
     ccc = rrr.column(align=True)
-    for i in _Util.enum_values(current_brush, "stroke_method"):
+    for i in _Util.enum_identifier(current_brush, "stroke_method"):
         is_use = current_brush.stroke_method == i
         _Util.MPM_OT_SetterBase.operator(ccc, _Util.MPM_OT_SetString.bl_idname, i,
                                          current_brush, "stroke_method", i, depress=is_use)
@@ -550,7 +550,7 @@ def MenuPrimary_v4_2(pie, context):
     bb.label(text="Blend")
     rrr = bb.row(align=True)
     ccc = rrr.column(align=True)
-    for i in _Util.enum_values(current_brush, "blend"):
+    for i in _Util.enum_identifier(current_brush, "blend"):
         if blend_filter_names and i.lower() not in blend_filter_names:
             continue
         if not blend_filter_names and i.lower() not in default_blends:

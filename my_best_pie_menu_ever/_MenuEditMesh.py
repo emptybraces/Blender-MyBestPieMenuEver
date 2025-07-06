@@ -125,7 +125,7 @@ def MenuPrimary(pie, context):
     # 接続
     rr = cc.row(align=True)
     _Util.layout_operator(rr, "mesh.vert_connect", isActive=has_selected_verts2)
-    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorVertConnect.bl_idname, isActive=has_selected_verts2, icon="MOD_MIRROR")
+    _Util.layout_operator(rr, MPM_OT_EditMesh_MirrorVertConnect.bl_idname, "", isActive=has_selected_verts2, icon="MOD_MIRROR")
     # 固定
     _Util.layout_operator(cc, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname)
     # ゴースト
@@ -575,14 +575,13 @@ class MPM_OT_EditMesh_MirrorDissolve(bpy.types.Operator):
     bl_idname = "mpm.editmesh_mirror_dissolve"
     bl_label = "Mirror Dissolve"
     bl_options = {"REGISTER", "UNDO"}
-    use_verts: bpy.props.BoolProperty(name="use_verts")
+    use_verts: bpy.props.BoolProperty(name="use_verts", default=True)
     use_face_split: bpy.props.BoolProperty(name="use_face_split")
     use_boundary_tear: bpy.props.BoolProperty(name="use_boundary_tear")
 
     def execute(self, context):
         bpy.ops.mesh.select_mirror(extend=True)
         bpy.ops.mesh.dissolve_mode(use_verts=self.use_verts, use_face_split=self.use_face_split, use_boundary_tear=self.use_boundary_tear)
-
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------

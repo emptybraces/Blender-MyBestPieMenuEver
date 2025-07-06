@@ -380,7 +380,7 @@ def print_enum_values(obj, prop_name):
     print([item.identifier for item in obj.bl_rna.properties[prop_name].enum_items])
 
 
-def enum_values(obj, prop_name):
+def enum_identifier(obj, prop_name):
     return [item.identifier for item in obj.bl_rna.properties[prop_name].enum_items]
 
 
@@ -411,10 +411,10 @@ def layout_for_mirror(layout):
 
 
 def layout_split_row2(layout, factor1, alignSplit=True, align1=True, align2=True):
-    split = layout.row().split(factor=factor1, align=alignSplit)
-    c1 = split.row(align=align1)
-    rest = split.row(align=align2)
-    return c1, rest
+    s = layout.row().split(factor=factor1, align=alignSplit)
+    r1 = s.row(align=align1)
+    rest = s.row(align=align2)
+    return r1, rest
 
 
 def reset_pose_bone_location(armature):

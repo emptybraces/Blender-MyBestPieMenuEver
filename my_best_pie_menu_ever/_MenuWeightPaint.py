@@ -1,14 +1,17 @@
 if "bpy" in locals():
     import importlib
     importlib.reload(_Util)
+    importlib.reload(_UtilInput)
     importlib.reload(_AddonPreferences)
     importlib.reload(g)
 else:
     from . import _Util
+    from . import _UtilInput
     from . import _AddonPreferences
     from . import g
 import bpy
 import os
+from bpy.app.translations import pgettext_iface as iface_
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
@@ -17,76 +20,68 @@ import os
 def MenuPrimary(pie, context):
     box = pie.split().box()
     box.label(text="WeightPaint Primary")
+    topbar_menu = box.row(align=True)
+    r = box.row()
+    brush_property_box = r.box()
+    utility_box = r.box()
 
     # icons
-    r = box.row(align=True)
+    r = topbar_menu
     _Util.layout_prop(r, context.object.data, "use_paint_mask", icon_only=True)
     _Util.layout_prop(r, context.object.data, "use_paint_mask_vertex", icon_only=True)
     _Util.layout_prop(r, context.object.data, "use_paint_bone_selection", icon_only=True)
     r = r.split(factor=0.2, align=True)
     _Util.layout_prop(r, _AddonPreferences.Accessor.get_ref(), "weightPaintHideBone", "HideBoneOnPaint")
 
-    # box menu
-    root_row = box.row()
-
     # brushes
-    box = root_row.box()
-    box.label(text="Brush Property", icon="BRUSH_DATA")
+    brush_property_box.label(text="Brush Property", icon="BRUSH_DATA")
     current_brush = context.tool_settings.weight_paint.brush
     unified_paint_settings = context.tool_settings.unified_paint_settings
 
-    # weight
-    c = box.column(align=True)
-
     def _get_row3(layout):
-        split = layout.row().split(factor=0.25, align=True)
-        c1 = split.column(align=True)
-        rest = split.column(align=True)
-        split = rest.split(factor=0.6, align=True)
-        c2 = split.column(align=True)
-        c3 = split.column(align=True)
-        return c1, c2, c3
+        s = layout.row().split(factor=0.25, align=True)
+        r1 = s.row(align=True)
+        s = s.row(align=True).split(factor=0.6, align=True)
+        r2 = s.row(align=True)
+        r3 = s.row(align=True)
+        return r1, r2, r3
+    # ウェイト
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_weight else current_brush
-    c1, c2, c3 = _get_row3(c)
-    _Util.layout_prop(c1, brush_property_target, "weight")
-    r = c2.row(align=True)
-    _Util.MPM_OT_SetSingle.operator(r, "0.0", brush_property_target, "weight", 0.0)
-    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "weight", 0.1)
-    _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "weight", 0.5)
-    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "weight", 1.0)
-    _Util.layout_prop(c3, unified_paint_settings, "use_unified_weight")
-
+    c = brush_property_box.column(align=True)
+    r1, r2, r3 = _get_row3(c)
+    _Util.layout_prop(r1, brush_property_target, "weight")
+    _Util.MPM_OT_SetSingle.operator(r2, "0.0", brush_property_target, "weight", 0.0)
+    _Util.MPM_OT_SetSingle.operator(r2, "0.1", brush_property_target, "weight", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r2, "0.5", brush_property_target, "weight", 0.5)
+    _Util.MPM_OT_SetSingle.operator(r2, "1.0", brush_property_target, "weight", 1.0)
+    _Util.layout_prop(r3, unified_paint_settings, "use_unified_weight")
     # size
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
-    c1, c2, c3 = _get_row3(c)
-    _Util.layout_prop(c1, brush_property_target, "size")
-    r = c2.row(align=True)
-    _Util.MPM_OT_SetInt.operator(r, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
-    _Util.MPM_OT_SetInt.operator(r, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
-    _Util.MPM_OT_SetInt.operator(r, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
-    _Util.MPM_OT_SetInt.operator(r, "200%", brush_property_target, "size", int(brush_property_target.size * 2.0))
-    _Util.layout_prop(c3, unified_paint_settings, "use_unified_size")
-
+    r1, r2, r3 = _get_row3(c)
+    _Util.layout_prop(r1, brush_property_target, "size")
+    _Util.MPM_OT_SetInt.operator(r2, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
+    _Util.MPM_OT_SetInt.operator(r2, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
+    _Util.MPM_OT_SetInt.operator(r2, "150%", brush_property_target, "size", int(brush_property_target.size * 1.5))
+    _Util.MPM_OT_SetInt.operator(r2, "200%", brush_property_target, "size", int(brush_property_target.size * 2.0))
+    _Util.layout_prop(r3, unified_paint_settings, "use_unified_size")
+    # 強さ
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_strength else current_brush
-    c1, c2, c3 = _get_row3(c)
-    _Util.layout_prop(c1, brush_property_target, "strength")
-    r = c2.row(align=True)
-    _Util.MPM_OT_SetSingle.operator(r, "0.1", brush_property_target, "strength", 0.1)
-    _Util.MPM_OT_SetSingle.operator(r, "0.5", brush_property_target, "strength", 0.5)
-    _Util.MPM_OT_SetSingle.operator(r, "1.0", brush_property_target, "strength", 1.0)
-    _Util.MPM_OT_SetSingle.operator(r, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
-    _Util.MPM_OT_SetSingle.operator(r, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
-    _Util.layout_prop(c3, unified_paint_settings, "use_unified_strength")
+    r1, r2, r3 = _get_row3(c)
+    _Util.layout_prop(r1, brush_property_target, "strength")
+    _Util.MPM_OT_SetSingle.operator(r2, "0.1", brush_property_target, "strength", 0.1)
+    _Util.MPM_OT_SetSingle.operator(r2, "0.5", brush_property_target, "strength", 0.5)
+    _Util.MPM_OT_SetSingle.operator(r2, "1.0", brush_property_target, "strength", 1.0)
+    _Util.MPM_OT_SetSingle.operator(r2, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
+    _Util.MPM_OT_SetSingle.operator(r2, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
+    _Util.layout_prop(r3, unified_paint_settings, "use_unified_strength")
     # Blends
-    r = c.row(align=True)
+    r1, r2, _ = _get_row3(c)
+    r1.label(text="Blend")
     target_blends = ["mix", "add", "sub"]
-    for i in _Util.enum_values(current_brush, "blend"):
-        if i.lower() in target_blends:
-            is_use = current_brush.blend == i
-            _Util.MPM_OT_SetString.operator(r, i, current_brush, "blend", i, depress=is_use)
-    # 蓄積
-    s = c.split(factor=0.2, align=True)
-    _Util.layout_prop(s, current_brush, "use_accumulate")
+    for i in current_brush.bl_rna.properties["blend"].enum_items:
+        if i.identifier.lower() in target_blends:
+            is_use = current_brush.blend == i.identifier
+            _Util.MPM_OT_SetString.operator(r2, iface_(i.name), current_brush, "blend", i.identifier, depress=is_use)
     # ぼかしブラシの強さ
     blur_brush = None
     if g.is_v4_3_later():
@@ -106,20 +101,22 @@ def MenuPrimary(pie, context):
                 blur_brush = current_brush
                 break
     if blur_brush:
-        c1, c2, c3 = _get_row3(c)
-        c1.enabled = not unified_paint_settings.use_unified_strength
-        _Util.layout_prop(c1, blur_brush, "strength", "Blur Strength")
-        r = c2.row(align=True)
-        _Util.MPM_OT_SetSingle.operator(r, "50%", blur_brush, "strength", max(0, blur_brush.strength * 0.5))
-        _Util.MPM_OT_SetSingle.operator(r, "75%", blur_brush, "strength", max(0, blur_brush.strength * 0.75))
-        _Util.MPM_OT_SetSingle.operator(r, "150%", blur_brush, "strength", min(1, blur_brush.strength * 1.5))
-        _Util.MPM_OT_SetSingle.operator(r, "200%", blur_brush, "strength", min(1, blur_brush.strength * 2))
+        s = c.split(factor=0.4, align=True)
+        r1 = s.row(align=True)
+        r2 = s.row(align=True)
+        s.enabled = not unified_paint_settings.use_unified_strength
+        _Util.layout_prop(r1, blur_brush, "strength", "Blur Strength")
+        _Util.MPM_OT_SetSingle.operator(r2, "50%", blur_brush, "strength", max(0, blur_brush.strength * 0.5))
+        _Util.MPM_OT_SetSingle.operator(r2, "75%", blur_brush, "strength", max(0, blur_brush.strength * 0.75))
+        _Util.MPM_OT_SetSingle.operator(r2, "150%", blur_brush, "strength", min(1, blur_brush.strength * 1.5))
+        _Util.MPM_OT_SetSingle.operator(r2, "200%", blur_brush, "strength", min(1, blur_brush.strength * 2))
+    # 蓄積
+    s = c.split(factor=0.2, align=True)
+    _Util.layout_prop(s, current_brush, "use_accumulate")
 
     # util
-    c = root_row.box()
-    box = c.box()
-    box.label(text="Utility", icon="MODIFIER")
-    c = box.column(align=True)
+    utility_box.label(text="Utility", icon="MODIFIER")
+    c = utility_box.column(align=True)
     _Util.layout_prop(c, context.space_data.overlay, "weight_paint_mode_opacity")
     r = c.row(align=True)
     r.label(text="Zero Weights")
@@ -150,136 +147,96 @@ def MirrorVertexGroup(layout, label, factor=0.3):
     r1, r2 = _Util.layout_split_row2(r, factor)
     r1.label(text=label)
     r1.scale_x = 0.9
-    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromActive.bl_idname, "Active")
-    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromActiveTopology.bl_idname, "", icon="MOD_MIRROR")
-    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromSelectedBone.bl_idname, "Selected Bones")
-    _Util.layout_operator(r2, MPM_OT_Weight_MirrorVGFromSelectedBoneTopology.bl_idname, "", icon="MOD_MIRROR")
+    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorActive.bl_idname, "Active")
+    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorActive.bl_idname, "", icon="MOD_MIRROR").use_topology = True
+    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorBoneSelection.bl_idname, "Selected Bones")
+    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorBoneSelection.bl_idname, "", icon="MOD_MIRROR").use_topology = True
 
 
 # --------------------------------------------------------------------------------
 
-class MPM_OT_Weight_MirrorVGFromSelectedBoneBase():
+def rename_vertexgroup(obj, target, rename):
+    bpy.ops.object.vertex_group_set_active(group=rename)
+    bpy.ops.object.vertex_group_remove()
+    bpy.ops.object.vertex_group_set_active(group=target)
+    obj.vertex_groups.active.name = rename
+
+
+class MPM_OT_Weight_VGroupMirrorBoneSelection(bpy.types.Operator):
+    bl_idname = "mpm.weight_mirror_vg_from_bone"
+    bl_label = "Mirror VertexGroup"
+    bl_description = "Create mirror VertexGroup from selected bones"
+    bl_options = {"REGISTER", "UNDO"}
+    use_topology: bpy.props.BoolProperty()
+    replace: bpy.props.BoolProperty()
+
     @classmethod
     def poll(cls, context):
         is_mesh = False
-        is_armature = 0
+        arm_cnt = 0
         for obj in _Util.selected_objects():
             is_mesh |= obj.type == "MESH"
-            if not is_armature:
-                if obj.type == "ARMATURE" and 0 < len([bone for bone in obj.data.bones if bone.select]):
-                    is_armature += 1
-        return is_mesh and 1 == is_armature
+            if obj.type == "ARMATURE" and any(bone.select for bone in obj.data.bones):
+                arm_cnt += 1
+        return is_mesh and arm_cnt == 1
 
-    def execute(self, context, use_topology):
-        msg = ""
-        names = []
+    def execute(self, context):
         g.force_cancel_piemenu_modal(context)
+        msg = ""
+        selected_bone_names = None
         for obj in _Util.selected_objects():
-            arm = _Util.get_armature(obj)
-            selected_bone_names = [bone.name for bone in arm.data.bones if bone.select]
-            if arm:
+            if obj.type == "ARMATURE" and any(bone.select for bone in obj.data.bones):
+                selected_bone_names = [bone.name for bone in obj.data.bones if bone.select]
                 break
-        for obj in _Util.selected_objects():
-            if obj.type != "MESH":
-                continue
-            for name in selected_bone_names:
-                if name in obj.vertex_groups:
-                    new_name, actural_name, is_replace = mirror_vgroup(obj, name, use_topology)
-                    msg += f"{name} -> {actural_name}\n"
-        _Util.show_msgbox(msg if msg else "Invalid Selection!", "Mirror VGroup from selected bones")
+        print(selected_bone_names)
+        if selected_bone_names:
+            for obj in _Util.selected_objects():
+                if obj.type != "MESH":
+                    continue
+                for bone_name in selected_bone_names:
+                    if bone_name in obj.vertex_groups:
+                        print("mirror!", obj, bone_name)
+                        new_name, actual_name, is_replace = mirror_vgroup(obj, bone_name, self.use_topology)
+                        if is_replace and self.replace:
+                            rename_vertexgroup(obj, actual_name, new_name)
+                            msg += f"{bone_name} -> {new_name}\n"
+                        else:
+                            msg += f"{bone_name} -> {actual_name}\n"
+            _Util.show_msgbox(msg if msg else "Invalid Selection!", "Mirror VGroup from selected bones")
         return {"FINISHED"}
 
 
-class MPM_OT_Weight_MirrorVGFromSelectedBoneTopology(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromSelectedBoneBase):
-    bl_idname = "mpm.weight_mirror_vg_from_bone_topology"
-    bl_label = "Create VertexGroup mirror from selected bones with Topology"
-    bl_description = "Create VertexGroup mirror from selected bones with Topology"
+class MPM_OT_Weight_VGroupMirrorActive(bpy.types.Operator):
+    bl_idname = "mpm.weight_vgroup_mirror_active"
+    bl_label = "VertexGroup Mirror"
+    bl_description = "Mirroring active VertexGroup"
     bl_options = {"REGISTER", "UNDO"}
+    use_topology: bpy.props.BoolProperty()
 
-    @classmethod
-    def poll(cls, context):
-        return super().poll(context)
-
-    def execute(self, context):
-        return super().execute(context, True)
-
-
-class MPM_OT_Weight_MirrorVGFromSelectedBone(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromSelectedBoneBase):
-    bl_idname = "mpm.weight_mirror_vg_from_bone"
-    bl_label = "Create VertexGroup mirror from selected bones"
-    bl_description = "Create mirror VertexGroup from selected bones"
-    bl_options = {"REGISTER", "UNDO"}
-
-    @classmethod
-    def poll(cls, context):
-        return super().poll(context)
-
-    def execute(self, context):
-        return super().execute(context, False)
-
-
-class MPM_OT_Weight_MirrorVGFromActiveBase():
     @classmethod
     def poll(cls, context):
         return context.active_object != None and any(context.active_object.vertex_groups)
 
-    def get_selected_bone_names(self, obj):
-        if obj and obj.type == "ARMATURE":
-            armature = obj.data
-            selected_bones = [bone for bone in armature.bones if bone.select]
-            selected_bone_names = [bone.name for bone in selected_bones]
-            return selected_bone_names
-        return None
-
-    def execute(self, context, use_topology):
+    def execute(self, context):
         current_mode = context.active_object.mode
         if current_mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
         obj = context.active_object
         target_name = obj.vertex_groups.active.name
-        new_name, actural_name, is_replace = mirror_vgroup(obj, target_name, use_topology)
+        new_name, actural_name, is_replace = mirror_vgroup(obj, target_name, self.use_topology)
         g.force_cancel_piemenu_modal(context)
         if is_replace:
-            bpy.ops.mpm.weight_mirror_vg_overrite_confirm("INVOKE_DEFAULT", target_name=target_name, overwrite_name=new_name)
+            bpy.ops.mpm.weight_vgroup_mirror_overrite_confirm("INVOKE_DEFAULT", target_name=actural_name, overwrite_name=new_name)
         else:
             msg = f"{target_name} -> {actural_name}\n"
             _Util.show_msgbox(msg if msg else "Invalid selection!", "Mirror VGroup from selected vgroup")
         if current_mode != "OBJECT":
             bpy.ops.object.mode_set(mode=current_mode)
-        # bpy.app.timers.register(__popup, first_interval=0)
         return {"FINISHED"}
 
 
-class MPM_OT_Weight_MirrorVGFromActive(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
-    bl_idname = "mpm.weight_mirror_vg_from_active"
-    bl_label = "Active"
-    bl_description = "Create VertexGroup mirror from active"
-    bl_options = {"REGISTER", "UNDO"}
-
-    @classmethod
-    def poll(cls, context):
-        return super().poll(context)
-
-    def execute(self, context):
-        return super().execute(context, False)
-
-
-class MPM_OT_Weight_MirrorVGFromActiveTopology(bpy.types.Operator, MPM_OT_Weight_MirrorVGFromActiveBase):
-    bl_idname = "mpm.weight_mirror_vg_from_active_topology"
-    bl_label = "Create VertexGroup mirror from active with topology"
-    bl_description = "Create VertexGroup mirror from active with topology"
-    bl_options = {"REGISTER", "UNDO"}
-
-    @classmethod
-    def poll(cls, context):
-        return super().poll(context)
-
-    def execute(self, context):
-        return super().execute(context, True)
-
-
-class MPM_OT_Weight_MirrorVGOverwriteConfirm(bpy.types.Operator):
-    bl_idname = "mpm.weight_mirror_vg_overrite_confirm"
+class MPM_OT_Weight_VGroupMirrorOverwriteConfirm(bpy.types.Operator):
+    bl_idname = "mpm.weight_vgroup_mirror_overrite_confirm"
     bl_label = ""
     target_name: bpy.props.StringProperty()
     overwrite_name: bpy.props.StringProperty()
@@ -296,38 +253,10 @@ class MPM_OT_Weight_MirrorVGOverwriteConfirm(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
         active_name = obj.vertex_groups.active.name
-        bpy.ops.object.vertex_group_set_active(group=self.overwrite_name)
-        bpy.ops.object.vertex_group_remove()
-        bpy.ops.object.vertex_group_set_active(group=active_name)
-        obj.vertex_groups.active.name = self.overwrite_name
+        rename_vertexgroup(obj, active_name, self.overwrite_name)
         _Util.show_msgbox(f"{self.target_name} -> {self.overwrite_name}\n", "Mirror VGroup from selected vgroup")
         return {"FINISHED"}
 
-
-class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
-    bl_idname = "mpm.weight_mirror_vg_overrite_confirm"
-    bl_label = ""
-    target_name: bpy.props.StringProperty()
-    overwrite_name: bpy.props.StringProperty()
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=400)
-
-    def draw(self, context):
-        self.layout.label(text=f"Already exist mirrored name '{self.overwrite_name}' Are you overwrite?")
-
-    def cancel(self, context):
-        pass
-
-    def execute(self, context):
-        obj = context.active_object
-        active_name = obj.vertex_groups.active.name
-        bpy.ops.object.vertex_group_set_active(group=self.overwrite_name)
-        bpy.ops.object.vertex_group_remove()
-        bpy.ops.object.vertex_group_set_active(group=active_name)
-        obj.vertex_groups.active.name = self.overwrite_name
-        _Util.show_msgbox(f"{self.target_name} -> {self.overwrite_name}\n", "Mirror VGroup from selected vgroup")
-        return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
 
@@ -357,6 +286,7 @@ def mirror_vgroup(obj, name, use_topology):
     if new_name == name:
         new_name = new_name + "_mirror"
 
+    _Util.select_active(obj)
     bpy.ops.object.vertex_group_set_active(group=name)
     bpy.ops.object.vertex_group_copy()
     bpy.ops.object.vertex_group_mirror(use_topology=use_topology)
@@ -367,10 +297,10 @@ def mirror_vgroup(obj, name, use_topology):
 
 
 class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
-    bl_idname = "mpm.remove_unused_vgroup"
+    bl_idname = "mpm.weight_vgroup_remove_unused"
     bl_label = "Remove Unused VGroup"
+    bl_description = "Bulk remove VertexGroups that do not have weights set"
     bl_options = {"REGISTER", "UNDO"}
-    bl_description = "Bulk remove vertex groups that do not have weights set"
 
     @classmethod
     def poll(cls, context):
@@ -472,55 +402,83 @@ class MPM_OT_Weight_RemoveWeight(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_Weight_ModalMonitor (bpy.types.Operator):
-    bl_idname = "mpm.weight_modal_monitor"
-    bl_label = ""
-    is_start = False
+def HideBoneOnPaint_on_update(value):
+    # スクリプトロード時の登録クラッシュ回避
+    def __safe_start_modal():
+        bpy.ops.mpm.weight_hide_bone_on_paint_monitor_modal("INVOKE_DEFAULT")
+        return None
 
-    def modal(self, context, e):
-        if context.mode == "PAINT_WEIGHT" and _AddonPreferences.Accessor.get_weight_paint_hide_bone():
-            if e.type == "LEFTMOUSE" and e.value == "PRESS" and not (e.ctrl and e.shift):  # ボーン選択操作のみ条件排除
-                self.is_press = True
-                self.show_bone(False)
-            # Release呼ばれないのでこれ
-            elif self.is_press and e.type == "MOUSEMOVE" and e.value == "NOTHING":
-                self.is_press = False
-                self.show_bone(True)
-        return {"PASS_THROUGH"}
+    if value:
+        bpy.app.timers.register(__safe_start_modal, first_interval=0.2)
+    else:
+        MPM_OT_Weight_HideBoneOnPaintMonitorModal.is_cancelled = True
+
+
+class MPM_OT_Weight_HideBoneOnPaintMonitorModal(bpy.types.Operator):
+    bl_idname = "mpm.weight_hide_bone_on_paint_monitor_modal"
+    bl_label = ""
+    is_started = False
+    is_cancelled = False
 
     def invoke(self, context, event):
-        if MPM_OT_Weight_ModalMonitor.is_start:
+        cls = self.__class__
+        if cls.is_started:
             return {"CANCELLED"}
+        cls.is_cancelled = False
         self.is_press = False
+        # self.input = _UtilInput.Monitor()
 
-        for window in bpy.context.window_manager.windows:
+        # timer起動だとcontextから直接辿れない
+        for window in context.window_manager.windows:
             for area in window.screen.areas:
                 if area.type == "VIEW_3D":
-                    print("start")
-                    MPM_OT_Weight_ModalMonitor.is_start = True
+                    # print("start")
+                    cls.is_started = True
                     context.window_manager.modal_handler_add(self)
                     return {"RUNNING_MODAL"}
         else:
             return {"CANCELLED"}
 
-    def show_bone(self, is_on):
-        overlay = getattr(bpy.context.space_data, "overlay", None)
-        if overlay:
-            overlay.show_bones = is_on
+    def modal(self, context, e):
+        if self.__class__.is_cancelled or not _AddonPreferences.Accessor.get_weight_paint_hide_bone():
+            # print("cancelled")
+            self.__class__.is_started = False
+            return {"CANCELLED"}
+        self.mx = e.mouse_x
+        self.my = e.mouse_y
+        # self.input.update(e, "LEFTMOUSE")
+        if context.mode == "PAINT_WEIGHT":
+            if e.type == "LEFTMOUSE" and e.value == "PRESS" and not (e.ctrl and e.shift):  # ボーン選択操作のみ条件排除
+                self.is_press = True
+                self.show_bone(context, False)
+            # Release呼ばれないのでこれ
+            elif self.is_press and e.type == "MOUSEMOVE" and e.value == "NOTHING":
+                self.is_press = False
+                self.show_bone(context, True)
+        return {"PASS_THROUGH"}
+
+    def show_bone(self, context, is_on):
+        for window in context.window_manager.windows:
+            for area in window.screen.areas:
+                if area.type == "VIEW_3D":
+                    x, y = area.x, area.y
+                    w, h = area.width, area.height
+                    if x <= self.mx < x + w and y <= self.my < y + h:
+                        overlay = getattr(area.spaces.active, "overlay", None)
+                        if overlay:
+                            overlay.show_bones = is_on
 # --------------------------------------------------------------------------------
 
 
 classes = (
-    MPM_OT_Weight_MirrorVGFromSelectedBone,
-    MPM_OT_Weight_MirrorVGFromSelectedBoneTopology,
-    MPM_OT_Weight_MirrorVGFromActive,
-    MPM_OT_Weight_MirrorVGFromActiveTopology,
-    MPM_OT_Weight_MirrorVGOverwriteConfirm,
+    MPM_OT_Weight_VGroupMirrorBoneSelection,
+    MPM_OT_Weight_VGroupMirrorActive,
+    MPM_OT_Weight_VGroupMirrorOverwriteConfirm,
     MPM_OT_Weight_RemoveUnusedVertexGroup,
     MPM_OT_Weight_MaskActiveVertexGroup,
     MPM_OT_Weight_SetWeight,
     MPM_OT_Weight_RemoveWeight,
-    MPM_OT_Weight_ModalMonitor,
+    MPM_OT_Weight_HideBoneOnPaintMonitorModal,
 
 
 )
