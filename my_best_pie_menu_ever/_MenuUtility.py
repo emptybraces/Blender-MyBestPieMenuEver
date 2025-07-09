@@ -192,6 +192,8 @@ def DrawView3D(layout, context):
         box = c.box()
         box.label(text="Armature")
         c = box.column(align=True)
+        if armature != None:
+            c.row(align=True).prop(armature.data, "pose_position", expand=True)
         r = c.row(align=True)
         _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
         _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")

@@ -85,6 +85,7 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         context.scene.mpm_prop.init()
         context.window_manager.modal_handler_add(self)
         self.label_handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_label, (), "WINDOW", "POST_PIXEL")
+        _MenuSculpt.invoke(context, event)
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
         # km, kmi = _Util.find_keymap("3D View", MPM_OT_OpenPieMenuModal.bl_idname)
         # if kmi != None:
@@ -178,41 +179,41 @@ def draw_primary(pie, context):
     if context.space_data.type == "VIEW_3D":
         current_mode = context.mode
         if current_mode == "OBJECT":
-            _MenuObject.MenuPrimary(pie, context)
+            _MenuObject.draw(pie, context)
         elif current_mode == 'EDIT_MESH':
-            _MenuEditMesh.MenuPrimary(pie, context)
+            _MenuEditMesh.draw(pie, context)
         elif current_mode == 'POSE':
-            _MenuPose.MenuPrimary(pie, context)
+            _MenuPose.draw(pie, context)
         elif current_mode == 'SCULPT':
-            _MenuSculpt.MenuPrimary(pie, context)
+            _MenuSculpt.draw(pie, context)
         elif current_mode == 'SCULPT_CURVES':
-            _MenuSculptCurve.MenuPrimary(pie, context)
+            _MenuSculptCurve.draw(pie, context)
         elif current_mode == 'PAINT_TEXTURE':
-            _MenuTexturePaint.MenuPrimary(pie, context)
+            _MenuTexturePaint.draw(pie, context)
         elif current_mode == 'PAINT_VERTEX':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'PAINT_WEIGHT':
-            _MenuWeightPaint.MenuPrimary(pie, context)
+            _MenuWeightPaint.draw(pie, context)
         elif current_mode == 'PARTICLE_EDIT':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'EDIT_ARMATURE':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_DRAW':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_EDIT':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_SCULPT':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'GPENCIL_WEIGHT_PAINT':
-            Placeholder(pie, context, 'No Impl')
+            draw_placeholder(pie, context, 'No Impl')
     elif context.space_data.type == "IMAGE_EDITOR":
         if context.space_data.mode == "UV":
-            _MenuUVEditor.MenuPrimary(pie, context)
+            _MenuUVEditor.draw(pie, context)
         else:
-            _MenuImageEditor.MenuPrimary(pie, context)
+            _MenuImageEditor.draw(pie, context)
 
 
-def Placeholder(pie, context, text):
+def draw_placeholder(pie, context, text):
     box = pie.split().box()
     box.label(text=text)
 
@@ -345,6 +346,7 @@ modules = [
 
 
 def register():
+    g.load()
     for m in modules:
         m.register()
     _Util.register_classes(classes)

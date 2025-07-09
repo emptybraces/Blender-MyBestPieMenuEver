@@ -13,6 +13,8 @@ import bpy
 import bmesh
 from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
+from bpy.app.translations import pgettext_iface as iface_
+
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
 # --------------------------------------------------------------------------------
@@ -21,7 +23,23 @@ g_is_filter_set_mode_enter = False
 g_filter_mode_enter_lasttime = 0
 
 
-def MenuPrimary(pie, context):
+def invoke(context, event):
+    smooth_brush = bpy.data.brushes.get("Smooth")
+    if smooth_brush == None:
+        blender_install_dir = os.path.dirname(bpy.app.binary_path)
+        path = os.path.join(blender_install_dir, f"{bpy.app.version[0]}.{bpy.app.version[1]}",
+                            "datafiles", "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
+        with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
+            for i in data_from.brushes:
+                if i == "Smooth":
+                    data_to.brushes = [i]  # これでひとつだけロードしたことになる
+                    break
+        # smooth_brush = bpy.data.brushes.get("Smooth")
+        # smooth_brush.strength = 0.9
+        # print(smooth_brush.size)
+
+
+def draw(pie, context):
     if not g.is_v4_3_later():
         return MenuPrimary_v4_2(pie, context)
     # フィルターモード
@@ -31,9 +49,28 @@ def MenuPrimary(pie, context):
 
     box = pie.split().box()
     box.label(text="Sculpt Brush Filter Setting Mode" if g_is_filter_set_mode_enter else "Sculpt Primary")
-
-    # 上部メニュー
     c = box.column(align=True)
+    # 上部メニュー
+    layout_start_upper = c.row(align=True)
+    layout_start_upper.alignment = "RIGHT"
+    layout_start_upper.scale_x = 1.1
+    # ブラシメニュー
+    r = c.row(align=True)
+    layout_start_brush = r.row(align=True)
+    box = layout_start_brush.box()
+    box.label(text="Tools & Brushes(Filtered)" if g_is_filter_mode else "Tools & Brushes", icon="BRUSH_DATA")
+    layout_start_brush_list = box.row(align=True)
+    # ブラシストローク
+    layout_start_brush_stroke = r.box()
+    # ユーティリティ
+    r = c.row()
+    box = r.box()
+    box.label(text="Utility")
+    layout_start_utility = box.column(align=True)
+    # 適用メニュー
+    box = r.box()
+    box.label(text="Apply", icon="CHECKMARK")
+    layout_start_apply = box.column(align=True)
 
     def __switch_filter_mode():
         global g_is_filter_mode
@@ -45,12 +82,10 @@ def MenuPrimary(pie, context):
         g_filter_mode_enter_lasttime = time.time()
         if g_is_filter_set_mode_enter:  # モードに入るときだけ警告を表示
             g.on_closed["warn_open_filter_set_sculpt"] = lambda: _Util.show_msgbox("Please hold down the shift key to click.", "Error", "ERROR")
-    r = c.row(align=True)
-    r.alignment = "RIGHT"
     if not g_is_filter_set_mode_enter:
-        _Util.MPM_OT_CallbackOperator.operator(r, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
+        _Util.MPM_OT_CallbackOperator.operator(layout_start_upper, "Disable Filter Mode" if g_is_filter_mode else "Enable Filter Mode", __name__ + ".g_is_filter_mode",
                                                __switch_filter_mode, None, "FILTER", depress=g_is_filter_mode)
-    _Util.MPM_OT_CallbackOperator.operator(r, "Exit Filter Setting" if g_is_filter_set_mode_enter else "Enter Filter Setting", __name__ + ".g_is_filter_mode_enter",
+    _Util.MPM_OT_CallbackOperator.operator(layout_start_upper, "Exit Filter Setting" if g_is_filter_set_mode_enter else "Enter Filter Setting", __name__ + ".g_is_filter_mode_enter",
                                            __switch_filter_setting_mode, None, "TOOL_SETTINGS",  depress=g_is_filter_set_mode_enter)
     # ブラシ
     cnt = 0
@@ -58,12 +93,6 @@ def MenuPrimary(pie, context):
     current_brush = tool.brush
     limit_rows = _AddonPreferences.Accessor.get_sculpt_limit_row_count()
     filter_names = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name().strip().split(",")
-    r = c.row(align=True)
-    box = r.box()
-    box.label(text="Tools & Brushes(Filtered)" if g_is_filter_mode else "Tools & Brushes", icon="BRUSH_DATA")
-    rr = box.row(align=True)
-    rr.scale_x = 0.9
-    cc = rr.column(align=True)
     # v4.3以降はブラシがアセット
     # libraryデータをロードすると全部一括ロードされる。
     # with bpy.data.libraries.load(bpy.data.libraries[0].filepath, assets_only=True) as (data_from, data_to):
@@ -84,14 +113,14 @@ def MenuPrimary(pie, context):
                 asset_library_identifier=lib_id,
                 relative_asset_identifier=asset_id)
         is_depress = active_tool.use_brushes and current_brush.name == brush_name
-        _Util.MPM_OT_CallbackOperator.operator(layout, brush_name, "_MenuSculpt.select_brush." + brush_name,
+        _Util.MPM_OT_CallbackOperator.operator(layout, iface_(brush_name), "_MenuSculpt.select_brush." + brush_name,
                                                _select_brush, (context, "ESSENTIALS", "", os.path.join("brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name)), depress=is_depress)
 
     def _callback_operator_select_tool(context, layout, label_name, tool_id):
         def _select_tool(context, tool_name):
             bpy.ops.wm.tool_set_by_id(name=tool_name)
         is_depress = not active_tool.use_brushes and active_tool.idname == tool_id
-        _Util.MPM_OT_CallbackOperator.operator(layout, label_name, "_MenuSculpt.select_tool." + tool_id,
+        _Util.MPM_OT_CallbackOperator.operator(layout, iface_(label_name), "_MenuSculpt.select_tool." + tool_id,
                                                _select_tool, (context, tool_id), depress=is_depress)
 
     def _brush_filter_operator(context, layout, label_name, tool_id, in_filter):
@@ -108,6 +137,7 @@ def MenuPrimary(pie, context):
         _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_brush_filter." + tool_id,
                                                _set, (context, tool_id, in_filter), depress=in_filter)
     # Tools
+    rr = layout_start_brush_list
     for i in TOOL_INFO:
         if g_is_filter_set_mode_enter or not g_is_filter_mode:
             if i[0] == "-":
@@ -130,7 +160,8 @@ def MenuPrimary(pie, context):
     for i in BRUSH_INFO:
         if g_is_filter_set_mode_enter or not g_is_filter_mode:
             if i[0] == "-":
-                box = rr.box()
+                if "Utilities" not in i:
+                    box = rr.box()
                 box.label(text=i[1:])
                 cc = box.column(align=False)
                 continue
@@ -171,9 +202,8 @@ def MenuPrimary(pie, context):
         return
     # Strokes
     cnt = 0
-    box = r.box()
-    box.label(text="Stroke", icon="STROKE")
-    rr = box.row(align=True)
+    layout_start_brush_stroke.label(text="Stroke", icon="STROKE")
+    rr = layout_start_brush_stroke.row(align=True)
     cc = rr.column(align=True)
     for i in _Util.enum_identifier(current_brush, "stroke_method"):
         if bpy.app.version < (4, 2, 9):
@@ -186,41 +216,30 @@ def MenuPrimary(pie, context):
             cc = rr.column(align=True)
 
     # Utilityメニュー
+    r = layout_start_utility.row()
+    r.alignment = "LEFT"
+    # 共通のサイズ、強度
+    unified_paint_settings = context.tool_settings.unified_paint_settings
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_size")
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
+    # オートワイヤーフレーム
+    _Util.layout_operator(r, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
 
     # Smoothブラシの強さ
-    rr = c.row(align=True)
-    box = rr.box()
-    box.label(text="Utility")
-    c = box.column(align=True)
     smooth_brush = bpy.data.brushes.get("Smooth")
-    if smooth_brush == None:
-        blender_install_dir = os.path.dirname(bpy.app.binary_path)
-        path = os.path.join(blender_install_dir, f"{bpy.app.version[0]}.{bpy.app.version[1]}",
-                            "datafiles", "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
-        with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
-            for i in data_from.brushes:
-                if i == "Smooth":
-                    data_to.brushes = [i]  # これでひとつだけロードしたことになる
-                    break
-        smooth_brush = bpy.data.brushes.get("Smooth")
     if smooth_brush != None:
-        r = c.split(factor=0.4, align=True)
+        r = layout_start_utility.row(align=True)
+        r.enabled = not unified_paint_settings.use_unified_strength
+        r.alignment = "LEFT"
         _Util.layout_prop(r, smooth_brush, "strength", "Smooth Strength")
-        r = r.row(align=True)
         _Util.MPM_OT_SetSingle.operator(r, "50%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.5))
         _Util.MPM_OT_SetSingle.operator(r, "75%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.75))
         _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
-    # オートワイヤーフレーム
-    c = c.split(factor=0.4)
-    _Util.layout_operator(c, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
-
     # Applyメニュー
-    box = rr.box()
-    box.label(text="Apply", icon="CHECKMARK")
     # mask
-    c = box.column(align=True)
-    r = c.split(factor=0.45, align=True)
+    r = layout_start_apply.row(align=True)
+    r.alignment = "LEFT"
     r.label(text=MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_label)
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Invert").is_invert = False
@@ -228,11 +247,19 @@ def MenuPrimary(pie, context):
     op.mode = "VALUE"
     op.value = 0
     # face set
-    r = c.split(factor=0.45, align=True)
+    r = layout_start_apply.row(align=True)
+    r.alignment = "LEFT"
     r.label(text=MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_label)
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Invert").mode = "Unselected"
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
+    # ブラシセーブロード
+    r = layout_start_apply.row(align=True)
+    r.alignment = "LEFT"
+    r.label(text="Essential Brush Params")
+    _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushSave.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushLoad.bl_idname)
+
 # --------------------------------------------------------------------------------
 
 
@@ -308,7 +335,8 @@ class MPM_OT_Sculpt_MakeMaskWithSelectedVert(bpy.types.Operator):
 
 class MPM_OT_Sculpt_AutoWireframeEnable(bpy.types.Operator):
     bl_idname = "mpm.sculpt_auto_wireframe_enable"
-    bl_label = "Auto Show Wireframe"
+    bl_label = "Auto Enable Wireframe"
+    bl_description = "Automatically enables Wireframe display when entering Sculpt mode"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -326,6 +354,32 @@ class MPM_OT_Sculpt_AutoWireframeEnable(bpy.types.Operator):
         if context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
             bpy.app.handlers.depsgraph_update_pre.append(mode_change_handler)
         return {"FINISHED"}
+
+
+class MPM_OT_Sculpt_EssentialBrushSave(bpy.types.Operator):
+    bl_idname = "mpm.sculpt_essential_brush_save"
+    bl_label = "Save"
+
+    @classmethod
+    def poll(cls, context):
+        fullname = context.tool_settings.sculpt.brush.name_full
+        return "essentials_brushes-mesh" in fullname
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+class MPM_OT_Sculpt_EssentialBrushLoad(bpy.types.Operator):
+    bl_idname = "mpm.sculpt_essential_brush_load"
+    bl_label = "Load"
+
+    @classmethod
+    def poll(cls, context):
+        fullname = context.tool_settings.sculpt.brush.name_full
+        return "essentials_brushes-mesh" in fullname and g.get_config_brush_params(fullname) != None
+
+    def execute(self, context):
+        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
 
@@ -333,6 +387,8 @@ classes = (
     MPM_OT_Sculpt_MakeMaskWithSelectedVert,
     MPM_OT_Sculpt_MakeFaceSetWithSelectedVert,
     MPM_OT_Sculpt_AutoWireframeEnable,
+    MPM_OT_Sculpt_EssentialBrushSave,
+    MPM_OT_Sculpt_EssentialBrushLoad,
 )
 
 
@@ -363,6 +419,12 @@ BRUSH_INFO = [
     "Scrape/Fill",
     "Smooth",
     "Trim",
+    "-Utilities",
+    "Density",
+    "Erase Multires Displacement",
+    "Face Set Paint",
+    "Mask",
+    "Smear Multires Displacement",
     "-Transform",
     "Boundary",
     "Elastic Grab",
@@ -379,25 +441,6 @@ BRUSH_INFO = [
     "Snake Hook",
     "Thumb",
     "Twist",
-    "-Utilities",
-    "Density",
-    "Erase Multires Displacement",
-    "Face Set Paint",
-    "Mask",
-    "Smear Multires Displacement",
-    "-Paint",
-    "Airbrush",
-    "Blend Hard",
-    "Blend Soft",
-    "Blend Square",
-    "Paint Blend",
-    "Paint Hard",
-    "Paint Hard Pressure",
-    "Paint Soft",
-    "Paint Soft Pressure",
-    "Paint Square",
-    "Sharpen",
-    "Smear",
     "-Simulation",
     "Bend Boundary Cloth",
     "Bend/Twist Cloth",
@@ -412,6 +455,19 @@ BRUSH_INFO = [
     "Push Cloth",
     "Stretch/Move Cloth",
     "Twist Boundary Cloth",
+    "-Paint",
+    "Airbrush",
+    "Blend Hard",
+    "Blend Soft",
+    "Blend Square",
+    "Paint Blend",
+    "Paint Hard",
+    "Paint Hard Pressure",
+    "Paint Soft",
+    "Paint Soft Pressure",
+    "Paint Square",
+    "Sharpen",
+    "Smear",
 ]
 TOOL_INFO = [
     "-Tools",

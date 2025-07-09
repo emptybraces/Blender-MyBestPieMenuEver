@@ -17,7 +17,7 @@ from bpy.app.translations import pgettext_iface as iface_
 # --------------------------------------------------------------------------------
 
 
-def MenuPrimary(pie, context):
+def draw(pie, context):
     box = pie.split().box()
     box.label(text="WeightPaint Primary")
     topbar_menu = box.row(align=True)
@@ -402,7 +402,7 @@ class MPM_OT_Weight_RemoveWeight(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-def HideBoneOnPaint_on_update(value):
+def on_update_HideBoneOnPaint(value):
     # スクリプトロード時の登録クラッシュ回避
     def __safe_start_modal():
         bpy.ops.mpm.weight_hide_bone_on_paint_monitor_modal("INVOKE_DEFAULT")

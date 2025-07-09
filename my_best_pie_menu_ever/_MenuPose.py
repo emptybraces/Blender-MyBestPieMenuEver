@@ -9,7 +9,7 @@ import bpy
 # --------------------------------------------------------------------------------
 
 
-def MenuPrimary(pie, context):
+def draw(pie, context):
     box = pie.split().box()
     box.label(text="Pose Primary")
     row = box.row()

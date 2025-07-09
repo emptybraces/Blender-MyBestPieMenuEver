@@ -26,7 +26,7 @@ has_active_vgroup = False
 # --------------------------------------------------------------------------------
 
 
-def MenuPrimary(pie, context):
+def draw(pie, context):
     global has_selected_verts, has_selected_edges, has_active_vgroup
     has_selected_verts = _Util.has_selected_verts(context)
     has_selected_verts2 = _Util.has_selected_verts_least_two(context)

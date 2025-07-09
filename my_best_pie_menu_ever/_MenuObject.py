@@ -10,7 +10,7 @@ import bpy
 # --------------------------------------------------------------------------------
 
 
-def MenuPrimary(pie, context):
+def draw(pie, context):
     pie = pie.split()
     box = pie.box()
     box.label(text="Object")

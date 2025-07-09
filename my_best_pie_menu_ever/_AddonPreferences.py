@@ -12,9 +12,9 @@ import colorsys
 addon_keymaps = []
 
 
-def weightPaintHideBone_on_update(self, context):
-    from ._MenuWeightPaint import HideBoneOnPaint_on_update
-    HideBoneOnPaint_on_update(self.weightPaintHideBone)
+def on_update_weightPaintHideBone(self, context):
+    from ._MenuWeightPaint import on_update_HideBoneOnPaint
+    on_update_HideBoneOnPaint(self.weightPaintHideBone)
 
 
 class MT_AddonPreferences(bpy.types.AddonPreferences):
@@ -33,7 +33,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5,
                                      description="Specify the line count for displaying brushes")
     sculptBrushFilterByName: StringProperty(name="Sculpt Brush Filter", description="Enter the name of the brush you want to display")
-    weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="", update=weightPaintHideBone_on_update)
+    weightPaintHideBone: BoolProperty(name="Weight Paint Hide Bone During Painting", description="", update=on_update_weightPaintHideBone)
     ghostColorFace: FloatVectorProperty(name="GhostColor: Face", subtype="COLOR", size=4,
                                         default=(*colorsys.hsv_to_rgb(0.65, 0.2, 0.5), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
     ghostColorEdge: FloatVectorProperty(name="GhostColor: Edge", subtype="COLOR", size=4,

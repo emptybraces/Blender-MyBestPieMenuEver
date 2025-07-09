@@ -23,7 +23,7 @@ g_is_filter_set_mode_enter = False
 g_filter_mode_enter_lasttime = 0
 
 
-def MenuPrimary(pie, context):
+def draw(pie, context):
     if not g.is_v4_3_later():
         return MenuPrimary_v4_2(pie, context)
     # フィルターモード
