@@ -21,22 +21,43 @@ from bpy.app.translations import pgettext_iface as iface_
 g_is_filter_mode = False
 g_is_filter_set_mode_enter = False
 g_filter_mode_enter_lasttime = 0
+g_essential_brush_path = os.path.join(
+    os.path.dirname(bpy.app.binary_path), f"{bpy.app.version[0]}.{bpy.app.version[1]}",
+    "datafiles", "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
 
 
-def invoke(context, event):
-    smooth_brush = bpy.data.brushes.get("Smooth")
-    if smooth_brush == None:
-        blender_install_dir = os.path.dirname(bpy.app.binary_path)
-        path = os.path.join(blender_install_dir, f"{bpy.app.version[0]}.{bpy.app.version[1]}",
-                            "datafiles", "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
-        with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
-            for i in data_from.brushes:
-                if i == "Smooth":
-                    data_to.brushes = [i]  # これでひとつだけロードしたことになる
-                    break
-        # smooth_brush = bpy.data.brushes.get("Smooth")
-        # smooth_brush.strength = 0.9
-        # print(smooth_brush.size)
+def init_brush():
+    load_requests = []
+    if bpy.data.brushes.get("Smooth") is None:
+        load_requests.append("Smooth")
+    for key in g.get_config().get("brush_params", {}).keys():
+        if bpy.data.brushes.get(key) is None:
+            load_requests.append(key)
+    if load_requests:
+        # アセットブラウザで表示されるブラシだけ=asset_only
+        # with bpy.data.libraries.load(g_essential_brush_path, link=False) as (data_from, data_to):
+        #     loads = set()
+        #     for request in load_requests:
+        #         if request in data_from.brushes:
+        #             loads.add(request)
+        #     data_to.brushes = list(loads)
+        # bpy.data.libraries.loadは別インスタンスが作られてしまうので使えないかも
+
+        print("[MyBestPieMenuEver] The following warning logs are required to apply brush settings!")
+        for key in load_requests:
+            bpy.ops.brush.asset_activate(
+                asset_library_type="ESSENTIALS",
+                asset_library_identifier="",
+                relative_asset_identifier=os.path.join("brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", key))
+            brush = bpy.data.brushes.get(key)
+            if brush and (param := g.get_config_brush_params(key)):
+                brush.strength = param.get("strength", brush.strength)
+                print("[MyBestPieMenuEver] Brush load and set param:", key)
+    # brush = bpy.data.brushes.get("Draw")
+    # if brush and (param := g.get_config_brush_params("Draw")):
+    #     brush.strength = param.get("strength", brush.strength)
+    #     print(brush.name, brush.strength)
+    #     context.view_layer.update()
 
 
 def draw(pie, context):
@@ -62,6 +83,8 @@ def draw(pie, context):
     layout_start_brush_list = box.row(align=True)
     # ブラシストローク
     layout_start_brush_stroke = r.box()
+    # スムーズブラシ
+    layout_start_smooth_brush = c.row(align=True)
     # ユーティリティ
     r = c.row()
     box = r.box()
@@ -215,20 +238,11 @@ def draw(pie, context):
         if (cnt := cnt+1) % limit_rows == 0:
             cc = rr.column(align=True)
 
-    # Utilityメニュー
-    r = layout_start_utility.row()
-    r.alignment = "LEFT"
-    # 共通のサイズ、強度
-    unified_paint_settings = context.tool_settings.unified_paint_settings
-    _Util.layout_prop(r, unified_paint_settings, "use_unified_size")
-    _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
-    # オートワイヤーフレーム
-    _Util.layout_operator(r, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
-
     # Smoothブラシの強さ
+    unified_paint_settings = context.tool_settings.unified_paint_settings
     smooth_brush = bpy.data.brushes.get("Smooth")
     if smooth_brush != None:
-        r = layout_start_utility.row(align=True)
+        r = layout_start_smooth_brush
         r.enabled = not unified_paint_settings.use_unified_strength
         r.alignment = "LEFT"
         _Util.layout_prop(r, smooth_brush, "strength", "Smooth Strength")
@@ -236,6 +250,15 @@ def draw(pie, context):
         _Util.MPM_OT_SetSingle.operator(r, "75%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.75))
         _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
         _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
+    # Utilityメニュー
+    r = layout_start_utility.row()
+    r.alignment = "LEFT"
+    # 共通のサイズ、強度
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_size")
+    _Util.layout_prop(r, unified_paint_settings, "use_unified_strength")
+    # オートワイヤーフレーム
+    _Util.layout_operator(r, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
+
     # Applyメニュー
     # mask
     r = layout_start_apply.row(align=True)
@@ -259,6 +282,7 @@ def draw(pie, context):
     r.label(text="Essential Brush Params")
     _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushSave.bl_idname)
     _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushLoad.bl_idname)
+    _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushRemove.bl_idname)
 
 # --------------------------------------------------------------------------------
 
@@ -362,10 +386,15 @@ class MPM_OT_Sculpt_EssentialBrushSave(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        fullname = context.tool_settings.sculpt.brush.name_full
-        return "essentials_brushes-mesh" in fullname
+        return "essentials_brushes-mesh" in context.tool_settings.sculpt.brush.name_full
 
     def execute(self, context):
+        brush = context.tool_settings.sculpt.brush
+        config = g.get_config()
+        brush_params = config.setdefault("brush_params", {})
+        brush_data = brush_params.setdefault(brush.name, {})
+        brush_data["strength"] = round(brush.strength, 3)
+        g.save_config()
         return {"FINISHED"}
 
 
@@ -375,10 +404,32 @@ class MPM_OT_Sculpt_EssentialBrushLoad(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        fullname = context.tool_settings.sculpt.brush.name_full
-        return "essentials_brushes-mesh" in fullname and g.get_config_brush_params(fullname) != None
+        brush = context.tool_settings.sculpt.brush
+        return "essentials_brushes-mesh" in brush.name_full and g.get_config_brush_params(brush.name) != None
 
     def execute(self, context):
+        brush = context.tool_settings.sculpt.brush
+        brush_data = g.get_config_brush_params(brush.name)
+        brush.strength = brush_data["strength"]
+        return {"FINISHED"}
+
+
+class MPM_OT_Sculpt_EssentialBrushRemove(bpy.types.Operator):
+    bl_idname = "mpm.sculpt_essential_brush_remove"
+    bl_label = "Remove"
+
+    @classmethod
+    def poll(cls, context):
+        brush = context.tool_settings.sculpt.brush
+        return "essentials_brushes-mesh" in brush.name_full and g.get_config_brush_params(brush.name) != None
+
+    def execute(self, context):
+        brush = context.tool_settings.sculpt.brush
+        config = g.get_config()
+        params = config.get("brush_params", {})
+        if brush.name in params:
+            del params[brush.name]
+            g.save_config()
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
@@ -389,11 +440,31 @@ classes = (
     MPM_OT_Sculpt_AutoWireframeEnable,
     MPM_OT_Sculpt_EssentialBrushSave,
     MPM_OT_Sculpt_EssentialBrushLoad,
+    MPM_OT_Sculpt_EssentialBrushRemove,
 )
+
+
+def delayed_init():
+    bpy.ops.brush.asset_activate(
+        asset_library_type="ESSENTIALS",
+        asset_library_identifier="",
+        relative_asset_identifier=os.path.join("brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", "Draw"))
+    brush = bpy.data.brushes.get("Draw")
+    if brush and (param := g.get_config_brush_params("Draw")):
+        brush.strength = param.get("strength", brush.strength)
+        print(brush.name, brush.strength)
+        bpy.context.view_layer.update()
+    print(brush, bpy.context.tool_settings.sculpt.brush)
+    return None
 
 
 def register():
     _Util.register_classes(classes)
+
+    def __delayed_call():
+        init_brush()
+        return None
+    bpy.app.timers.register(__delayed_call, first_interval=0.5)
 
 
 def unregister():

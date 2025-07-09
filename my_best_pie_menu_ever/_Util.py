@@ -221,7 +221,7 @@ class MPM_ModalMonitor:
     def __init__(self):
         self.interrupt = False
         self.count = 0.0
-        bpy.app.timers.register(self._monitor)
+        # bpy.app.timers.register(self._monitor)
         bpy.app.handlers.load_pre.append(self.on_loadpre)
 
     def reset_timer(self):

@@ -72,29 +72,25 @@ def get_config():
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 config_data = json.load(f)
+        else:
+            config_data = {}
     except (json.JSONDecodeError, OSError) as e:
         print(f"[MyBestPieMenuEver] Failed to load config file: {e}")
     return config_data
 
 
-def save_config(data):
+def save_config():
     try:
         path = get_config_path()
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+            config_data["last_saved_version"] = ver
+            json.dump(config_data, f, indent=2)
     except (OSError, TypeError) as e:
         print(f"[MyBestPieMenuEver] Failed to save config file:: {e}")
 
 
-def load():
-    print(get_config())
-    save_config({
-        "last_saved_version": ver,
-    })
-
-
-def get_config_brush_params(brushPath):
+def get_config_brush_params(key):
     c = get_config()
     if "brush_params" in c:
-        return c.brush_params.get(brushPath, None)
+        return c["brush_params"].get(key, None)
     return None
