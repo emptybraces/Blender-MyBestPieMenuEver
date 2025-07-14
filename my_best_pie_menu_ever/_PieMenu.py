@@ -58,7 +58,7 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
         # 西　最後に選択したモード
         _MenuMode.PieMenuDraw_ChangeModeLast(pie, context)
         # 東
-        _SwitchObjectData.draw_pie_menu(pie.split(), context)
+        _SwitchObjectData.draw_pie_menu(pie, context)
         # 南
         row = pie.row()
         _MenuMode.draw_pie_menu(row, context)

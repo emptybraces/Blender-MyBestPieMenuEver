@@ -1,7 +1,7 @@
 import bpy
 import importlib
 bl_info = {
-    "name": "MyBestPieMenuEVER_debug",
+    "name": "My Best Pie Menu Ever debug",
     "author": "emptybraces",
     "version": (1, 0, 0),
     "blender": (4, 1, 0),
@@ -12,27 +12,19 @@ bl_info = {
     "category": "3D View",
 }
 
+addon_name = "my_best_pie_menu_ever"
+addon_path = "C:/user/projects/github_blender_MyBestPieMenuEver/my_best_pie_menu_ever.zip"
+
 
 class OT_ReinstallAddon(bpy.types.Operator):
-    bl_idname = "mpmei.reinstall_addon"
+    bl_idname = "mpm_debug.reinstall"
     bl_label = "Reinstall Addon"
-
-    def get_addon_mpm(self):
-        addon_name = "my_best_pie_menu_ever"
-        for i in bpy.context.preferences.addons.keys():
-            # print(i)
-            if "debug" not in i and "my_best_pie_menu_ever" in i:
-                addon_name = i
-                break
-        return addon_name
 
     def execute(self, context):
         exist_module = False
-        # 検索
-        addon_name = self.get_addon_mpm()
-        # print(addon_name)
-        if is_addon_enabled(addon_name):
-            # if 'my_pie_menu_ever._AddonPreferences' in sys.modules:
+        global addon_name
+        if addon_name in context.preferences.addons.keys():
+            # if "my_pie_menu_ever._AddonPreferences" in sys.modules:
             # from addon_name import _AddonPreferences
             _AddonPreferences = importlib.import_module(f"{addon_name}._AddonPreferences")
             # print(module)
@@ -44,11 +36,10 @@ class OT_ReinstallAddon(bpy.types.Operator):
             bpy.ops.preferences.addon_remove(module=addon_name)
             bpy.ops.preferences.addon_refresh()
         # インストール
-        bpy.ops.preferences.addon_install(filepath="C:/user/projects/github_blender_MyBestPieMenuEver/my_best_pie_menu_ever.zip")
+        bpy.ops.preferences.addon_install(filepath=addon_path)
         bpy.ops.preferences.addon_refresh()
 
         # 再度検索
-        addon_name = self.get_addon_mpm()
         bpy.ops.preferences.addon_enable(module=addon_name)
         bpy.ops.preferences.addon_refresh()
         if exist_module:
@@ -65,14 +56,8 @@ class OT_ReinstallAddon(bpy.types.Operator):
         # def draw(self, context):
         #     self.layout.label(text="reinstalled!")
         # context.window_manager.popup_menu(draw)
-        print("reinstalled!")
-        return {'FINISHED'}
-
-
-def is_addon_enabled(addon_name):
-    # 現在有効になっているアドオンのリストを取得
-    enabled_addons = bpy.context.preferences.addons.keys()
-    return addon_name in enabled_addons
+        self.report({"INFO"}, "[My Best Pie Menu Ever] reinstalled")
+        return {"FINISHED"}
 
 
 classes = (
@@ -86,8 +71,8 @@ def register():
         bpy.utils.register_class(cls)
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
-        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
-        kmi = km.keymap_items.new('mpmei.reinstall_addon', 'W', 'PRESS', ctrl=True, shift=True)
+        km = kc.keymaps.new(name="3D View", space_type="VIEW_3D")
+        kmi = km.keymap_items.new(OT_ReinstallAddon.bl_idname, "W", "PRESS", ctrl=True, shift=True)
         addon_keymaps.append((km, kmi))
 
 
@@ -97,7 +82,3 @@ def unregister():
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
     addon_keymaps.clear()
-
-
-if __name__ == "__main__":
-    register()

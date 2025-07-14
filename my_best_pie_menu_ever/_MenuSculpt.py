@@ -1,19 +1,26 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-    importlib.reload(_AddonPreferences)
-    importlib.reload(g)
-else:
-    from . import _Util
-    from . import _AddonPreferences
-    from . import g
 import os
 import time
 import bpy
+import sys
+import importlib
 import bmesh
 from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
 from bpy.app.translations import pgettext_iface as iface_
+# fmt:off
+modules = (
+    "my_best_pie_menu_ever.g",
+    "my_best_pie_menu_ever._Util",
+    "my_best_pie_menu_ever._AddonPreferences",
+)
+for mod_name in modules:
+    if mod_name in sys.modules:
+        importlib.reload(sys.modules[mod_name])
+    else:
+        __import__(mod_name)
+from . import g, _Util, _AddonPreferences
+# fmt:on
+
 
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
@@ -21,43 +28,9 @@ from bpy.app.translations import pgettext_iface as iface_
 g_is_filter_mode = False
 g_is_filter_set_mode_enter = False
 g_filter_mode_enter_lasttime = 0
-g_essential_brush_path = os.path.join(
-    os.path.dirname(bpy.app.binary_path), f"{bpy.app.version[0]}.{bpy.app.version[1]}",
-    "datafiles", "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
-
-
-def init_brush():
-    load_requests = []
-    if bpy.data.brushes.get("Smooth") is None:
-        load_requests.append("Smooth")
-    for key in g.get_config().get("brush_params", {}).keys():
-        if bpy.data.brushes.get(key) is None:
-            load_requests.append(key)
-    if load_requests:
-        # アセットブラウザで表示されるブラシだけ=asset_only
-        # with bpy.data.libraries.load(g_essential_brush_path, link=False) as (data_from, data_to):
-        #     loads = set()
-        #     for request in load_requests:
-        #         if request in data_from.brushes:
-        #             loads.add(request)
-        #     data_to.brushes = list(loads)
-        # bpy.data.libraries.loadは別インスタンスが作られてしまうので使えないかも
-
-        print("[MyBestPieMenuEver] The following warning logs are required to apply brush settings!")
-        for key in load_requests:
-            bpy.ops.brush.asset_activate(
-                asset_library_type="ESSENTIALS",
-                asset_library_identifier="",
-                relative_asset_identifier=os.path.join("brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", key))
-            brush = bpy.data.brushes.get(key)
-            if brush and (param := g.get_config_brush_params(key)):
-                brush.strength = param.get("strength", brush.strength)
-                print("[MyBestPieMenuEver] Brush load and set param:", key)
-    # brush = bpy.data.brushes.get("Draw")
-    # if brush and (param := g.get_config_brush_params("Draw")):
-    #     brush.strength = param.get("strength", brush.strength)
-    #     print(brush.name, brush.strength)
-    #     context.view_layer.update()
+# g_essential_brush_path = os.path.join(
+#     bpy.utils.system_resource("DATAFILES"),
+#     "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
 
 
 def draw(pie, context):
@@ -241,6 +214,14 @@ def draw(pie, context):
     # Smoothブラシの強さ
     unified_paint_settings = context.tool_settings.unified_paint_settings
     smooth_brush = bpy.data.brushes.get("Smooth")
+    if smooth_brush == None:
+        path = os.path.join(bpy.utils.system_resource("DATAFILES"), "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
+        with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
+            for i in data_from.brushes:
+                if i == "Smooth":
+                    data_to.brushes = [i]  # これでひとつだけロードしたことになる
+                    break
+        smooth_brush = bpy.data.brushes.get("Smooth")
     if smooth_brush != None:
         r = layout_start_smooth_brush
         r.enabled = not unified_paint_settings.use_unified_strength
@@ -444,27 +425,8 @@ classes = (
 )
 
 
-def delayed_init():
-    bpy.ops.brush.asset_activate(
-        asset_library_type="ESSENTIALS",
-        asset_library_identifier="",
-        relative_asset_identifier=os.path.join("brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", "Draw"))
-    brush = bpy.data.brushes.get("Draw")
-    if brush and (param := g.get_config_brush_params("Draw")):
-        brush.strength = param.get("strength", brush.strength)
-        print(brush.name, brush.strength)
-        bpy.context.view_layer.update()
-    print(brush, bpy.context.tool_settings.sculpt.brush)
-    return None
-
-
 def register():
     _Util.register_classes(classes)
-
-    def __delayed_call():
-        init_brush()
-        return None
-    bpy.app.timers.register(__delayed_call, first_interval=0.5)
 
 
 def unregister():

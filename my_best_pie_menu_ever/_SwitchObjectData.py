@@ -15,7 +15,8 @@ import bpy
 
 
 def draw_pie_menu(layout, context):
-    layout.operator(MPM_OT_SwitchObjectDataModal.bl_idname)
+    r = layout.row()
+    r.operator(MPM_OT_SwitchObjectDataModal.bl_idname)
 
 
 class MPM_OT_SwitchObjectDataModal(bpy.types.Operator):

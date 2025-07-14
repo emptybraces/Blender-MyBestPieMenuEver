@@ -4,10 +4,8 @@ if "bpy" in locals():
 else:
     from . import _UtilBlf
 import bpy
-import os
-import json
 from typing import Callable
-
+ver = (2, 7, 0)
 is_force_cancelled_piemenu_modal = False  # メニューモーダルの強制キャンセル。
 is_request_reopen_piemenu = False  # パイメニュー再起動リクエスト
 on_closed: dict[str, Callable[[], None]] = {}
@@ -53,44 +51,3 @@ def space_view_command_display_stack_height(id, y=0):
 def space_view_command_display_stack_remove(id):
     global space_view_command_display_start_stack
     space_view_command_display_start_stack = [x for x in space_view_command_display_start_stack if x["id"] != id]
-
-
-config_data = {}
-
-
-def get_config_path():
-    config_dir = bpy.utils.user_resource("CONFIG", path="", create=True)
-    return os.path.join(config_dir, "my_best_pie_menu_ever_config.json")
-
-
-def get_config():
-    global config_data
-    if config_data:
-        return config_data
-    try:
-        path = get_config_path()
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                config_data = json.load(f)
-        else:
-            config_data = {}
-    except (json.JSONDecodeError, OSError) as e:
-        print(f"[MyBestPieMenuEver] Failed to load config file: {e}")
-    return config_data
-
-
-def save_config():
-    try:
-        path = get_config_path()
-        with open(path, "w", encoding="utf-8") as f:
-            config_data["last_saved_version"] = ver
-            json.dump(config_data, f, indent=2)
-    except (OSError, TypeError) as e:
-        print(f"[MyBestPieMenuEver] Failed to save config file:: {e}")
-
-
-def get_config_brush_params(key):
-    c = get_config()
-    if "brush_params" in c:
-        return c["brush_params"].get(key, None)
-    return None

@@ -1,10 +1,18 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-else:
-    from . import _Util
 import bpy
-
+import sys
+import importlib
+from bpy.app.translations import pgettext_iface as iface_
+# fmt:off
+modules = (
+    "my_best_pie_menu_ever._Util",
+)
+for mod_name in modules:
+    if mod_name in sys.modules:
+        importlib.reload(sys.modules[mod_name])
+    else:
+        __import__(mod_name)
+from . import _Util
+# fmt:on
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------
@@ -36,14 +44,16 @@ def draw(pie, context):
 
 
 def LayoutSwitchSelectionOperator(context, layout):
+    # s = layout.row().split(factor=0.25, align=True)
     r = layout.row(align=True)
-    r.label(text="SelectionTool")
-    r = r.row(align=True)
-    # r.scale_x = 0.5
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolTweak.bl_idname)
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolBox.bl_idname)
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolCircle.bl_idname)
-    _Util.layout_operator(r, MPM_OT_SwitchSelectionToolLasso.bl_idname)
+    r1 = r2 = r
+    # r1 = s.row()
+    # r2 = s.row(align=True)
+    r1.label(text=iface_("Selection Tool"))
+    _Util.layout_operator(r2, MPM_OT_SwitchSelectionToolTweak.bl_idname)
+    _Util.layout_operator(r2, MPM_OT_SwitchSelectionToolBox.bl_idname)
+    _Util.layout_operator(r2, MPM_OT_SwitchSelectionToolCircle.bl_idname)
+    _Util.layout_operator(r2, MPM_OT_SwitchSelectionToolLasso.bl_idname)
 
 
 class MPM_OT_SwitchSelectionToolTweak(bpy.types.Operator):

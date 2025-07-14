@@ -1,37 +1,36 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(g)
-    importlib.reload(_Util)
-    importlib.reload(_AddonPreferences)
-else:
-    from . import g
-    from . import _Util
-    from . import _AddonPreferences
 import bpy
+import sys
+import importlib
+# fmt:off
+modules = (
+    "my_best_pie_menu_ever.g",
+    "my_best_pie_menu_ever._Util",
+    "my_best_pie_menu_ever._AddonPreferences",
+    "my_best_pie_menu_ever._PieMenu",
+)
+for mod_name in modules:
+    if mod_name in sys.modules:
+        importlib.reload(sys.modules[mod_name])
+    else:
+        __import__(mod_name)
+from . import g, _Util, _AddonPreferences,_PieMenu
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",
     "version": (2, 7, 0),
-    "blender": (4, 2, 0),
+    "blender": (4, 4, 3),
     "location": "3D View",
     "description": "Quick access to the functions you need",
     "warning": "",
     "doc_url": "",
     "category": "3D View",
 }
-# フォーマッタの都合上インポートを後にしてる
-g.ver = bl_info["version"]
-if "_PieMenu" in locals():
-    import importlib
-    importlib.reload(_PieMenu)
-else:
-    from . import _PieMenu
-
-classes = [
+# fmt:on
+classes = (
     _AddonPreferences,
     _PieMenu,
     _Util,
-]
+)
 cat_3dview = "3D View"
 cat_image = "Image"
 addon_opid = _PieMenu.MPM_OT_OpenPieMenuModal.bl_idname
@@ -71,8 +70,6 @@ def unregister_keymap():
     kmkmi = _Util.find_keymap(cat_image, addon_opid)
     if kmkmi[1] is not None:
         kmkmi[0].keymap_items.remove(kmkmi[1])
-
-# アドオンの場合、blenderからコールされる。
 
 
 def register():
