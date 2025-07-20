@@ -107,12 +107,13 @@ def draw(pie, context):
     layout_brushes.label(text="Brushes(Filtered)" if g_is_filter_mode else "Brushes", icon="BRUSH_DATA")
     # Stroke
     layout_stroke = None
+    c = r.column(align=True)
     if not g_is_filter_set_mode_enter:
-        layout_stroke = r.box()
+        layout_stroke = c.box()
         layout_stroke.label(text="Stroke", icon="STROKE")
     # Blend
     blend_filter_names = [i for i in map(str.strip, _AddonPreferences.get_data().imagePaintBlendFilterByName.split(',')) if i]
-    layout_blend = r.box()
+    layout_blend = c.box()
     layout_blend.label(text="Blend(All)" if g_is_filter_set_mode_enter else "Blend(Filtered)" if g_is_filter_mode and blend_filter_names else "Blend(Default)")
     # Property
     if not g_is_filter_set_mode_enter:
@@ -230,20 +231,20 @@ def draw(pie, context):
     unified_paint_settings = context.tool_settings.unified_paint_settings
     # color
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_color else current_brush
-    s = c.row().split(factor=0.2, align=True)
+    s = c.row().split(factor=0.3, align=True)
     r1 = s.row(align=True)
-    s = s.row().split(factor=0.2, align=True)
+    s = s.row().split(factor=0.15, align=True)
     r2 = s.row(align=True)
     r3 = s.row(align=True)
     r3.alignment = "LEFT"
     r1.label(text="Color")
-    UnifiedPaintPanel.prop_unified_color(r2, context, brush_property_target, "color", text="")
-    UnifiedPaintPanel.prop_unified_color(r2, context, brush_property_target, "secondary_color", text="")
-    _Util.MPM_OT_CallbackOperator.operator(r3, "", "_MenuTexturePaint.swap_color",
+    UnifiedPaintPanel.prop_unified_color(r1, context, brush_property_target, "color", text="")
+    UnifiedPaintPanel.prop_unified_color(r1, context, brush_property_target, "secondary_color", text="")
+    _Util.MPM_OT_CallbackOperator.operator(r1, "", "_MenuTexturePaint.swap_color",
                                            _SwapBrushColor, (context, brush_property_target,), icon="ARROW_LEFTRIGHT")
-    _Util.MPM_OT_CallbackOperator.operator(r3, "W", "_MenuTexturePaint.set_white",
+    _Util.MPM_OT_CallbackOperator.operator(r2, "W", "_MenuTexturePaint.set_white",
                                            lambda x: setattr(x, "color", mathutils.Color((1.0, 1.0, 1.0))), (brush_property_target,))
-    _Util.MPM_OT_CallbackOperator.operator(r3, "B", "_MenuTexturePaint.set_black",
+    _Util.MPM_OT_CallbackOperator.operator(r2, "B", "_MenuTexturePaint.set_black",
                                            lambda x: setattr(x, "color", mathutils.Color((0.0, 0.0, 0.0))), (brush_property_target,))
     r3.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
     _Util.layout_prop(r3, unified_paint_settings, "use_unified_color")

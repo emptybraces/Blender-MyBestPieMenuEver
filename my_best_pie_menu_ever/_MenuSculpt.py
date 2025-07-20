@@ -3,8 +3,6 @@ import time
 import bpy
 import importlib
 import bmesh
-from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
-from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
 from bpy.app.translations import pgettext_iface as iface_
 from . import (
     g,
@@ -27,8 +25,6 @@ g_filter_mode_enter_lasttime = 0
 
 
 def draw(pie, context):
-    if not g.is_v4_3_later():
-        return MenuPrimary_v4_2(pie, context)
     # フィルターモード
     global g_is_filter_mode, g_is_filter_set_mode_enter, g_filter_mode_enter_lasttime
     g_is_filter_set_mode_enter = g_is_filter_set_mode_enter and (time.time() - g_filter_mode_enter_lasttime) < 0.1
@@ -80,8 +76,8 @@ def draw(pie, context):
     cnt = 0
     tool = context.tool_settings.sculpt
     current_brush = tool.brush
-    limit_rows = _AddonPreferences.Accessor.get_sculpt_limit_row_count()
-    filter_names = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name().strip().split(",")
+    pref = _AddonPreferences.get_data()
+    filter_names = pref.sculptBrushFilterByName.strip().split(",")
     # v4.3以降はブラシがアセット
     # libraryデータをロードすると全部一括ロードされる。
     # with bpy.data.libraries.load(bpy.data.libraries[0].filepath, assets_only=True) as (data_from, data_to):
@@ -114,21 +110,21 @@ def draw(pie, context):
 
     def _brush_filter_operator(context, layout, label_name, tool_id, in_filter):
         def _set(context, tool_id, in_filter):
-            filter = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name()
+            filter = _AddonPreferences.get_data().sculptBrushFilterByName
             tool_id = tool_id.lower()
             if in_filter:
                 filter = filter.replace(tool_id, "")
             else:
                 filter += "," + tool_id
-            _AddonPreferences.Accessor.set_sculpt_brush_filter_by_name(",".join(s.strip() for s in filter.split(",") if 0 < len(s.strip())))
+            _AddonPreferences.get_data().sculptBrushFilterByName = ",".join(s.strip() for s in filter.split(",") if 0 < len(s.strip()))
             global g_filter_mode_enter_lasttime
             g_filter_mode_enter_lasttime = time.time()
         _Util.MPM_OT_CallbackOperator.operator(layout, label_name, __name__ + ".set_brush_filter." + tool_id,
                                                _set, (context, tool_id, in_filter), depress=in_filter)
     # Tools
     rr = layout_start_brush_list
-    for i in TOOL_INFO:
-        if g_is_filter_set_mode_enter or not g_is_filter_mode:
+    if g_is_filter_set_mode_enter or not g_is_filter_mode:
+        for i in TOOL_INFO:
             if i[0] == "-":
                 cc = rr.box().column(align=True)
                 cc.label(text=i[1:])
@@ -137,32 +133,38 @@ def draw(pie, context):
                 _brush_filter_operator(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i, _is_in_filter(i))
             else:
                 _callback_operator_select_tool(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i)
-        # フィルターモード
-        else:
+    # フィルターモード
+    else:
+        cnt = 0
+        cc = rr.column(align=True)
+        for i in TOOL_INFO:
             if not _is_in_filter(i):
                 continue  # 表示しない
             _callback_operator_select_tool(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i)
-            if (cnt := cnt+1) % limit_rows == 0:
+            if (cnt := cnt+1) % pref.sculptLimitRowCount == 0:
                 cc = rr.column(align=True)
     # Essential
-    for i in BRUSH_INFO:
-        if g_is_filter_set_mode_enter or not g_is_filter_mode:
+    if g_is_filter_set_mode_enter or not g_is_filter_mode:
+        for i in BRUSH_INFO:
             if i[0] == "-":
                 if "Utilities" not in i:
                     box = rr.box()
-                cc = box.column(align=False)
+                cc = box.column(align=True)
                 cc.label(text=i[1:])
                 continue
             if g_is_filter_set_mode_enter:
                 _brush_filter_operator(context, cc, i, i, _is_in_filter(i))
             else:
                 _callback_operator_select_brush(context, cc, i)
-        # フィルターモード
-        else:
+    # フィルターモード
+    else:
+        cnt = 0
+        cc = rr.column(align=True)
+        for i in BRUSH_INFO:
             if not _is_in_filter(i):
                 continue  # 表示しない
             _callback_operator_select_brush(context, cc, i)
-            if (cnt := cnt+1) % limit_rows == 0:
+            if (cnt := cnt+1) % pref.sculptLimitRowCount == 0:
                 cc = rr.column(align=True)
     # Local/Custom
     # 任意のブラシのcontext.tool_settings.image_paint.brush_asset_referenceにアクセスする術がないため不可能
@@ -176,7 +178,7 @@ def draw(pie, context):
     #             _brush_filter_operator(context, cc, i.name, i.name, _is_in_filter(i.name))
     #         else:
     #             _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
-    #         if (cnt := cnt+1) % limit_rows == 0:
+    #         if (cnt := cnt+1) % pref.sculptLimitRowCount == 0:
     #             cc = rrr.column(align=True)
     # # フィルターモード
     # else:
@@ -184,7 +186,7 @@ def draw(pie, context):
     #         if not _is_in_filter(i.name):
     #             continue  # 表示しない
     #         _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
-    #         if (cnt := cnt+1) % limit_rows == 0:
+    #         if (cnt := cnt+1) % pref.sculptLimitRowCount == 0:
     #             cc = rrr.column(align=True)
 
     if g_is_filter_set_mode_enter:
@@ -195,13 +197,9 @@ def draw(pie, context):
     rr = layout_start_brush_stroke.row(align=True)
     cc = rr.column(align=True)
     for i in _Util.enum_identifier(current_brush, "stroke_method"):
-        if bpy.app.version < (4, 2, 9):
-            is_use = current_brush.stroke_method == i
-            _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=i != current_brush, depress=is_use)
-        else:
-            is_use = active_tool.use_brushes and current_brush.stroke_method == i
-            _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=active_tool.use_brushes, depress=is_use)
-        if (cnt := cnt+1) % limit_rows == 0:
+        is_use = active_tool.use_brushes and current_brush.stroke_method == i
+        _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=active_tool.use_brushes, depress=is_use)
+        if (cnt := cnt+1) % pref.sculptLimitRowCount == 0:
             cc = rr.column(align=True)
 
     # Smoothブラシの強さ
@@ -449,104 +447,3 @@ TOOL_INFO = [
     "builtin.trasform",
     "builtin.annotate",
 ]
-
-
-def MenuPrimary_v4_2(pie, context):
-    box = pie.split().box()
-    box.label(text="Sculpt Primary")
-
-    c = box.column(align=True)
-    _Util.layout_operator(c, MPM_OT_Sculpt_AutoWireframeEnable.bl_idname, depress=context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode)
-    # ブラシ
-    r = c.row(align=True)
-    box = r.box()
-    box.label(text="Tools & Brushes", icon="BRUSH_DATA")
-    rr = box.row(align=True)
-    rr.scale_x = 0.9
-    cc = rr.column(align=True)
-    cnt = 0
-    tool = context.tool_settings.sculpt
-    current_brush = tool.brush
-    limit_rows = _AddonPreferences.Accessor.get_sculpt_limit_row_count()
-    filter_names = _AddonPreferences.Accessor.get_sculpt_brush_filter_by_name().strip().split(",")
-
-    def _is_in_filter(brush):
-        if len(filter_names) == 1 and filter_names[0] == "":
-            return True
-        for filter_name in filter_names:
-            if filter_name.strip().lower() == brush.name.lower():
-                return True
-        return False
-    tool_defs = []
-    for item in ToolSelectPanelHelper._tools_flatten(VIEW3D_PT_tools_active.tools_from_context(context, context.mode)):
-        if item and item.data_block:
-            # print(dir(item))
-            icon_value = ToolSelectPanelHelper._icon_value_from_icon_handle(item.icon)
-            tool_defs.append((item.data_block, icon_value))
-            # print(item.label, item.data_block, icon_value)
-            # print(item)
-            # row2.template_icon(icon_value=icon_value, scale=0.5)
-
-    for i in bpy.data.brushes:
-        if i.use_paint_sculpt and _is_in_filter(i):
-            rrr = cc.row(align=False)
-            icon_value = 0
-            for t in tool_defs:
-                if t[0] == i.sculpt_tool:
-                    rrr.template_icon(icon_value=t[1], scale=1)
-                    icon_value = t[1]
-            _Util.MPM_OT_SetPointer.operator(rrr, i.name, tool, "brush", i, depress=current_brush == i)
-            # _Util.MPM_OT_SetPointer.operator(rr, i.name, tool, "brush", i, depress=current_brush == i, icon_value=icon_value)
-            if (cnt := cnt+1) % limit_rows == 0:
-                cc = rr.column(align=True)
-
-    # Strokes
-    cnt = 0
-    box = r.box()
-    box.label(text="Stroke", icon="STROKE")
-    rr = box.row(align=True)
-    cc = rr.column(align=True)
-    for i in _Util.enum_identifier(current_brush, "stroke_method"):
-        is_use = current_brush.stroke_method == i
-        _Util.MPM_OT_SetString.operator(cc, i, current_brush, "stroke_method", i, isActive=i != current_brush, depress=is_use)
-        if (cnt := cnt+1) % limit_rows == 0:
-            cc = rr.column(align=True)
-    # Smoothブラシの強さ
-    rr = c.row()
-    smooth_brush = None
-    if smooth_brush == None:
-        for brush in bpy.data.brushes:
-            if brush.use_paint_sculpt and brush.name.lower() == "smooth":
-                smooth_brush = brush
-                break
-    if smooth_brush:
-        c = rr.column(align=True)
-        r = c.row(align=True)
-        r.label(icon="BRUSH_BLUR")
-        _Util.layout_prop(r, smooth_brush, "strength", "Smooth Brush: Strength", icon="BRUSH_BLUR")
-        r = r.row(align=True)
-        r.scale_x = 0.8
-        _Util.MPM_OT_SetSingle.operator(r, "50%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.5))
-        _Util.MPM_OT_SetSingle.operator(r, "75%", smooth_brush, "strength", max(0, smooth_brush.strength * 0.75))
-        _Util.MPM_OT_SetSingle.operator(r, "150%", smooth_brush, "strength", min(1, smooth_brush.strength * 1.5))
-        _Util.MPM_OT_SetSingle.operator(r, "200%", smooth_brush, "strength", min(1, smooth_brush.strength * 2))
-
-    # Applyメニュー
-    box = c.box()
-    box.label(text="Apply", icon="CHECKMARK")
-    # mask
-    c = box.column(align=True)
-    r = c.row(align=True)
-    r.label(text=MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Unselected").is_invert = False
-    op = _Util.layout_operator(r, "paint.mask_flood_fill", "Clear")
-    op.mode = "VALUE"
-    op.value = 0
-    # face set
-    r = c.row(align=True)
-    r.label(text=MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Unselected").mode = "Unselected"
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
-# --------------------------------------------------------------------------------

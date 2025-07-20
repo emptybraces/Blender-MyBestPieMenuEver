@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "2.7.0"
+version = "2.7.1"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -28,6 +28,9 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
+# v2.7.1
+# - [Bugfix] スカルプトブラシのフィルタモードが機能していない。
+# - ミニマムバージョンを4.3.0にアップ。
 # v2.7.0
 # - [Pose] Auto-Rig Pro　IKFKスイッチ機能を更新。
 # - [Utility] アクティブコレクションの表示非表示ボタンを追加。

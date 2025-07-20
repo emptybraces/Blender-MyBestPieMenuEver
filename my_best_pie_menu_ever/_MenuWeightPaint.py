@@ -87,22 +87,14 @@ def draw(pie, context):
             _Util.MPM_OT_SetString.operator(r2, iface_(i.name), current_brush, "blend", i.identifier, depress=is_use)
     # ぼかしブラシの強さ
     blur_brush = None
-    if g.is_v4_3_later():
-        blender_install_dir = os.path.dirname(bpy.app.binary_path)
-        if bpy.data.brushes.get("Blur") == None:
-            path = os.path.join(blender_install_dir, f"{bpy.app.version[0]}.{bpy.app.version[1]}",
-                                "datafiles", "assets", "brushes", "essentials_brushes-mesh_weight.blend")
-            with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
-                for i in data_from.brushes:
-                    if i == "Blur":
-                        data_to.brushes = [i]  # これでひとつだけロードしたことになる
-                        break
-        blur_brush = bpy.data.brushes["Blur"]
-    else:
-        for current_brush in bpy.data.brushes:
-            if current_brush.use_paint_weight and current_brush.name.lower() == "blur":
-                blur_brush = current_brush
-                break
+    if bpy.data.brushes.get("Blur", None) == None:
+        path = os.path.join(bpy.utils.system_resource("DATAFILES"), "assets", "brushes", "essentials_brushes-mesh_weight.blend")
+        with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
+            for i in data_from.brushes:
+                if i == "Blur":
+                    data_to.brushes = [i]  # これでひとつだけロードしたことになる
+                    break
+    blur_brush = bpy.data.brushes["Blur"]
     if blur_brush:
         s = c.split(factor=0.4, align=True)
         r1 = s.row(align=True)

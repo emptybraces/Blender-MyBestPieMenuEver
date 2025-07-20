@@ -116,10 +116,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         c.prop(self, "imagePaintLimitRowCount")
 
         c = layout.box().column(heading="Sculpt")
-        if g.is_v4_3_later():
-            c.prop(self, "sculptBrushFilterByName")
-        else:
-            sub_row(self, c, "sculptBrushFilterByName", "sculptBrushNameDropDown")
+        c.prop(self, "sculptBrushFilterByName")
         c.prop(self, "sculptLimitRowCount")
 
         c = layout.box().column(heading="Weight Paint")
@@ -197,12 +194,6 @@ class Accessor():
     def get_image_paint_ctrl_behaviour(): return Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha
     @staticmethod
     def set_image_paint_ctrl_behaviour(v): Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
-    @staticmethod
-    def get_sculpt_limit_row_count(): return Accessor.get_ref().sculptLimitRowCount
-    @staticmethod
-    def get_sculpt_brush_filter_by_name(): return Accessor.get_ref().sculptBrushFilterByName
-    @staticmethod
-    def set_sculpt_brush_filter_by_name(v): Accessor.get_ref().sculptBrushFilterByName = v
     @staticmethod
     def get_open_file_path_list(): return Accessor.get_ref().openFilePathList
     @staticmethod
