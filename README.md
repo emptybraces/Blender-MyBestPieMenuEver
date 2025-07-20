@@ -11,31 +11,31 @@ https://extensions.blender.org/add-ons/my-best-pie-menu-ever/
 
 ### [Utility]
 
-![image](https://github.com/user-attachments/assets/97e484b8-a8b5-47dc-bb8c-6073138471d5)
+<img width="1039" height="474" alt="image" src="https://github.com/user-attachments/assets/c8ba72dc-2446-40a3-8d96-d532440ebbd2" />
 
 ### [OBJECT Mode]
 
-![image](https://github.com/user-attachments/assets/78859d10-5835-499c-aeed-a4e7318a6068)
+<img width="578" height="210" alt="image" src="https://github.com/user-attachments/assets/7fd425a2-109f-4309-89a5-06cb733762c8" />
 
 ### [Edit Mode]
 
-![image](https://github.com/user-attachments/assets/6b343f02-e3c0-451d-b4e4-ecf82d7ab689)
+<img width="753" height="393" alt="image" src="https://github.com/user-attachments/assets/e0a53fac-25ad-400f-bdaa-4ff57f08af8c" />
 
 ### [PAINT_TEXTURE Mode]
 
-![image](https://github.com/user-attachments/assets/55b486ea-204a-4c19-a806-02feea50e3ee)
+<img width="836" height="411" alt="image" src="https://github.com/user-attachments/assets/99cb69cc-c05f-454b-b8dd-0e55b9512249" />
 
 ### [PAINT_WEIGHT Mode]
 
-![image](https://github.com/user-attachments/assets/9b3d3827-ae81-4218-b63f-e197ecd064a5)
+<img width="910" height="308" alt="image" src="https://github.com/user-attachments/assets/e8764865-ea8a-4cf4-8cdd-146cad978430" />
 
 ### [SCULPT Mode]
 
-![image](https://github.com/user-attachments/assets/3412ce99-9b6c-4a89-815d-6db6a7d728cb)
+<img width="994" height="580" alt="image" src="https://github.com/user-attachments/assets/5e617154-2b12-491f-b80f-ef1d6de69505" />
 
 ### [POSE Mode]
 
-![image](https://github.com/user-attachments/assets/437ac082-6e5a-4696-901d-05a595637652)
+<img width="501" height="182" alt="image" src="https://github.com/user-attachments/assets/67ce23e3-1326-46b8-a115-c4038cb88fd8" />
 
 ### [UVEditor & ImageEditor]
 
