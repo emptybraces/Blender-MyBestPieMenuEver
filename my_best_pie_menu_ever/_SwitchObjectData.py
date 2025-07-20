@@ -1,17 +1,20 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-    importlib.reload(_UtilInput)
-    importlib.reload(_UtilBlf)
-    importlib.reload(_AddonPreferences)
-    importlib.reload(g)
-else:
-    from . import _Util
-    from . import _UtilInput
-    from . import _UtilBlf
-    from . import _AddonPreferences
-    from . import g
 import bpy
+import importlib
+from . import (
+    g,
+    _Util,
+    _UtilInput,
+    _UtilBlf,
+    _AddonPreferences,
+)
+for m in (
+    g,
+    _Util,
+    _UtilInput,
+    _UtilBlf,
+    _AddonPreferences,
+):
+    importlib.reload(m)
 
 
 def draw_pie_menu(layout, context):

@@ -1,7 +1,13 @@
 ﻿import bpy
-from . import _Util
+import importlib
 from bpy.app.handlers import persistent
-
+from . import (
+    _Util,
+)
+for m in (
+    _Util,
+):
+    importlib.reload(m)
 g_history = []
 g_history_no = 1
 g_history_current_no = -1
@@ -9,12 +15,16 @@ g_is_busy = False
 # --------------------------------------------------------------------------------
 # 選択履歴
 # --------------------------------------------------------------------------------
+
+
 def PanelHistory(layout, context):
     pass
-    #layout.label(text="v4 dont work...")
-    #layout.operator_menu_enum(MPM_OT_SelectionHistory.bl_idname, 'historyEnum')
+    # layout.label(text="v4 dont work...")
+    # layout.operator_menu_enum(MPM_OT_SelectionHistory.bl_idname, 'historyEnum')
 
 # --------------------------------------------------------------------------------
+
+
 class MPM_OT_SelectionHistory(bpy.types.Operator):
     bl_idname = "mpm.selection_history"
     bl_description = "selection history"
@@ -50,7 +60,7 @@ class MPM_OT_SelectionHistory(bpy.types.Operator):
             r.append((str(no), s, ""))
         return r
 
-    historyEnum: bpy.props.EnumProperty(items = get)
+    historyEnum: bpy.props.EnumProperty(items=get)
 
     def execute(self, context):
         global g_is_busy
@@ -67,7 +77,7 @@ class MPM_OT_SelectionHistory(bpy.types.Operator):
         # print("select", objs, data)
         # objectの選択
         if objs:
-            bpy.ops.object.mode_set(mode = 'OBJECT')
+            bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.select_all(action='DESELECT')
             for o in objs:
                 o.select_set(True)
@@ -81,13 +91,13 @@ class MPM_OT_SelectionHistory(bpy.types.Operator):
         # boneの選択
         elif mode == "POSE":
             g_is_busy = True
-            bpy.ops.object.mode_set(mode = 'POSE')
+            bpy.ops.object.mode_set(mode='POSE')
             bpy.ops.pose.select_all(action='DESELECT')
             for o in data:
                 o.bone.select = True
                 bpy.context.object.data.bones.active = o.bone
         elif mode == "EDIT_ARMATURE":
-            bpy.ops.object.mode_set(mode = 'EDIT')
+            bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.armature.select_all(action='DESELECT')
             for i, o in enumerate(objs):
                 g_is_busy = True
@@ -99,8 +109,10 @@ class MPM_OT_SelectionHistory(bpy.types.Operator):
                     # bpy.context.object.data.edit_bones.active = eb
         else:
             g_is_busy = True
-        return{'FINISHED'}
+        return {'FINISHED'}
 # --------------------------------------------------------------------------------
+
+
 @persistent
 def on_selection_changed(context):
     global g_is_busy
@@ -121,44 +133,51 @@ def on_selection_changed(context):
         objs = None
         is_register = True
     elif ctx.mode == 'POSE':
-        if not objs: return;
+        if not objs:
+            return
         data = ctx.selected_pose_bones
         if 0 < len(g_history) and g_history[0]["objects"] == objs and (not data or g_history[0]["data"] == data):
             return
     elif ctx.mode == 'EDIT_ARMATURE':
-        if not objs: return;
+        if not objs:
+            return
         # なんでか参照が永続化されないので必要なパラメータを抽出
-        data = [[(b.name, b.select, b.select_head, b.select_tail) for b in obj.data.edit_bones if b.select or b.select_head or b.select_tail] for obj in objs]
+        data = [[(b.name, b.select, b.select_head, b.select_tail)
+                 for b in obj.data.edit_bones if b.select or b.select_head or b.select_tail] for obj in objs]
         if 0 < len(g_history) and g_history[0]["objects"] == objs and (not data or g_history[0]["bones"] == data):
             return
     max_count = 20
     if is_register:
         g_history_no += 1
-        item = {"no": g_history_no, "objects":objs, "data": data, "mode": ctx.mode}
+        item = {"no": g_history_no, "objects": objs, "data": data, "mode": ctx.mode}
         g_history.insert(0, item)
         if max_count < len(g_history):
             del g_history[-1]
         g_history_current_no = -1
 # --------------------------------------------------------------------------------
 
+
 # --------------------------------------------------------------------------------
 classes = [
     MPM_OT_SelectionHistory,
 ]
+
+
 def register():
     pass
-    #bpy.app.handlers.depsgraph_update_post.append(on_selection_changed)
-    #_Util.register_classes(classes)
+    # bpy.app.handlers.depsgraph_update_post.append(on_selection_changed)
+    # _Util.register_classes(classes)
+
 
 def unregister():
     pass
-    #_Util.unregister_classes(classes)
-    #bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
-    #global g_history
-    #global g_history_no
-    #global g_history_current_no
-    #global g_is_busy
-    #g_history.clear()
-    #g_history_no = 0
-    #g_history_current_no = -1
-    #g_is_busy = False
+    # _Util.unregister_classes(classes)
+    # bpy.app.handlers.depsgraph_update_post.remove(on_selection_changed)
+    # global g_history
+    # global g_history_no
+    # global g_history_current_no
+    # global g_is_busy
+    # g_history.clear()
+    # g_history_no = 0
+    # g_history_current_no = -1
+    # g_is_busy = False

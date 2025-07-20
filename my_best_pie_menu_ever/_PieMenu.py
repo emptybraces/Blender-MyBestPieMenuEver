@@ -1,46 +1,44 @@
-﻿if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-    importlib.reload(_UtilInput)
-    importlib.reload(_UtilBlf)
-    importlib.reload(_AddonPreferences)
-    importlib.reload(_MenuMode)
-    importlib.reload(_MenuUtility)
-    importlib.reload(_MenuObject)
-    importlib.reload(_MenuEditMesh)
-    importlib.reload(_MenuWeightPaint)
-    importlib.reload(_MenuTexturePaint)
-    importlib.reload(_MenuSculpt)
-    importlib.reload(_MenuSculptCurve)
-    importlib.reload(_MenuPose)
-    importlib.reload(_MenuUVEditor)
-    importlib.reload(_MenuImageEditor)
-    importlib.reload(_PanelSelectionHistory)
-    importlib.reload(_SwitchObjectData)
-    importlib.reload(g)
-else:
-    from . import _Util
-    from . import _UtilInput
-    from . import _UtilBlf
-    from . import _AddonPreferences
-    from . import _MenuMode
-    from . import _MenuUtility
-    from . import _MenuObject
-    from . import _MenuEditMesh
-    from . import _MenuWeightPaint
-    from . import _MenuTexturePaint
-    from . import _MenuSculpt
-    from . import _MenuSculptCurve
-    from . import _MenuPose
-    from . import _MenuUVEditor
-    from . import _MenuImageEditor
-    from . import _PanelSelectionHistory
-    from . import _SwitchObjectData
-    from . import g
-import bpy
+﻿import bpy
+import importlib
 import math
 from mathutils import Vector
-
+from . import (
+    _Util,
+    _UtilBlf,
+    _MenuMode,
+    _MenuUtility,
+    _MenuObject,
+    _MenuEditMesh,
+    _MenuWeightPaint,
+    _MenuTexturePaint,
+    _MenuSculpt,
+    _MenuSculptCurve,
+    _MenuPose,
+    _MenuUVEditor,
+    _MenuImageEditor,
+    _PanelSelectionHistory,
+    _SwitchObjectData,
+    g,
+)
+for m in (
+    _Util,
+    _UtilBlf,
+    _MenuMode,
+    _MenuUtility,
+    _MenuObject,
+    _MenuEditMesh,
+    _MenuWeightPaint,
+    _MenuTexturePaint,
+    _MenuSculpt,
+    _MenuSculptCurve,
+    _MenuPose,
+    _MenuUVEditor,
+    _MenuImageEditor,
+    _PanelSelectionHistory,
+    _SwitchObjectData,
+    g,
+):
+    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
@@ -70,7 +68,6 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
 class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
     bl_idname = "mpm.open_pie_menu"
     bl_label = "My Best Pie Menu Ever"
-    label_handler = None
     imp = Vector((0, 0))
 
     def invoke(self, context, event):
@@ -87,28 +84,21 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
         self.draw_modal = self.DrawModal()
         bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
-        # km, kmi = _Util.find_keymap("3D View", MPM_OT_OpenPieMenuModal.bl_idname)
-        # if kmi != None:
-        #     self._shortcutKey = kmi.type
-        # else:
-        #     self._shortcutKey = None
-        # bpy.ops.mpm.open_pie_menu_monitor('INVOKE_DEFAULT')
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
         context.area.tag_redraw()
         self.mp = Vector((event.mouse_x, event.mouse_y))
-        # if event.type == self._shortcutKey:
-        #     return {"CANCELLED"}
         # print(event.type, event.is_consecutive, event.is_repeat)
         if event.type in {"RIGHTMOUSE", "ESC"} or g.is_force_cancelled_piemenu_modal:
             self.cancel(context)
             return {"CANCELLED"}
 
-        elif event.type in {"LEFTMOUSE", "NONE"}:
+        elif event.type in {"LEFTMOUSE", "MOUSEMOVE", "NONE"}:
             if getattr(context.area.spaces.active, "image", None):
                 context.area.spaces.active.image.reload()
             if event.shift or g.is_request_reopen_piemenu:
+                # print(event.type, event.value, event.is_consecutive, event.is_repeat)
                 g.is_request_reopen_piemenu = False
                 context.window.cursor_warp(int(self.__class__.imp.x), int(self.__class__.imp.y))
                 bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_my_pie_menu")
@@ -130,6 +120,7 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
         return {"RUNNING_MODAL"}
 
     def cancel(self, context):
+        # print("finish")
         context.area.tag_redraw()
         if self.draw_modal:
             self.draw_modal.cancel()
@@ -157,31 +148,31 @@ class MPM_OT_OpenPieMenuModal(bpy.types.Operator):
             self.handler2d = None
 
 
-class MPM_OT_OpenPieMenuModalMonitor(bpy.types.Operator):
-    bl_idname = "mpm.open_pie_menu_monitor"
-    bl_label = ""
-    _is_pie_menu_open = True  # パイメニューが開いているかのフラグ
+# class MPM_OT_OpenPieMenuModalMonitor(bpy.types.Operator):
+#     bl_idname = "mpm.open_pie_menu_monitor"
+#     bl_label = ""
+#     _is_pie_menu_open = True  # パイメニューが開いているかのフラグ
 
-    def invoke(self, context, event):
-        self._is_pie_menu_open = True
-        context.window_manager.modal_handler_add(self)
-        bpy.app.timers.register(self.check_pie_menu_status, first_interval=0.1)
-        return {"RUNNING_MODAL"}
+#     def invoke(self, context, event):
+#         self._is_pie_menu_open = True
+#         context.window_manager.modal_handler_add(self)
+#         bpy.app.timers.register(self.check_pie_menu_status, first_interval=0.1)
+#         return {"RUNNING_MODAL"}
 
-    def modal(self, context, event):
-        if not self._is_pie_menu_open:
-            print("監視終了")
-            return {"CANCELLED"}
-        if event.type in {"LEFTMOUSE", "NONE"}:
-            print(event.type, event.is_consecutive, event.is_repeat)
-        return {"PASS_THROUGH"}
+#     def modal(self, context, event):
+#         if not self._is_pie_menu_open:
+#             print("監視終了")
+#             return {"CANCELLED"}
+#         if event.type in {"LEFTMOUSE", "NONE"}:
+#             print(event.type, event.is_consecutive, event.is_repeat)
+#         return {"PASS_THROUGH"}
 
-    def check_pie_menu_status(self):
-        is_pie_open = any(op.bl_idname == "MPM_OT_open_pie_menu" for op in bpy.context.window.modal_operators)
-        if not is_pie_open:
-            self._is_pie_menu_open = False
-            return None
-        return 0.1
+#     def check_pie_menu_status(self):
+#         is_pie_open = any(op.bl_idname == "MPM_OT_open_pie_menu" for op in bpy.context.window.modal_operators)
+#         if not is_pie_open:
+#             self._is_pie_menu_open = False
+#             return None
+#         return 0.1
 
 # --------------------------------------------------------------------------------
 # モード中プライマリ処理
@@ -200,7 +191,7 @@ def draw_primary(pie, context):
         elif current_mode == 'SCULPT':
             _MenuSculpt.draw(pie, context)
         elif current_mode == 'SCULPT_CURVES':
-            _MenuSculptCurve.draw(pie, context)
+            draw_placeholder(pie, context, 'No Impl')
         elif current_mode == 'PAINT_TEXTURE':
             _MenuTexturePaint.draw(pie, context)
         elif current_mode == 'PAINT_VERTEX':
@@ -338,7 +329,6 @@ class MPM_Prop(bpy.types.PropertyGroup):
 classes = (
     VIEW3D_MT_my_pie_menu,
     MPM_OT_OpenPieMenuModal,
-    MPM_OT_OpenPieMenuModalMonitor,
     MPM_Prop,
 )
 modules = [

@@ -1,9 +1,15 @@
 import bpy
-from . import _Util
-from . import g
 import os
-import shutil
-
+import importlib
+from . import (
+    g,
+    _Util,
+)
+for m in (
+    g,
+    _Util,
+):
+    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # ImageEditorモードメニュー
 # --------------------------------------------------------------------------------

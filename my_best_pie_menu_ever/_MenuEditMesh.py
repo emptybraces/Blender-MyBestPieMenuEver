@@ -3,26 +3,25 @@ import bmesh
 import time
 import math
 import gpu
-import sys
 import importlib
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
 from bpy.app.translations import pgettext_iface as iface_
-# fmt:off
-modules = (
-    "my_best_pie_menu_ever.g",
-    "my_best_pie_menu_ever._Util",
-    "my_best_pie_menu_ever._UtilInput",
-    "my_best_pie_menu_ever._UtilBlf",
-    "my_best_pie_menu_ever._AddonPreferences",
+from . import (
+    g,
+    _Util,
+    _UtilInput,
+    _UtilBlf,
+    _AddonPreferences,
 )
-for mod_name in modules:
-    if mod_name in sys.modules:
-        importlib.reload(sys.modules[mod_name])
-    else:
-        __import__(mod_name)
-from . import g, _Util, _UtilInput, _UtilBlf, _AddonPreferences
-# fmt:on
+for m in (
+    g,
+    _Util,
+    _UtilInput,
+    _UtilBlf,
+    _AddonPreferences,
+):
+    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------

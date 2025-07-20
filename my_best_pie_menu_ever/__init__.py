@@ -1,24 +1,23 @@
 import bpy
-import sys
 import importlib
-# fmt:off
-modules = (
-    "my_best_pie_menu_ever.g",
-    "my_best_pie_menu_ever._Util",
-    "my_best_pie_menu_ever._AddonPreferences",
-    "my_best_pie_menu_ever._PieMenu",
+from . import (
+    g,
+    _Util,
+    _AddonPreferences,
+    _PieMenu,
 )
-for mod_name in modules:
-    if mod_name in sys.modules:
-        importlib.reload(sys.modules[mod_name])
-    else:
-        __import__(mod_name)
-from . import g, _Util, _AddonPreferences,_PieMenu
+for m in (
+    g,
+    _Util,
+    _AddonPreferences,
+    _PieMenu,
+):
+    importlib.reload(m)
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",
     "version": (2, 7, 0),
-    "blender": (4, 4, 3),
+    "blender": (4, 3, 0),
     "location": "3D View",
     "description": "Quick access to the functions you need",
     "warning": "",

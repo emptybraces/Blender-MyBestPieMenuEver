@@ -1,15 +1,23 @@
-﻿if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-    importlib.reload(g)
-else:
-    from . import _Util
-    from . import g
+﻿import importlib
 import bpy
 import rna_keymap_ui
 from bpy.props import IntProperty, StringProperty, BoolProperty, FloatVectorProperty
 import colorsys
+from . import (
+    g,
+    _Util,
+)
+for m in (
+    g,
+    _Util,
+):
+    importlib.reload(m)
 addon_keymaps = []
+
+
+@staticmethod
+def get_data():
+    return bpy.context.preferences.addons[__package__].preferences if __package__ in bpy.context.preferences.addons else None
 
 
 def on_update_weightPaintHideBone(self, context):
@@ -26,8 +34,8 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                                                 description="Enter the name of the brush you want to display")
     imagePaintBlendFilterByName: StringProperty(name="ImagePaint Brush Blend Filter", default="",
                                                 description="Enter the name of the brush you want to INCLUDE, or select it from the drop-down list")
-    imagePaintShiftBrushName: StringProperty(name="Shift-key Brush", default="Blur",
-                                             description="Enter the name of the brush you want to switch to while holding down the Shift key")
+    imagePaintShiftBrushInfo: StringProperty(name="Shift-key Brush Info", default="ESSENTIALS,,brushes\\essentials_brushes-mesh_texture.blend\\Brush\\Blur",
+                                             description="Please register from the PIE menu.")
     image_paint_is_ctrl_behaviour_invert_or_erasealpha: BoolProperty(name="Ctrl+LMB Behaviour")
     imagePaintLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5, description="Specify the line count for displaying brushes")
     sculptLimitRowCount: IntProperty(name="Limit Row Count", default=15, min=5,
@@ -53,12 +61,6 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     #     self.imagePaintBrushExclude += value
     # imagePaintBrushNameDropDown: bpy.props.EnumProperty(
     #     name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_filter)
-
-    def __select_dropdown_imagepaint_shift_brush(self, value):
-        value = self.__get_imagepaint_brush_names(None)[value][0]
-        self.imagePaintShiftBrushName = value
-    imagePaintShiftBrushNameDropDown: bpy.props.EnumProperty(
-        name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_shift_brush)
 
     def __get_blend_names(self, context):
         return [(i.lower(), i.lower(), "") for i in _Util.enum_identifier(bpy.types.Brush, "blend")]
@@ -105,7 +107,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         c = layout.box().column(heading="Image Paint")
         c.prop(self, "imagePaintBrushFilterByName")
         sub_row(self, c, "imagePaintBlendFilterByName", "imagePaintBlendDropDown")
-        c.prop(self, "imagePaintShiftBrushName")
+        c.prop(self, "imagePaintShiftBrushInfo")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         r = c.row(align=True)
         r.label(text="Ctrl+LMB Behaviour:")
@@ -151,7 +153,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
             # "isDebug": getattr(self, "isDebug", False),
             "imagePaintBrushFilterByName": self.imagePaintBrushFilterByName,
             "imagePaintBlendFilterByName": self.imagePaintBlendFilterByName,
-            "imagePaintShiftBrushName": self.imagePaintShiftBrushName,
+            "imagePaintShiftBrushInfo": self.imagePaintShiftBrushInfo,
             "imagePaintLimitRowCount": self.imagePaintLimitRowCount,
             "image_paint_is_ctrl_behaviour_invert_or_erasealpha": self.image_paint_is_ctrl_behaviour_invert_or_erasealpha,
             "sculptLimitRowCount": self.sculptLimitRowCount,
@@ -195,18 +197,6 @@ class Accessor():
     def get_image_paint_ctrl_behaviour(): return Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha
     @staticmethod
     def set_image_paint_ctrl_behaviour(v): Accessor.get_ref().image_paint_is_ctrl_behaviour_invert_or_erasealpha = v
-    @staticmethod
-    def get_image_paint_shift_brush_name(): return Accessor.get_ref().imagePaintShiftBrushName
-    @staticmethod
-    def get_image_paint_limit_row(): return Accessor.get_ref().imagePaintLimitRowCount
-    @staticmethod
-    def get_image_paint_brush_filter_by_name(): return Accessor.get_ref().imagePaintBrushFilterByName
-    @staticmethod
-    def set_image_paint_brush_filter_by_name(v): Accessor.get_ref().imagePaintBrushFilterByName = v
-    @staticmethod
-    def get_image_paint_blend_filter_by_name(): return Accessor.get_ref().imagePaintBlendFilterByName
-    @staticmethod
-    def set_image_paint_blend_filter_by_name(v): Accessor.get_ref().imagePaintBlendFilterByName = v
     @staticmethod
     def get_sculpt_limit_row_count(): return Accessor.get_ref().sculptLimitRowCount
     @staticmethod

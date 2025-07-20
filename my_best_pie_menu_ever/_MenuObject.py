@@ -1,18 +1,13 @@
 import bpy
-import sys
 import importlib
 from bpy.app.translations import pgettext_iface as iface_
-# fmt:off
-modules = (
-    "my_best_pie_menu_ever._Util",
+from . import (
+    _Util,
 )
-for mod_name in modules:
-    if mod_name in sys.modules:
-        importlib.reload(sys.modules[mod_name])
-    else:
-        __import__(mod_name)
-from . import _Util
-# fmt:on
+for m in (
+    _Util,
+):
+    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------

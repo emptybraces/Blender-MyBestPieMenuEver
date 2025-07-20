@@ -1,10 +1,16 @@
 import bpy
+import importlib
 import blf
 import colorsys
 import time
 from math import sin
-from . import _Util
-
+from . import (
+    _Util,
+)
+for m in (
+    _Util,
+):
+    importlib.reload(m)
 FONT_SIZE_BASE = 20
 FONT_SIZE_NORMAL = FONT_SIZE_BASE * 0.8
 FONT_SIZE_INFO = FONT_SIZE_BASE * 0.55

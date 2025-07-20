@@ -1,17 +1,20 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-    importlib.reload(_UtilInput)
-    importlib.reload(_AddonPreferences)
-    importlib.reload(g)
-else:
-    from . import _Util
-    from . import _UtilInput
-    from . import _AddonPreferences
-    from . import g
 import bpy
+import importlib
 import os
 from bpy.app.translations import pgettext_iface as iface_
+from . import (
+    g,
+    _Util,
+    _UtilInput,
+    _AddonPreferences,
+)
+for m in (
+    g,
+    _Util,
+    _UtilInput,
+    _AddonPreferences,
+):
+    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------

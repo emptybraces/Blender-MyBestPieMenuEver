@@ -14,7 +14,7 @@ website = "https://emptybraces.github.io"
 # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
 tags = ["3D View", "User Interface"]
 
-blender_version_min = "4.2.1"
+blender_version_min = "4.3.0"
 ## Optional: Blender version that the extension does not support, earlier versions are supported.
 ## This can be omitted and defined later on the extensions platform if an issue is found.
 # blender_version_max = "5.1.0"
@@ -37,7 +37,7 @@ files = "Import/export FBX from/to disk"
 # - [EditMesh] 頂点マージのミラー機能の追加。
 # - [EditMesh] エッジループ(マージ)のミラー機能の追加。
 # - [EditMesh] 頂点連結のミラー機能の追加。
-# - [Sculpt] メニュー配置改善、エッセンシャルブラシのパラメータセーブ／ロードの実装。
+# - [ImagePaint] シフトキーブラシのエラー解消&登録処理の追加。
 # - [SwitchObjectData] Gキーでパネルを移動できるようにした。
 # - [SwitchObjectData] 対象データ選択時、自動的に最適なモードに切り替わるようにした。
 # - [Bugfix] SwitchObjectData項目選択ロジックが不安定。
@@ -45,6 +45,7 @@ files = "Import/export FBX from/to disk"
 # - [Bugfix] SwitchObjectData/VertexGroupで、アクティブなVertexGroupがないときリストが非表示になる。
 # - [Bugfix] モード変更ボタンのテキスト見切れ。
 # - [Bugfix] ウェイトペイント時のボーン非表示処理が動かない
+# - [Bugfix] パイメニューが閉じない、または点滅するバグを修正
 # v2.6.0
 # - [Object/EditMesh] ゴースト表示機能を実装。
 # - [EditMesh] 頂点固定機能を実装。

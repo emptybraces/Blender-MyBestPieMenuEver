@@ -1,10 +1,13 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(_UtilBlf)
-else:
-    from . import _UtilBlf
 import bpy
+import importlib
 from typing import Callable
+from . import (
+    _UtilBlf,
+)
+for m in (
+    _UtilBlf,
+):
+    importlib.reload(m)
 ver = (2, 7, 0)
 is_force_cancelled_piemenu_modal = False  # メニューモーダルの強制キャンセル。
 is_request_reopen_piemenu = False  # パイメニュー再起動リクエスト

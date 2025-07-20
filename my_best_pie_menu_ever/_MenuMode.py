@@ -1,11 +1,14 @@
-﻿if "bpy" in locals():
-    import importlib
-    importlib.reload(_Util)
-else:
-    from . import _Util
-import bpy
-import bmesh
+﻿import bpy
+import importlib
 from bpy.app.translations import pgettext_iface as iface_
+from . import (
+    _Util,
+)
+for m in (
+    _Util,
+):
+    importlib.reload(m)
+
 # --------------------------------------------------------------------------------
 # モード切り替えメニュー
 # --------------------------------------------------------------------------------

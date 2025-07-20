@@ -1,26 +1,22 @@
 import os
 import time
 import bpy
-import sys
 import importlib
 import bmesh
 from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
 from bpy.app.translations import pgettext_iface as iface_
-# fmt:off
-modules = (
-    "my_best_pie_menu_ever.g",
-    "my_best_pie_menu_ever._Util",
-    "my_best_pie_menu_ever._AddonPreferences",
+from . import (
+    g,
+    _Util,
+    _AddonPreferences,
 )
-for mod_name in modules:
-    if mod_name in sys.modules:
-        importlib.reload(sys.modules[mod_name])
-    else:
-        __import__(mod_name)
-from . import g, _Util, _AddonPreferences
-# fmt:on
-
+for m in (
+    g,
+    _Util,
+    _AddonPreferences,
+):
+    importlib.reload(m)
 
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
@@ -28,9 +24,6 @@ from . import g, _Util, _AddonPreferences
 g_is_filter_mode = False
 g_is_filter_set_mode_enter = False
 g_filter_mode_enter_lasttime = 0
-# g_essential_brush_path = os.path.join(
-#     bpy.utils.system_resource("DATAFILES"),
-#     "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
 
 
 def draw(pie, context):
@@ -137,9 +130,8 @@ def draw(pie, context):
     for i in TOOL_INFO:
         if g_is_filter_set_mode_enter or not g_is_filter_mode:
             if i[0] == "-":
-                box = rr.box()
-                box.label(text=i[1:])
-                cc = box.column(align=False)
+                cc = rr.box().column(align=True)
+                cc.label(text=i[1:])
                 continue
             if g_is_filter_set_mode_enter:
                 _brush_filter_operator(context, cc, ' '.join(word.capitalize() for word in i[8:].split('_')), i, _is_in_filter(i))
@@ -158,8 +150,8 @@ def draw(pie, context):
             if i[0] == "-":
                 if "Utilities" not in i:
                     box = rr.box()
-                box.label(text=i[1:])
                 cc = box.column(align=False)
+                cc.label(text=i[1:])
                 continue
             if g_is_filter_set_mode_enter:
                 _brush_filter_operator(context, cc, i, i, _is_in_filter(i))
@@ -172,27 +164,28 @@ def draw(pie, context):
             _callback_operator_select_brush(context, cc, i)
             if (cnt := cnt+1) % limit_rows == 0:
                 cc = rr.column(align=True)
-    # Custom
-    if g_is_filter_set_mode_enter or not g_is_filter_mode:
-        box = rr.box()
-        box.label(text="User")
-        rrr = box.row(align=True)
-        cc = rrr.column(align=False)
-        for i in [i for i in bpy.data.brushes if i.use_paint_sculpt and i.name not in BRUSH_INFO]:
-            if g_is_filter_set_mode_enter:
-                _brush_filter_operator(context, cc, i.name, i.name, _is_in_filter(i.name))
-            else:
-                _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
-            if (cnt := cnt+1) % limit_rows == 0:
-                cc = rrr.column(align=True)
-    # フィルターモード
-    else:
-        for i in [i for i in bpy.data.brushes if i.use_paint_sculpt and i.name not in BRUSH_INFO]:
-            if not _is_in_filter(i.name):
-                continue  # 表示しない
-            _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
-            if (cnt := cnt+1) % limit_rows == 0:
-                cc = rrr.column(align=True)
+    # Local/Custom
+    # 任意のブラシのcontext.tool_settings.image_paint.brush_asset_referenceにアクセスする術がないため不可能
+    # if g_is_filter_set_mode_enter or not g_is_filter_mode:
+    #     box = rr.box()
+    #     box.label(text="User")
+    #     rrr = box.row(align=True)
+    #     cc = rrr.column(align=False)
+    #     for i in [i for i in bpy.data.brushes if i.use_paint_sculpt and i.name not in BRUSH_INFO]:
+    #         if g_is_filter_set_mode_enter:
+    #             _brush_filter_operator(context, cc, i.name, i.name, _is_in_filter(i.name))
+    #         else:
+    #             _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
+    #         if (cnt := cnt+1) % limit_rows == 0:
+    #             cc = rrr.column(align=True)
+    # # フィルターモード
+    # else:
+    #     for i in [i for i in bpy.data.brushes if i.use_paint_sculpt and i.name not in BRUSH_INFO]:
+    #         if not _is_in_filter(i.name):
+    #             continue  # 表示しない
+    #         _Util.MPM_OT_SetPointer.operator(cc, i.name, tool, "brush", i, depress=current_brush == i)
+    #         if (cnt := cnt+1) % limit_rows == 0:
+    #             cc = rrr.column(align=True)
 
     if g_is_filter_set_mode_enter:
         return
@@ -243,27 +236,18 @@ def draw(pie, context):
     # Applyメニュー
     # mask
     r = layout_start_apply.row(align=True)
-    r.alignment = "LEFT"
     r.label(text=MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selected").is_invert = True
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Selection").is_invert = True
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeMaskWithSelectedVert.bl_idname, "Invert").is_invert = False
     op = _Util.layout_operator(r, "paint.mask_flood_fill", "Clear")
     op.mode = "VALUE"
     op.value = 0
     # face set
     r = layout_start_apply.row(align=True)
-    r.alignment = "LEFT"
     r.label(text=MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_label)
-    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selected").mode = "Selected"
+    _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Selection").mode = "Selected"
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Invert").mode = "Unselected"
     _Util.layout_operator(r, MPM_OT_Sculpt_MakeFaceSetWithSelectedVert.bl_idname, "Clear").mode = "Clear"
-    # ブラシセーブロード
-    r = layout_start_apply.row(align=True)
-    r.alignment = "LEFT"
-    r.label(text="Essential Brush Params")
-    _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushSave.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushLoad.bl_idname)
-    _Util.layout_operator(r, MPM_OT_Sculpt_EssentialBrushRemove.bl_idname)
 
 # --------------------------------------------------------------------------------
 
@@ -361,57 +345,6 @@ class MPM_OT_Sculpt_AutoWireframeEnable(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_Sculpt_EssentialBrushSave(bpy.types.Operator):
-    bl_idname = "mpm.sculpt_essential_brush_save"
-    bl_label = "Save"
-
-    @classmethod
-    def poll(cls, context):
-        return "essentials_brushes-mesh" in context.tool_settings.sculpt.brush.name_full
-
-    def execute(self, context):
-        brush = context.tool_settings.sculpt.brush
-        config = g.get_config()
-        brush_params = config.setdefault("brush_params", {})
-        brush_data = brush_params.setdefault(brush.name, {})
-        brush_data["strength"] = round(brush.strength, 3)
-        g.save_config()
-        return {"FINISHED"}
-
-
-class MPM_OT_Sculpt_EssentialBrushLoad(bpy.types.Operator):
-    bl_idname = "mpm.sculpt_essential_brush_load"
-    bl_label = "Load"
-
-    @classmethod
-    def poll(cls, context):
-        brush = context.tool_settings.sculpt.brush
-        return "essentials_brushes-mesh" in brush.name_full and g.get_config_brush_params(brush.name) != None
-
-    def execute(self, context):
-        brush = context.tool_settings.sculpt.brush
-        brush_data = g.get_config_brush_params(brush.name)
-        brush.strength = brush_data["strength"]
-        return {"FINISHED"}
-
-
-class MPM_OT_Sculpt_EssentialBrushRemove(bpy.types.Operator):
-    bl_idname = "mpm.sculpt_essential_brush_remove"
-    bl_label = "Remove"
-
-    @classmethod
-    def poll(cls, context):
-        brush = context.tool_settings.sculpt.brush
-        return "essentials_brushes-mesh" in brush.name_full and g.get_config_brush_params(brush.name) != None
-
-    def execute(self, context):
-        brush = context.tool_settings.sculpt.brush
-        config = g.get_config()
-        params = config.get("brush_params", {})
-        if brush.name in params:
-            del params[brush.name]
-            g.save_config()
-        return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
 
@@ -419,9 +352,6 @@ classes = (
     MPM_OT_Sculpt_MakeMaskWithSelectedVert,
     MPM_OT_Sculpt_MakeFaceSetWithSelectedVert,
     MPM_OT_Sculpt_AutoWireframeEnable,
-    MPM_OT_Sculpt_EssentialBrushSave,
-    MPM_OT_Sculpt_EssentialBrushLoad,
-    MPM_OT_Sculpt_EssentialBrushRemove,
 )
 
 

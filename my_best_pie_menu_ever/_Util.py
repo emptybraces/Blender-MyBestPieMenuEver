@@ -1,11 +1,5 @@
-if "bpy" in locals():
-    import importlib
-    importlib.reload(_UtilBlf)
-    importlib.reload(g)
-else:
-    from . import _UtilBlf
-    from . import g
 import bpy
+import importlib
 import bmesh
 import math
 from typing import Callable
@@ -17,6 +11,15 @@ from bpy.app.translations import (
     pgettext_tip as tip_,
     contexts as i18n_contexts,
 )
+from . import (
+    g,
+    _UtilBlf,
+)
+for m in (
+    g,
+    _UtilBlf,
+):
+    importlib.reload(m)
 VEC3 = (lambda: Vector((0, 0, 0)))
 VEC3_X = (lambda: Vector((1, 0, 0)))
 VEC3_Y = (lambda: Vector((0, 1, 0)))
