@@ -3,9 +3,11 @@ import importlib
 from bpy.app.translations import pgettext_iface as iface_
 from . import (
     _Util,
+    g,
 )
 for m in (
     _Util,
+    g,
 ):
     importlib.reload(m)
 
@@ -15,24 +17,25 @@ for m in (
 
 
 def PieMenuDraw_ChangeModeLast(layout, context):
-    # print(context.scene.mpm_prop.PrevModeName)
-    row = layout.row()
-    if context.scene.mpm_prop.PrevModeName == "OBJECT":
-        DrawOperatorObjectMode(row, context)
-    elif context.scene.mpm_prop.PrevModeName == "EDIT_MESH" or context.scene.mpm_prop.PrevModeName == "EDIT_ARMATURE":
-        DrawOperatorEditMode(row, context)
-    elif context.scene.mpm_prop.PrevModeName == "SCULPT":
-        DrawOperatorSculptMode(row, context)
-    elif context.scene.mpm_prop.PrevModeName == "POSE":
-        DrawOperatorPoseMode(row, context)
-    elif context.scene.mpm_prop.PrevModeName == "PAINT_WEIGHT":
-        DrawOperatorWeightPaintMode(row, context)
-    elif context.scene.mpm_prop.PrevModeName == "PAINT_TEXTURE":
-        DrawOperatorTexturePaintMode(row, context)
-    elif context.scene.mpm_prop.PrevModeName == "PAINT_VERTEX":
-        DrawOperatorVertexPaintMode(row, context)
-    else:
-        row.separator()  # これで空白を描画して、位置を調整してる
+    sels, mode = g.get_last_objs_and_mode()
+    r = layout.row()
+    r.alignment = "LEFT"
+    if sels[0] != None:
+        _Util.layout_operator(r, MPM_OT_ChangePrevMode.bl_idname, f"{mode} | {sels[0].name}")
+    # if context.scene.mpm_prop.PrevModeName == "OBJECT":
+    #     DrawOperatorObjectMode(r, context)
+    # elif context.scene.mpm_prop.PrevModeName == "EDIT_MESH" or context.scene.mpm_prop.PrevModeName == "EDIT_ARMATURE":
+    #     DrawOperatorEditMode(r, context)
+    # elif context.scene.mpm_prop.PrevModeName == "SCULPT":
+    #     DrawOperatorSculptMode(r, context)
+    # elif context.scene.mpm_prop.PrevModeName == "POSE":
+    #     DrawOperatorPoseMode(r, context)
+    # elif context.scene.mpm_prop.PrevModeName == "PAINT_WEIGHT":
+    #     DrawOperatorWeightPaintMode(r, context)
+    # elif context.scene.mpm_prop.PrevModeName == "PAINT_TEXTURE":
+    #     DrawOperatorTexturePaintMode(r, context)
+    # elif context.scene.mpm_prop.PrevModeName == "PAINT_VERTEX":
+    #     DrawOperatorVertexPaintMode(r, context)
 
 
 def draw_pie_menu(layout, context):
@@ -292,12 +295,33 @@ class MPM_OT_ChangeModePose(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class MPM_OT_ChangePrevMode(bpy.types.Operator):
+    bl_idname = "mpm.mode_change_last"
+    bl_label = "Change Mode to last"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return g.get_last_objs_and_mode()[0] != None
+
+    def execute(self, context):
+        sels, mode = g.get_last_objs_and_mode()
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+        _Util.select_active(sels[0])
+        for i in sels[1:]:
+            _Util.select_add(sels[0])
+        bpy.ops.object.mode_set(mode=mode)
+        return {"FINISHED"}
+
+
 classes = (
     MPM_OT_ChangeMode,
     MPM_OT_ChangeModeWithArmature,
     MPM_OT_ChangeSculptModeWithMask,
     MPM_OT_ChangeSculptModeWithFaceSets,
     MPM_OT_ChangeModePose,
+    MPM_OT_ChangePrevMode,
     MPM_OT_ChangeUITypeUV,
     MPM_OT_ChangeUITypeImage,
 )

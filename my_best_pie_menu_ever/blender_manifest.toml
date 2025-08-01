@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "2.7.1"
+version = "2.8.0"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -28,6 +28,11 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
+# v2.8.0
+# - [WeightPaint] ウェイト設定/削除機能に非選択頂点を対象にするオプションを追加。
+# - [WeightPaint] 選択中のポーズボーンのミラーボーンを選択する機能を追加。
+# - [WeightPaint] ポーズボーンのミラーを設定項目を追加。
+# - [Utility] Armatureのアクションスロットを追加。
 # v2.7.1
 # - [Bugfix] スカルプトブラシのフィルタモードが機能していない。
 # - ミニマムバージョンを4.3.0にアップ。

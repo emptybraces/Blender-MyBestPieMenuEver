@@ -33,6 +33,7 @@ class OT_ReinstallAddon(bpy.types.Operator):
                 if ref:
                     exist_module = True
                     self.dict = ref.dict()
+            bpy.ops.preferences.addon_disable(module=addon_name)
             bpy.ops.preferences.addon_remove(module=addon_name)
             bpy.ops.preferences.addon_refresh()
         # インストール

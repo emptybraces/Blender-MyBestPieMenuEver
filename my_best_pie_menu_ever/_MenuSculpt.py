@@ -327,23 +327,34 @@ class MPM_OT_Sculpt_AutoWireframeEnable(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        from ._PieMenu import mode_change_handler
-        context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode = not context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
-        context.active_object.show_wire = context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode
-        indices = []
-        for i, e in enumerate(bpy.app.handlers.depsgraph_update_pre):
-            if e.__name__ == mode_change_handler.__name__:
-                # print("atta", i)
-                indices.append(i)
-        for i in reversed(indices):
-            # print("del", i)
-            del bpy.app.handlers.depsgraph_update_pre[i]
-        if context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
-            bpy.app.handlers.depsgraph_update_pre.append(mode_change_handler)
+        prop = context.scene.mpm_prop
+        prop.IsAutoEnableWireframeOnSculptMode = not prop.IsAutoEnableWireframeOnSculptMode
+        context.active_object.show_wire = prop.IsAutoEnableWireframeOnSculptMode
+        if prop.IsAutoEnableWireframeOnSculptMode:
+            register_on_mode_change()
+        else:
+            bpy.msgbus.clear_by_owner("mpm.sculpt.on_mode_change")
         return {"FINISHED"}
 
-
 # --------------------------------------------------------------------------------
+
+
+def on_mode_change():
+    active = bpy.context.active_object
+    if active and bpy.context.scene.mpm_prop.IsAutoEnableWireframeOnSculptMode:
+        active.show_wire = bpy.context.mode == "SCULPT"
+
+
+msgbus_owner = "mpm.sculpt.on_mode_change"
+
+
+def register_on_mode_change():
+    bpy.msgbus.subscribe_rna(
+        key=(bpy.types.Object, "mode"),
+        owner=msgbus_owner,
+        args=(),
+        notify=on_mode_change,
+    )
 
 
 classes = (
@@ -356,9 +367,16 @@ classes = (
 def register():
     _Util.register_classes(classes)
 
+    def __register_safe_msgbus():
+        prop = bpy.context.scene.mpm_prop
+        if prop.IsAutoEnableWireframeOnSculptMode:
+            register_on_mode_change()
+    bpy.app.timers.register(__register_safe_msgbus, persistent=True)
+
 
 def unregister():
     _Util.unregister_classes(classes)
+    bpy.msgbus.clear_by_owner(msgbus_owner)
 
 
 BRUSH_INFO = [

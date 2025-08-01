@@ -201,7 +201,19 @@ def DrawView3D(layout, context):
         _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
         if armature != None:
             c.popover(panel=_MenuPose.MPM_PT_Pose_BoneCollectionPopover.bl_idname, icon="GROUP_BONE")
-            _Util.layout_prop(c, armature.data, "display_type", isActive=armature != None)
+            _Util.layout_prop(c, armature.data, "display_type")
+            animated_id = armature
+            c.template_action(animated_id, new="action.new", unlink="action.unlink")
+            adt = animated_id and animated_id.animation_data
+            if adt and adt.action and adt.action.is_action_layered:
+                r = c.row(align=True)
+                r.context_pointer_set("animated_id", animated_id)
+                r.template_search(
+                    adt, "action_slot",
+                    adt, "action_suitable_slots",
+                    new="anim.slot_new_for_id",
+                    unlink="anim.slot_unassign_from_id",
+                )
 
     # -------------------------------
     # 次の列
