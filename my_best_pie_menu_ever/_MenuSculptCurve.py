@@ -1,12 +1,14 @@
-import bpy
-import importlib
-from . import (
-    _Util,
-)
-for m in (
-    _Util,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+    )
 # --------------------------------------------------------------------------------
 # カーブスカルプトモードメニュー
 # 'use_paint_antialiasing', 'use_paint_grease_pencil', 'use_paint_image', 'use_paint_sculpt', 'use_paint_sculpt_curves', 'use_paint_uv_sculpt', 'use_paint_vertex', 'use_paint_weight'

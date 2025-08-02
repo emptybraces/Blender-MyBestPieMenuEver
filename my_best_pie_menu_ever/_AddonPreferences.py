@@ -1,17 +1,19 @@
-﻿import importlib
-import bpy
+﻿import colorsys
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+    )
 import rna_keymap_ui
 from bpy.props import IntProperty, StringProperty, BoolProperty, FloatVectorProperty
-import colorsys
-from . import (
-    g,
-    _Util,
-)
-for m in (
-    g,
-    _Util,
-):
-    importlib.reload(m)
 addon_keymaps = []
 
 
@@ -48,6 +50,8 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                                         default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.9), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
     ghostColorVertex: FloatVectorProperty(name="GhostColor: Vert", subtype="COLOR", size=4,
                                           default=(*colorsys.hsv_to_rgb(0.0, 0.0, 0.9), 0.5), min=0.0, max=1.0, description="Colors used for Ghost display")
+    modeHistoryLimit: IntProperty(name="ModeHistory Limit", default=20, min=10, max=30,
+                                  description="Enter the maximum number of mode history entries to keep")
 
     def __get_imagepaint_brush_names(self, context):
         return [(i.name, i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_image]
@@ -62,30 +66,30 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
     # imagePaintBrushNameDropDown: bpy.props.EnumProperty(
     #     name="", items=__get_imagepaint_brush_names, set=__select_dropdown_imagepaint_filter)
 
-    def __get_blend_names(self, context):
-        return [(i.lower(), i.lower(), "") for i in _Util.enum_identifier(bpy.types.Brush, "blend")]
+    # def __get_blend_names(self, context):
+    #     return [(i.lower(), i.lower(), "") for i in _Util.enum_identifier(bpy.types.Brush, "blend")]
 
-    def __select_dropdown_blend_names(self, value):
-        value = self.__get_blend_names(None)[value][1]
-        if value in self.imagePaintBlendFilterByName:
-            return
-        if self.imagePaintBlendFilterByName:
-            self.imagePaintBlendFilterByName += ', '
-        self.imagePaintBlendFilterByName += value
-    imagePaintBlendDropDown: bpy.props.EnumProperty(name="", items=__get_blend_names, set=__select_dropdown_blend_names)
+    # def __select_dropdown_blend_names(self, value):
+    #     value = self.__get_blend_names(None)[value][1]
+    #     if value in self.imagePaintBlendFilterByName:
+    #         return
+    #     if self.imagePaintBlendFilterByName:
+    #         self.imagePaintBlendFilterByName += ', '
+    #     self.imagePaintBlendFilterByName += value
+    # imagePaintBlendDropDown: bpy.props.EnumProperty(name="", items=__get_blend_names, set=__select_dropdown_blend_names)
 
-    def __get_sculpt_brush_names(self, context):
-        return [(i.name.lower(), i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_sculpt]
+    # def __get_sculpt_brush_names(self, context):
+    #     return [(i.name.lower(), i.name.lower(), "") for i in bpy.data.brushes if i.use_paint_sculpt]
 
-    def __select_dropdown_sclupt_brush_filter(self, value):
-        value = self.__get_sculpt_brush_names(None)[value][1]
-        if value in self.sculptBrushFilterByName:
-            return
-        if self.sculptBrushFilterByName:
-            self.sculptBrushFilterByName += ', '
-        self.sculptBrushFilterByName += value
-    sculptBrushNameDropDown: bpy.props.EnumProperty(
-        name="", items=__get_sculpt_brush_names, set=__select_dropdown_sclupt_brush_filter)
+    # def __select_dropdown_sclupt_brush_filter(self, value):
+    #     value = self.__get_sculpt_brush_names(None)[value][1]
+    #     if value in self.sculptBrushFilterByName:
+    #         return
+    #     if self.sculptBrushFilterByName:
+    #         self.sculptBrushFilterByName += ', '
+    #     self.sculptBrushFilterByName += value
+    # sculptBrushNameDropDown: bpy.props.EnumProperty(
+    #     name="", items=__get_sculpt_brush_names, set=__select_dropdown_sclupt_brush_filter)
 
     def draw(self, context):
         def sub_row(self, layout, prop1, prop2):
@@ -98,6 +102,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
         c = layout.box().column(heading="Utility")
         c.prop(self, "secondLanguage")
         c.prop(self, "openFilePathList")
+        c.prop(self, "modeHistoryLimit")
 
         c = layout.box().column(heading="EditMesh")
         c.prop(self, "ghostColorFace")
@@ -106,7 +111,7 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
 
         c = layout.box().column(heading="Image Paint")
         c.prop(self, "imagePaintBrushFilterByName")
-        sub_row(self, c, "imagePaintBlendFilterByName", "imagePaintBlendDropDown")
+        c.prop(self, "imagePaintBlendFilterByName")
         c.prop(self, "imagePaintShiftBrushInfo")
         b = self.image_paint_is_ctrl_behaviour_invert_or_erasealpha
         r = c.row(align=True)
@@ -143,10 +148,12 @@ class MT_AddonPreferences(bpy.types.AddonPreferences):
                         break
         # box.operator(MPM_OT_RevertKeymap.bl_idname)
 
+    # 増やしたりしたら手動で再インストールする必要あり
     def dict(self):
         return {
             "secondLanguage": self.secondLanguage,
             "openFilePathList": self.openFilePathList,
+            "modeHistoryLimit": self.modeHistoryLimit,
             # "isDebug": getattr(self, "isDebug", False),
             "imagePaintBrushFilterByName": self.imagePaintBrushFilterByName,
             "imagePaintBlendFilterByName": self.imagePaintBlendFilterByName,

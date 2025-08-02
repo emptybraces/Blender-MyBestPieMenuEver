@@ -1,12 +1,14 @@
-import bpy
-import importlib
-from . import (
-    _Util,
-)
-for m in (
-    _Util,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+    )
 # --------------------------------------------------------------------------------
 # ポーズメニュー
 # --------------------------------------------------------------------------------
@@ -58,34 +60,6 @@ def draw_layout_3rdparty(context, layout):
         _Util.layout_operator(r2, MPM_OT_Pose_ARP_SnapIKFK.bl_idname, text="IK").type = "IK_Leg"
 
 
-def draw_layout_bone_collection(layout, arm):
-    def _get_all_bone_collections(arm):
-        result = []
-
-        def collect_recursive(collection, level=0):
-            result.append((collection, level))
-            for child in collection.children:
-                collect_recursive(child, level + 1)
-        for col in arm.collections:
-            collect_recursive(col)
-        return result
-
-    selected_col_names = set()
-    if bpy.context.mode in ("POSE", "PAINT_WEIGHT"):
-        for pbone in bpy.context.selected_pose_bones:
-            selected_col_names.update(col.name for col in pbone.bone.collections)
-    all_collections = _get_all_bone_collections(arm)
-    for col, level in all_collections:
-        row = layout.row(align=True)
-        row.separator(factor=level * 1)  # 階層インデント
-        # icon = 'TRIA_DOWN' if BoneCollectionState.foldout_state.get(col.name, True) else 'TRIA_RIGHT'
-        # op = row.operator("view3d.toggle_bone_collection_fold", text="", icon=icon, emboss=False)
-        row.label(text=col.name)
-        row.label(text="", icon="DOT" if col.name in selected_col_names else "NONE")
-        row.prop(col, "is_visible", text="", toggle=True, icon="HIDE_OFF" if col.is_visible else "HIDE_ON")
-        row.prop(col, "is_solo", text="", toggle=True, icon="SOLO_ON" if col.is_solo else "SOLO_OFF")
-
-
 class MPM_PT_Pose_BoneCollectionPopover(bpy.types.Panel):
     bl_idname = "MPM_PT_pose_bone_collection_popover"
     bl_label = "Bone Collections"
@@ -94,7 +68,32 @@ class MPM_PT_Pose_BoneCollectionPopover(bpy.types.Panel):
     bl_ui_units_x = 12  # 横幅
 
     def draw(self, context):
-        draw_layout_bone_collection(self.layout.column(align=True), _Util.get_armature(context.object).data)
+        def __get_all_bone_collections(arm):
+            result = []
+            for col in arm.collections:
+                __collect_recursive(result, col)
+            return result
+
+        def __collect_recursive(result, collection, level=0):
+            result.append((collection, level))
+            for child in collection.children:
+                __collect_recursive(result, child, level + 1)
+        c = self.layout.column(align=True)
+        arm = _Util.get_armature(context.object).data
+
+        selected_col_names = set()
+        if bpy.context.mode in ("POSE", "PAINT_WEIGHT"):
+            for pbone in bpy.context.selected_pose_bones:
+                selected_col_names.update(col.name for col in pbone.bone.collections)
+        for col, level in __get_all_bone_collections(arm):
+            row = c.row(align=True)
+            row.separator(factor=level * 1)  # 階層インデント
+            # icon = 'TRIA_DOWN' if BoneCollectionState.foldout_state.get(col.name, True) else 'TRIA_RIGHT'
+            # op = row.operator("view3d.toggle_bone_collection_fold", text="", icon=icon, emboss=False)
+            row.label(text=col.name)
+            row.label(text="", icon="DOT" if col.name in selected_col_names else "NONE")
+            row.prop(col, "is_visible", text="", toggle=True, icon="HIDE_OFF" if col.is_visible else "HIDE_ON")
+            row.prop(col, "is_solo", text="", toggle=True, icon="SOLO_ON" if col.is_solo else "SOLO_OFF")
 # --------------------------------------------------------------------------------
 
 

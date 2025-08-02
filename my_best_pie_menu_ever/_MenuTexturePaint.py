@@ -1,20 +1,22 @@
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+        _AddonPreferences,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+        _AddonPreferences,
+    )
 import os
-import importlib
-import bpy
 import time
 import mathutils
 from bl_ui.properties_paint_common import UnifiedPaintPanel
-from . import (
-    g,
-    _Util,
-    _AddonPreferences,
-)
-for m in (
-    g,
-    _Util,
-    _AddonPreferences,
-):
-    importlib.reload(m)
 key_ctrl_lmb_erasealpha = None
 key_ctrl_lmb_invert = None
 key_keydown_ctrl = None

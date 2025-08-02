@@ -56,41 +56,9 @@ def space_view_command_display_stack_remove(id):
     space_view_command_display_start_stack = [x for x in space_view_command_display_start_stack if x["id"] != id]
 
 
-# -------------------------------------
-# msgbus関係
-# -------------------------------------
-history_objs_and_mode = [([None], ""), ([None], "")]
-
-
-def on_mode_change():
-    global prev_obj_and_mode
-    obj = bpy.context.object
-    active = bpy.context.active_object
-    if obj:
-        selected = [active] + [obj for obj in bpy.context.selected_objects if obj != active]
-        history_objs_and_mode.insert(0, (selected, obj.mode))
-        print(history_objs_and_mode[0])
-        if 10 < len(history_objs_and_mode):
-            history_objs_and_mode.pop()
-
-
-def get_last_objs_and_mode():
-    return history_objs_and_mode[1]
-
-
-msgbus_owner = "mpm.g.on_mode_change"
-
-
 def register():
-    def __register_safe_msgbus():
-        bpy.msgbus.subscribe_rna(
-            key=(bpy.types.Object, "mode"),
-            owner=msgbus_owner,
-            args=(),
-            notify=on_mode_change,
-        )
-    bpy.app.timers.register(__register_safe_msgbus, persistent=True)
+    pass
 
 
 def unregister():
-    bpy.msgbus.clear_by_owner(msgbus_owner)
+    pass

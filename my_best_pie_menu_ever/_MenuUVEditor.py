@@ -1,14 +1,16 @@
-import bpy
-import importlib
-from . import (
-    _Util,
-    _MenuImageEditor,
-)
-for m in (
-    _Util,
-    _MenuImageEditor,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        _MenuImageEditor,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        _MenuImageEditor,
+    )
 # --------------------------------------------------------------------------------
 # UVEditorモードメニュー
 # --------------------------------------------------------------------------------

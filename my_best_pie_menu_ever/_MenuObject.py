@@ -1,13 +1,17 @@
-import bpy
-import importlib
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+    )
 from bpy.app.translations import pgettext_iface as iface_
-from . import (
-    _Util,
-)
-for m in (
-    _Util,
-):
-    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------

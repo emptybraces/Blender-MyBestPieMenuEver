@@ -1,30 +1,32 @@
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+        _UtilInput,
+        _UtilBlf,
+        _AddonPreferences,
+        _MenuPose,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+        _UtilInput,
+        _UtilBlf,
+        _AddonPreferences,
+        _MenuPose,
+    )
 import os
 import subprocess
-import bpy
 import bmesh
 import math
-import importlib
 from time import time
 from mathutils import Vector, Quaternion
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d
 from bpy.app.translations import pgettext_iface as iface_
-from . import (
-    g,
-    _Util,
-    _UtilInput,
-    _UtilBlf,
-    _AddonPreferences,
-    _MenuPose,
-)
-for m in (
-    g,
-    _Util,
-    _UtilInput,
-    _UtilBlf,
-    _AddonPreferences,
-    _MenuPose,
-):
-    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------

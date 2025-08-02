@@ -1,27 +1,29 @@
-import bpy
+if "bpy" in locals():
+    import importlib
+    for m in (
+        g,
+        _Util,
+        _UtilInput,
+        _UtilBlf,
+        _AddonPreferences,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        g,
+        _Util,
+        _UtilInput,
+        _UtilBlf,
+        _AddonPreferences,
+    )
 import bmesh
 import time
 import math
 import gpu
-import importlib
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
 from bpy.app.translations import pgettext_iface as iface_
-from . import (
-    g,
-    _Util,
-    _UtilInput,
-    _UtilBlf,
-    _AddonPreferences,
-)
-for m in (
-    g,
-    _Util,
-    _UtilInput,
-    _UtilBlf,
-    _AddonPreferences,
-):
-    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # オブジェクトモードメニュー
 # --------------------------------------------------------------------------------

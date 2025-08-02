@@ -1,44 +1,48 @@
-﻿import bpy
-import importlib
-import math
+﻿import math
 from mathutils import Vector
-from . import (
-    _Util,
-    _UtilBlf,
-    _MenuMode,
-    _MenuUtility,
-    _MenuObject,
-    _MenuEditMesh,
-    _MenuWeightPaint,
-    _MenuTexturePaint,
-    _MenuSculpt,
-    _MenuSculptCurve,
-    _MenuPose,
-    _MenuUVEditor,
-    _MenuImageEditor,
-    _PanelSelectionHistory,
-    _SwitchObjectData,
-    g,
-)
-for m in (
-    _Util,
-    _UtilBlf,
-    _MenuMode,
-    _MenuUtility,
-    _MenuObject,
-    _MenuEditMesh,
-    _MenuWeightPaint,
-    _MenuTexturePaint,
-    _MenuSculpt,
-    _MenuSculptCurve,
-    _MenuPose,
-    _MenuUVEditor,
-    _MenuImageEditor,
-    _PanelSelectionHistory,
-    _SwitchObjectData,
-    g,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        _UtilBlf,
+        _MenuMode,
+        _MenuModeHistory,
+        _MenuUtility,
+        _MenuObject,
+        _MenuEditMesh,
+        _MenuWeightPaint,
+        _MenuTexturePaint,
+        _MenuSculpt,
+        _MenuSculptCurve,
+        _MenuPose,
+        _MenuUVEditor,
+        _MenuImageEditor,
+        _PanelSelectionHistory,
+        _SwitchObjectData,
+        g,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        _UtilBlf,
+        _MenuMode,
+        _MenuModeHistory,
+        _MenuUtility,
+        _MenuObject,
+        _MenuEditMesh,
+        _MenuWeightPaint,
+        _MenuTexturePaint,
+        _MenuSculpt,
+        _MenuSculptCurve,
+        _MenuPose,
+        _MenuUVEditor,
+        _MenuImageEditor,
+        _PanelSelectionHistory,
+        _SwitchObjectData,
+        g,
+    )
 # --------------------------------------------------------------------------------
 # ルートメニュー
 # --------------------------------------------------------------------------------
@@ -54,7 +58,7 @@ class VIEW3D_MT_my_pie_menu(bpy.types.Menu):
         # 西、東、南、北、北西、北東、南西、南東
         pie = self.layout.menu_pie()
         # 西　最後に選択したモード
-        _MenuMode.PieMenuDraw_ChangeModeLast(pie, context)
+        _MenuModeHistory.draw_pie_menu(pie, context)
         # 東
         _SwitchObjectData.draw_pie_menu(pie, context)
         # 南
@@ -314,6 +318,7 @@ classes = (
 )
 modules = [
     _MenuMode,
+    _MenuModeHistory,
     _MenuUtility,
     _MenuObject,
     _MenuEditMesh,

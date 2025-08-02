@@ -1,18 +1,20 @@
-import bpy
-import importlib
-from . import (
-    g,
-    _Util,
-    _AddonPreferences,
-    _PieMenu,
-)
-for m in (
-    g,
-    _Util,
-    _AddonPreferences,
-    _PieMenu,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        g,
+        _Util,
+        _AddonPreferences,
+        _PieMenu,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        g,
+        _Util,
+        _AddonPreferences,
+        _PieMenu,
+    )
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",

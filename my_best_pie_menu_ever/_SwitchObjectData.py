@@ -1,20 +1,22 @@
-import bpy
-import importlib
-from . import (
-    g,
-    _Util,
-    _UtilInput,
-    _UtilBlf,
-    _AddonPreferences,
-)
-for m in (
-    g,
-    _Util,
-    _UtilInput,
-    _UtilBlf,
-    _AddonPreferences,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+        _UtilInput,
+        _UtilBlf,
+        _AddonPreferences,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+        _UtilInput,
+        _UtilBlf,
+        _AddonPreferences,
+    )
 
 
 def draw_pie_menu(layout, context):

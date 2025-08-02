@@ -1,25 +1,20 @@
-import bpy
-import importlib
+if "bpy" in locals():
+    import importlib
+    for m in (
+        g,
+        _UtilBlf,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        g,
+        _UtilBlf,
+    )
 import bmesh
 import math
 from typing import Callable
 from mathutils import Vector, Quaternion, Matrix
-from bpy.types import Panel, Menu, Operator
-from rna_prop_ui import PropertyPanel
-from bpy.app.translations import (
-    pgettext_iface as iface_,
-    pgettext_tip as tip_,
-    contexts as i18n_contexts,
-)
-from . import (
-    g,
-    _UtilBlf,
-)
-for m in (
-    g,
-    _UtilBlf,
-):
-    importlib.reload(m)
 VEC3 = (lambda: Vector((0, 0, 0)))
 VEC3_X = (lambda: Vector((1, 0, 0)))
 VEC3_Y = (lambda: Vector((0, 1, 0)))

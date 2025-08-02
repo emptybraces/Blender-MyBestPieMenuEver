@@ -1,15 +1,17 @@
-import bpy
 import os
-import importlib
-from . import (
-    g,
-    _Util,
-)
-for m in (
-    g,
-    _Util,
-):
-    importlib.reload(m)
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+    )
 # --------------------------------------------------------------------------------
 # ImageEditorモードメニュー
 # --------------------------------------------------------------------------------

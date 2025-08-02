@@ -1,23 +1,26 @@
-import bpy
-import importlib
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+        _UtilInput,
+        _AddonPreferences,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+        _UtilInput,
+        _AddonPreferences,
+    )
 import os
 from bpy.app.translations import pgettext_iface as iface_
-from . import (
-    g,
-    _Util,
-    _UtilInput,
-    _AddonPreferences,
-)
-for m in (
-    g,
-    _Util,
-    _UtilInput,
-    _AddonPreferences,
-):
-    importlib.reload(m)
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
+blur_brush = None
 
 
 def draw(pie, context):
@@ -88,15 +91,15 @@ def draw(pie, context):
     s = c.split(factor=0.2, align=True)
     _Util.layout_prop(s, current_brush, "use_accumulate")
     # ぼかしブラシの強さ
-    blur_brush = None
-    if bpy.data.brushes.get("Blur", None) == None:
+    global blur_brush
+    if not blur_brush:
         path = os.path.join(bpy.utils.system_resource("DATAFILES"), "assets", "brushes", "essentials_brushes-mesh_weight.blend")
         with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
             for i in data_from.brushes:
                 if i == "Blur":
                     data_to.brushes = [i]  # これでひとつだけロードしたことになる
                     break
-    blur_brush = bpy.data.brushes["Blur"]
+        blur_brush = bpy.data.brushes["Blur", path]
     if blur_brush:
         c.label(text="Blur Brush")
         s = c.split(factor=0.4, align=True)

@@ -1,20 +1,22 @@
+if "bpy" in locals():
+    import importlib
+    for m in (
+        _Util,
+        g,
+        _AddonPreferences,
+    ):
+        importlib.reload(m)
+else:
+    import bpy
+    from . import (
+        _Util,
+        g,
+        _AddonPreferences,
+    )
 import os
 import time
-import bpy
-import importlib
 import bmesh
 from bpy.app.translations import pgettext_iface as iface_
-from . import (
-    g,
-    _Util,
-    _AddonPreferences,
-)
-for m in (
-    g,
-    _Util,
-    _AddonPreferences,
-):
-    importlib.reload(m)
 
 # --------------------------------------------------------------------------------
 # スカルプトモードメニュー
@@ -22,6 +24,7 @@ for m in (
 g_is_filter_mode = False
 g_is_filter_set_mode_enter = False
 g_filter_mode_enter_lasttime = 0
+smooth_brush = None
 
 
 def draw(pie, context):
@@ -203,8 +206,8 @@ def draw(pie, context):
             cc = rr.column(align=True)
 
     # Smoothブラシの強さ
+    global smooth_brush
     unified_paint_settings = context.tool_settings.unified_paint_settings
-    smooth_brush = bpy.data.brushes.get("Smooth")
     if smooth_brush == None:
         path = os.path.join(bpy.utils.system_resource("DATAFILES"), "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
         with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):
@@ -212,7 +215,7 @@ def draw(pie, context):
                 if i == "Smooth":
                     data_to.brushes = [i]  # これでひとつだけロードしたことになる
                     break
-        smooth_brush = bpy.data.brushes.get("Smooth")
+        smooth_brush = bpy.data.brushes.get("Smooth", path)
     if smooth_brush != None:
         r = layout_start_smooth_brush
         r.enabled = not unified_paint_settings.use_unified_strength
