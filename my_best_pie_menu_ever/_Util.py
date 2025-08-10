@@ -274,9 +274,9 @@ stackable_draw_modals: dict[str, list[MPM_ModalMonitor]] = {}
 
 
 def selected_objects():
-    objs = set(bpy.context.selected_objects)
+    objs = [i for i in bpy.context.selected_objects if i != bpy.context.active_object and i != None]
     if bpy.context.active_object:
-        objs.add(bpy.context.active_object)
+        objs.insert(0, bpy.context.active_object)
     return objs
 
 

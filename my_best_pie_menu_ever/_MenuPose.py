@@ -163,6 +163,7 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
 
     def execute(self, context):
         current_mode = context.active_object.mode
+        sels = _Util.selected_objects()
         arm = _Util.get_armature(context.active_object)
         _Util.select_active(arm)
         # アーマチュア選択後じゃないと、ポーズモードに変更できない
@@ -184,6 +185,9 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
                 self.convert(arm.pose.bones["c_foot_fk.l"].bone, bpy.ops.pose.arp_leg_ik_to_fk_)
                 self.convert(arm.pose.bones["c_foot_fk.r"].bone, bpy.ops.pose.arp_leg_ik_to_fk_)
         if current_mode != "POSE":
+            _Util.select_active(sels[0])
+            for i in sels[1:]:
+                _Util.select_add(i)
             bpy.ops.object.mode_set(mode=current_mode)
         return {"FINISHED"}
 

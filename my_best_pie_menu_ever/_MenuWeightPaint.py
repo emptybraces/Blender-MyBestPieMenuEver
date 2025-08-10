@@ -3,6 +3,7 @@ if "bpy" in locals():
     for m in (
         _Util,
         g,
+        _MenuPose,
         _UtilInput,
         _AddonPreferences,
     ):
@@ -12,11 +13,13 @@ else:
     from . import (
         _Util,
         g,
+        _MenuPose,
         _UtilInput,
         _AddonPreferences,
     )
 import os
 from bpy.app.translations import pgettext_iface as iface_
+
 # --------------------------------------------------------------------------------
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
@@ -30,6 +33,7 @@ def draw(pie, context):
     r = box.row()
     brush_property_box = r.box()
     utility_box = r.box()
+    third_party_box = r.box()
 
     # icons
     r = topbar_menu
@@ -39,7 +43,7 @@ def draw(pie, context):
     r = r.split(factor=0.2, align=True)
     _Util.layout_prop(r, _AddonPreferences.Accessor.get_ref(), "weightPaintHideBone", "HideBoneOnPaint")
     # brushes
-    brush_property_box.label(text="Brush Property", icon="BRUSH_DATA")
+    brush_property_box.label(text="Current Brush Property", icon="BRUSH_DATA")
     current_brush = context.tool_settings.weight_paint.brush
     unified_paint_settings = context.tool_settings.unified_paint_settings
 
@@ -88,8 +92,13 @@ def draw(pie, context):
             is_use = current_brush.blend == i.identifier
             _Util.MPM_OT_SetString.operator(r2, iface_(i.name), current_brush, "blend", i.identifier, depress=is_use)
     # 蓄積
-    s = c.split(factor=0.2, align=True)
-    _Util.layout_prop(s, current_brush, "use_accumulate")
+    # s = c.split(factor=0.2, align=True)
+    r = c.row(align=True)
+    r.alignment = "LEFT"
+    _Util.layout_prop(r, current_brush, "use_accumulate")
+    # ミラートポロジ
+    _Util.layout_prop(r, context.object.data, "use_mirror_topology")
+
     # ぼかしブラシの強さ
     global blur_brush
     if not blur_brush:
@@ -101,7 +110,11 @@ def draw(pie, context):
                     break
         blur_brush = bpy.data.brushes["Blur", path]
     if blur_brush:
-        c.label(text="Blur Brush")
+        # s = c.row().split(factor=0.05)
+        # s.row()
+        # c = s.row().column()
+        c.separator(factor=2.5)
+        c.label(text="Blur Brush", icon="BRUSH_DATA")
         s = c.split(factor=0.4, align=True)
         r1 = s.row(align=True)
         r2 = s.row(align=True)
@@ -140,8 +153,12 @@ def draw(pie, context):
     MirrorVertexGroup(c, "VGroup Mirror")
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
     r = c.row(align=True)
-    _Util.layout_operator(r, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, icon="MOD_MASK").is_invert = False
-    _Util.layout_operator(r, MPM_OT_Weight_MaskActiveVertexGroup.bl_idname, "", icon="CLIPUV_HLT").is_invert = True
+    _Util.layout_operator(r, MPM_OT_Weight_MaskNonZeroVGroup.bl_idname, icon="MOD_MASK").is_invert = False
+    _Util.layout_operator(r, MPM_OT_Weight_MaskNonZeroVGroup.bl_idname, "", icon="CLIPUV_HLT").is_invert = True
+    _Util.layout_operator(c, MPM_OT_Weight_GradientExpand.bl_idname, icon="COLORSET_04_VEC")
+
+    # 3rdparty
+    _MenuPose.draw_layout_3rdparty(context, third_party_box)
 
 
 # --------------------------------------------------------------------------------
@@ -348,19 +365,33 @@ class MPM_OT_Weight_RemoveUnusedVertexGroup(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_Weight_MaskActiveVertexGroup(bpy.types.Operator):
-    bl_idname = "mpm.weight_mask_active_vgroup"
-    bl_label = "Mask Active Vgroup"
+class MPM_OT_Weight_MaskNonZeroVGroup(bpy.types.Operator):
+    bl_idname = "mpm.weight_mask_nonzero_vgroup"
+    bl_label = "Non-Zero Weight Mask"
     bl_options = {"REGISTER", "UNDO"}
-    bl_description = "Mask only the vertices with the current weight set"
+    bl_description = "Mask only the current weight set. Option: Invert mask"
     is_invert: bpy.props.BoolProperty()
 
     def execute(self, context):
         context.object.data.use_paint_mask_vertex = True
         _Util.deselect_all(context)
-        bpy.ops.object.vertex_group_select()
-        if self.is_invert:
-            bpy.ops.paint.vert_select_all(action='INVERT')
+        # 登録されていれば選択されてしまう。
+        # bpy.ops.object.vertex_group_select()
+        # if self.is_invert:
+        #     bpy.ops.paint.vert_select_all(action="INVERT")
+        # ウェイトが0より大きい頂点だけ選択
+        vg = context.object.vertex_groups.active
+        for v in context.object.data.vertices:
+            try:
+                weight = vg.weight(v.index)
+                if self.is_invert and weight <= 0.0:
+                    v.select = True
+                elif not self.is_invert and 0.0 < weight:
+                    v.select = True
+            # 頂点グループに登録されていない場合
+            except RuntimeError:
+                if self.is_invert:
+                    v.select = True
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
@@ -529,7 +560,7 @@ class MPM_OT_Weight_PoseBoneMirrorSelect(bpy.types.Operator):
         return False
 
     def execute(self, context):
-        mesh = bpy.context.active_object
+        mesh = context.active_object
         arm = mesh.find_armature()
         for obj in _Util.selected_objects():
             if obj.type == "ARMATURE" and obj == arm:
@@ -552,6 +583,70 @@ class MPM_OT_Weight_PoseBoneMirrorSelect(bpy.types.Operator):
         if name in group_names:
             mesh.vertex_groups.active_index = group_names.index(name)
         return {"FINISHED"}
+
+
+class MPM_OT_Weight_GradientExpand(bpy.types.Operator):
+    bl_idname = "mpm.weight_gradient_expand"
+    bl_label = "Gradient Weight Expand"
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Expand vertex selection and apply gradually decreasing weights"
+    steps: bpy.props.IntProperty(default=5, min=1)
+    max_weight: bpy.props.FloatProperty(default=1.0, min=0.0, max=1.0, description="Weight falloff bias (0=early, 0.5=linear, 1=late)")
+    weight_mode: bpy.props.EnumProperty(name="Weight Mode", description="How to apply weight", default='REPLACE',
+                                        items=[
+                                            ('REPLACE', "Replace", "Replace the weight"),
+                                            ('ADD', "Add", "Add to existing weight"),
+                                            ('SUBTRACT', "Subtract", "Subtract from existing weight"),
+                                        ])
+    gradation_bias: bpy.props.FloatProperty(default=0.5, min=0.0, max=1.0)
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj and obj.vertex_groups and obj.vertex_groups.active
+
+    def execute(self, context):
+        import bmesh
+        mesh = context.object.data
+        vg = context.object.vertex_groups.active
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bm.verts.ensure_lookup_table()
+        current = set(v for v in bm.verts if v.select)
+        visited = set(current)
+        for i in range(self.steps):
+            t = i / self.steps
+            weight = self.max_weight * self.biased_weight(t, self.gradation_bias)
+            for v in current:
+                vg.add([v.index], weight, self.weight_mode)
+            # 隣接頂点へ拡張する
+            next_current = set()
+            for v in current:
+                for e in v.link_edges:
+                    other = e.other_vert(v)
+                    if other not in visited:
+                        next_current.add(other)
+            visited |= next_current
+            current = next_current
+        bm.free()
+        return {"FINISHED"}
+
+    def biased_weight(self, t: float, bias: float) -> float:
+        t = max(0.0, min(1.0, t))
+        bias = max(0.0, min(1.0, bias))
+
+        if abs(bias - 0.5) < 1e-6:
+            return 1.0 - t  # リニア
+
+        if bias < 0.5:
+            k = bias * 2.0  # [0..1]
+            exponent = 1.0 + (1.0 - k) * 4.0  # exponent >=1
+            return (1.0 - t) ** exponent  # 始端寄りの減衰
+
+        else:
+            k = (bias - 0.5) * 2.0  # [0..1]
+            exponent = 1.0 + k * 4.0  # exponent >=1
+        return 1.0 - (t ** exponent)  # 終端寄りの減衰
 # --------------------------------------------------------------------------------
 
 
@@ -560,12 +655,13 @@ classes = (
     MPM_OT_Weight_VGroupMirrorActive,
     MPM_OT_Weight_VGroupMirrorOverwriteConfirm,
     MPM_OT_Weight_RemoveUnusedVertexGroup,
-    MPM_OT_Weight_MaskActiveVertexGroup,
+    MPM_OT_Weight_MaskNonZeroVGroup,
     MPM_OT_Weight_SetWeight,
     MPM_OT_Weight_RemoveWeight,
     MPM_OT_Weight_HideBoneOnPaintMonitorModal,
     MPM_OT_Weight_PoseBoneUseMirror,
     MPM_OT_Weight_PoseBoneMirrorSelect,
+    MPM_OT_Weight_GradientExpand,
 )
 
 

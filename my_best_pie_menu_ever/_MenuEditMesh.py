@@ -1588,7 +1588,7 @@ class MPM_OT_EditMesh_PinSelectedVertsModal(_Util.MPM_StackableViewportUI, bpy.t
 class MPM_OT_EditMesh_Ghost(_Util.MPM_StackableViewportUI, bpy.types.Operator):
     bl_idname = "mpm.editmesh_ghost"
     bl_label = "Add Ghost"
-    bl_description = "Add a ghost of the current selection. Listed below the viewport — click 'X' to remove."
+    bl_description = "Add a ghost of the current selection. Listed below the viewport — click 'X' to remove. Option: Hide selected mesh."
     with_hide:  bpy.props.BoolProperty()
 
     @classmethod

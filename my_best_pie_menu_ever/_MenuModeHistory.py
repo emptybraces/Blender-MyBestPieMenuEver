@@ -99,11 +99,10 @@ enable_history = True
 def on_mode_change():
     global prev_obj_and_mode
     obj = bpy.context.object
-    active = bpy.context.active_object
     if obj:
-        selected = [active] + [obj for obj in bpy.context.selected_objects if obj != active]
-        history_objs_and_mode.insert(0, (selected, obj.mode))
-        print(history_objs_and_mode[0])
+        sels = _Util.selected_objects()
+        history_objs_and_mode.insert(0, (sels, obj.mode))
+        # print(history_objs_and_mode[0])
         if _AddonPreferences.get_data().modeHistoryLimit < len(history_objs_and_mode):
             history_objs_and_mode.pop()
 
