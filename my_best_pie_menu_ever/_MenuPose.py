@@ -154,7 +154,7 @@ class MPM_OT_Pose_ShowInFrontArmature(bpy.types.Operator):
 class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
     bl_idname = "mpm.pose_arp_snapikfk"
     bl_label = "AutoRigPro: Snap IK-FK"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {"UNDO"}
     type: bpy.props.StringProperty()
 
     @classmethod
@@ -167,7 +167,7 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
         arm = _Util.get_armature(context.active_object)
         _Util.select_active(arm)
         # アーマチュア選択後じゃないと、ポーズモードに変更できない
-        arms = [i for i in bpy.context.selected_objects if i.type == "ARMATURE"]
+        arms = [i for i in context.selected_objects if i.type == "ARMATURE"]
         if 0 < len(arms) and current_mode != "POSE":
             bpy.ops.object.mode_set(mode="POSE")
         for arm in arms:

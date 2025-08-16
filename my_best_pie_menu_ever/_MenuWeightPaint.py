@@ -156,6 +156,10 @@ def draw(pie, context):
     _Util.layout_operator(r, MPM_OT_Weight_MaskNonZeroVGroup.bl_idname, icon="MOD_MASK").is_invert = False
     _Util.layout_operator(r, MPM_OT_Weight_MaskNonZeroVGroup.bl_idname, "", icon="CLIPUV_HLT").is_invert = True
     _Util.layout_operator(c, MPM_OT_Weight_GradientExpand.bl_idname, icon="COLORSET_04_VEC")
+    r = c.row(align=True)
+    r.label(text="Hide L/R Bones", icon="HIDE_ON")
+    _Util.layout_operator(r, MPM_OT_Weight_HideLeftRightBones.bl_idname, "Left").mode = "LEFT"
+    _Util.layout_operator(r, MPM_OT_Weight_HideLeftRightBones.bl_idname, "Right").mode = "RIGHT"
 
     # 3rdparty
     _MenuPose.draw_layout_3rdparty(context, third_party_box)
@@ -647,6 +651,50 @@ class MPM_OT_Weight_GradientExpand(bpy.types.Operator):
             k = (bias - 0.5) * 2.0  # [0..1]
             exponent = 1.0 + k * 4.0  # exponent >=1
         return 1.0 - (t ** exponent)  # 終端寄りの減衰
+
+
+class MPM_OT_Weight_HideLeftRightBones(bpy.types.Operator):
+    bl_idname = "mpm.weight_hide_side_bones"
+    bl_label = "Hide L/R Bones"
+    bl_options = {"REGISTER", "UNDO"}
+    mode: bpy.props.EnumProperty(name="Mode", default="LEFT",
+                                 items=[
+                                     ("LEFT", "Left", ""),
+                                     ("RIGHT", "Right", ""),
+                                 ])
+
+    @classmethod
+    def poll(cls, context):
+        return _Util.get_armature(context.active_object) != None
+
+    def execute(self, context):
+        sels = _Util.selected_objects()
+        arm = _Util.get_armature(context.active_object)
+        _Util.select_active(arm)
+        # アーマチュア選択後じゃないと、ポーズモードに変更できない
+        arms = [i for i in bpy.context.selected_objects if i.type == "ARMATURE"]
+        if 0 == len(arms):
+            return {"CANCELLED"}
+        bpy.ops.object.mode_set(mode="POSE")
+        conditions = (".r", ".R") if self.mode == "RIGHT" else (".l", ".L")
+        for arm in arms:
+            for pbone in arm.pose.bones:
+                bone = pbone.bone
+                # ボーンコレクションが表示されているなら
+                if any(coll.is_visible for coll in bone.collections):
+                    if bone.name.endswith(conditions):
+                        bone.hide = True
+        _Util.select_active(sels[0])
+        for i in sels[1:]:
+            _Util.select_add(i)
+        bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
+        return {"FINISHED"}
+
+    def convert(self, bone, func):
+        bpy.ops.pose.select_all(action="DESELECT")
+        bone.select = True
+        func()
+
 # --------------------------------------------------------------------------------
 
 
@@ -662,6 +710,7 @@ classes = (
     MPM_OT_Weight_PoseBoneUseMirror,
     MPM_OT_Weight_PoseBoneMirrorSelect,
     MPM_OT_Weight_GradientExpand,
+    MPM_OT_Weight_HideLeftRightBones,
 )
 
 
