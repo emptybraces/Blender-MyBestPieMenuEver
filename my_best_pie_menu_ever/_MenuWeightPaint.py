@@ -98,6 +98,8 @@ def draw(pie, context):
     _Util.layout_prop(r, current_brush, "use_accumulate")
     # ミラートポロジ
     _Util.layout_prop(r, context.object.data, "use_mirror_topology")
+    # 自動正規化
+    _Util.layout_prop(r, context.scene.tool_settings, "use_auto_normalize")
 
     # ぼかしブラシの強さ
     global blur_brush
@@ -461,7 +463,7 @@ def on_update_HideBoneOnPaint(value):
         return None
 
     if value:
-        bpy.app.timers.register(__safe_start_modal, first_interval=0.2)
+        bpy.app.timers.register(__safe_start_modal, first_interval=0.2, persistent=True)
     else:
         MPM_OT_Weight_HideBoneOnPaintMonitorModal.is_cancelled = True
 
@@ -716,6 +718,7 @@ classes = (
 
 def register():
     _Util.register_classes(classes)
+    on_update_HideBoneOnPaint(_AddonPreferences.get_data().weightPaintHideBone)
 
 
 def unregister():

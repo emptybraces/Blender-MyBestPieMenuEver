@@ -105,7 +105,7 @@ def DrawView3D(layout, context):
     view = context.space_data
     shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
 
-    # オーバーレイ、最前面
+    # オーバーレイ
     overlay = getattr(context.space_data, "overlay", None)
     r = c.row(align=True)
     r.enabled = overlay != None
@@ -166,11 +166,7 @@ def DrawView3D(layout, context):
         c = box.column(align=True)
         r = c.row(align=True)
         _Util.layout_prop(r, obj, "show_in_front")
-        armature = _Util.get_armature(obj)
-        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ShowInFrontArmature.bl_idname, "", armature != None,  getattr(
-            armature, "show_in_front", False), "BONE_DATA").is_on = not getattr(armature, "show_in_front", False)
-
-        _Util.layout_prop(c, obj, "show_wire")
+        _Util.layout_prop(r, obj, "show_wire")
 
         r = c.row(align=True)
         r.label(text="Display Type")
@@ -193,17 +189,22 @@ def DrawView3D(layout, context):
         _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
         _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
         # アーマチュア
-        box = c.box()
-        box.label(text="Armature")
-        c = box.column(align=True)
+        armature = _Util.get_armature(obj)
+        c = c.box().column(align=True)
+        c.label(text=f"Linked Armature: {armature.name if armature else 'None'}")
         if armature != None:
             c.row(align=True).prop(armature.data, "pose_position", expand=True)
-        r = c.row(align=True)
-        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
-        _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
-        if armature != None:
+            r = c.row(align=True)
+            _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
+            _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
+
             c.popover(panel=_MenuPose.MPM_PT_Pose_BoneCollectionPopover.bl_idname, icon="GROUP_BONE")
             _Util.layout_prop(c, armature.data, "display_type")
+            # _Util.layout_prop(r, overlay, "show_xray_bone", "", icon="BONE_DATA")
+            show_in_front = getattr(armature, "show_in_front", False)
+            _Util.layout_operator(c, _MenuPose.MPM_OT_Pose_ShowInFrontArmature.bl_idname, iface_("In Front"), isActive=armature != None,
+                                  depress=show_in_front).is_on = not show_in_front
+
             animated_id = armature
             c.template_action(animated_id, new="action.new", unlink="action.unlink")
             adt = animated_id and animated_id.animation_data
