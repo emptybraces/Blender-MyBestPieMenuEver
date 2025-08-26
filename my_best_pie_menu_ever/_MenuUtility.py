@@ -156,26 +156,28 @@ def DrawView3D(layout, context):
     obj = context.object
     if obj:
         r.label(text=obj.name, icon="OBJECT_DATAMODE")
-        _Util.MPM_OT_SetBoolToggle.operator(r, "", obj, "hide_viewport", "HIDE_ON" if obj.hide_viewport else "HIDE_OFF")
     else:
         r.label(text="No Active Object", icon="OBJECT_DATAMODE")
-    _Util.layout_operator(r, MPM_OT_Utility_SelectionCycleSoloModal.bl_idname, "", icon="FILE_REFRESH")
 
     # アクティブオブジェクトがなければ空欄
     if obj:
+        # 表示/非表示
+        _Util.MPM_OT_SetBoolToggle.operator(r, "", obj, "hide_viewport", "HIDE_ON" if obj.hide_viewport else "HIDE_OFF")
+        # サイクルソロ表示
+        _Util.layout_operator(r, MPM_OT_Utility_SelectionCycleSoloModal.bl_idname, "", icon="FILE_REFRESH")
+        r.separator()
+        # オブジェクト表示タイプ
+        icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
+        for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
+            _Util.MPM_OT_SetString.operator(r, "", obj, "display_type", item.identifier,
+                                            icons[i], obj.display_type == item.identifier)
+
         c = box.column(align=True)
         r = c.row(align=True)
         _Util.layout_prop(r, obj, "show_in_front")
         _Util.layout_prop(r, obj, "show_wire")
 
         r = c.row(align=True)
-        r.label(text="Display Type")
-        icons = ["PIVOT_BOUNDBOX", "MOD_WIREFRAME", "SHADING_SOLID", "TEXTURE"]
-        for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
-            _Util.MPM_OT_SetString.operator(r, "", obj, "display_type", item.identifier,
-                                            icons[i], obj.display_type == item.identifier)
-        # UV
-        c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
         # ビューポートオブジェクトカラー
         r = c.row(align=True)
         r.scale_x = 0.5
@@ -188,6 +190,13 @@ def DrawView3D(layout, context):
         _Util.layout_operator(r2, MPM_OT_Utility_CopyPosition.bl_idname)
         _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
         _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
+        # UV
+        c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
+        # ブレンドシェイプ
+        c.label(text=f"Active ShapeKey: {obj.active_shape_key.name if obj.active_shape_key else 'None'}", icon="SHAPEKEY_DATA")
+        r = c.row(align=True)
+        r.operator(MPM_OT_Utility_ShapekeyResetRevert.bl_idname, text="Store/Reset").mode = 0
+        r.operator(MPM_OT_Utility_ShapekeyResetRevert.bl_idname, text="Restore").mode = 1
         # アーマチュア
         armature = _Util.get_armature(obj)
         c = c.box().column(align=True)
@@ -377,6 +386,46 @@ class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
+class MPM_OT_Utility_ShapekeyResetRevert(bpy.types.Operator):
+    bl_idname = "mpm.util_shapekey_reset_revert"
+    bl_label = "Shapekey Reset/Revert"
+    bl_description = "Reset shapekey values to 0 or revert to basis"
+    bl_options = {"UNDO"}
+    mode: bpy.props.IntProperty()
+    dict = {}
+
+    def execute(self, context):
+        sk = context.object.data.shape_keys
+        drivers = sk.animation_data.drivers if sk and sk.animation_data else []
+        # for i in drivers:
+        #     print(i.data_path)
+        values = self.dict.setdefault(context.object.name, {})
+        is_reset = self.mode == 0
+        is_restore = self.mode == 1
+        if not values and is_restore:
+            return {"CANCELLED"}
+
+        for kb in sk.key_blocks:
+            if kb == sk.reference_key:
+                continue
+            has_driver = any(fcurve.data_path == f'key_blocks["{kb.name}"].value' for fcurve in drivers)
+            if not has_driver:
+                if is_reset:
+                    values[kb.name] = kb.value
+                    kb.value = 0.0
+                else:
+                    kb.value = values.get(kb.name, kb.value)
+        if is_reset:
+            values["__active_index"] = context.object.active_shape_key_index
+            context.object.active_shape_key_index = 0
+            pass
+        elif is_restore:
+            context.object.active_shape_key_index = values.get("__active_index", context.object.active_shape_key_index)
+        return {"FINISHED"}
+
+# --------------------------------------------------------------------------------
+
+
 class MPM_OT_Utility_OpenFile(bpy.types.Operator):
     bl_idname = "mpm.util_open_file"
     bl_label = "Open Path"
@@ -386,7 +435,6 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
         import subprocess
         subprocess.Popen(['start', self.path], shell=True)
         return {"FINISHED"}
-# --------------------------------------------------------------------------------
 
 
 class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
@@ -972,6 +1020,7 @@ classes = (
     MPM_OT_Utility_ChangeLanguage,
     MPM_OT_Utility_PivotOrientationSet_Reset,
     MPM_OT_Utility_PivotOrientationSet_Cursor,
+    MPM_OT_Utility_ShapekeyResetRevert,
     MPM_OT_Utility_ViewportCameraTransformSave,
     MPM_OT_Utility_ViewportCameraTransformRestorePanel,
     MPM_OT_Utility_ViewportCameraTransformRestoreModal,
