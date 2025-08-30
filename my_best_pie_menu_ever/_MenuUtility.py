@@ -481,7 +481,8 @@ class MPM_OT_Utility_ARPExport(bpy.types.Operator):
         bpy.ops.object.select_all(action="DESELECT")
         _Util.select_active(active_arm)
         for i in items:
-            _Util.select_add(i.obj)
+            if i.enabled:
+                _Util.select_add(i.obj)
         bpy.ops.arp.arp_export_fbx_panel("INVOKE_DEFAULT")
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
