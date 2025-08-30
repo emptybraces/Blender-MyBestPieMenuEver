@@ -140,7 +140,7 @@ def draw(layout, context):
     _Util.layout_operator(r, MPM_OT_EditMesh_MirrorVertConnect.bl_idname, "", isActive=has_selected_verts2, icon="MOD_MIRROR")
     # 固定
     r = c.row(align=True)
-    _Util.layout_operator(r, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname)
+    _Util.layout_operator(r, MPM_OT_EditMesh_PinSelectedVertsModal.bl_idname, icon="PINNED")
     # ゴースト
     _Util.layout_operator(r, MPM_OT_EditMesh_Ghost.bl_idname, icon="GHOST_ENABLED").with_hide = False
     _Util.layout_operator(r, MPM_OT_EditMesh_Ghost.bl_idname, "", icon="HIDE_ON").with_hide = True

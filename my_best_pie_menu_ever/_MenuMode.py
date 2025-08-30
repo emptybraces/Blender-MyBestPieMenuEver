@@ -170,7 +170,6 @@ class MPM_OT_ChangeMode(bpy.types.Operator):
     mode: bpy.props.StringProperty()
 
     def execute(self, context):
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode=self.mode)
         return {"FINISHED"}
 
@@ -195,7 +194,6 @@ class MPM_OT_ChangeModeWithArmature(bpy.types.Operator):
             _Util.select_active(active)
         elif self.mode == "EDIT":
             _Util.select_active(_Util.get_armature(active))
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode=self.mode)
         return {"FINISHED"}
 
@@ -211,7 +209,6 @@ class MPM_OT_ChangeSculptModeWithMask(bpy.types.Operator):
         return context.mode != "SCLUPT" and _Util.has_selected_verts(context)
 
     def execute(self, context):
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode="SCULPT")
         mod = next((m for m in bpy.context.active_object.modifiers if m.type == 'MULTIRES'), None)
         if mod:
@@ -234,7 +231,6 @@ class MPM_OT_ChangeSculptModeWithFaceSets(bpy.types.Operator):
         return context.mode != "SCLUPT" and _Util.has_selected_verts(context)
 
     def execute(self, context):
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         bpy.ops.object.mode_set(mode="SCULPT")
         mod = next((m for m in bpy.context.active_object.modifiers if m.type == "MULTIRES"), None)
         if mod:
@@ -260,7 +256,6 @@ class MPM_OT_ChangeModePose(bpy.types.Operator):
         return active != None and (active.type == "ARMATURE" or (active.type == "MESH" and _Util.get_armature(active) != None))
 
     def execute(self, context):
-        context.scene.mpm_prop.PrevModeName = context.scene.mpm_prop.PrevModeNameTemp
         active = context.active_object
         if active.type == "MESH":
             # bpy.ops.object.select_all(action='DESELECT')

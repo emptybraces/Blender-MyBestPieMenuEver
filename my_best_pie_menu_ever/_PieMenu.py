@@ -235,14 +235,9 @@ def draw_placeholder(pie, context, text):
 
 class MPM_Prop(bpy.types.PropertyGroup):
     def init(self):
-        self.PrevModeNameTemp = bpy.context.mode
         self.ColorPalettePopoverEnum = "ColorPalette"
         if bpy.context.tool_settings.image_paint.palette is not None:
             self.ColorPalettePopoverEnum = bpy.context.tool_settings.image_paint.palette.name
-
-    # 直前のモード
-    PrevModeName: bpy.props.StringProperty()
-    PrevModeNameTemp: bpy.props.StringProperty()
 
     # ビューポートカメラ位置保存スタック
     ViewportCameraTransforms: bpy.props.CollectionProperty(type=_MenuUtility.MPM_Prop_ViewportCameraTransform)
@@ -308,6 +303,9 @@ class MPM_Prop(bpy.types.PropertyGroup):
         set=on_set_AnimationSpeed,
         get=on_get_AnimationSpeed
     )
+
+    # ARPエクスポートパネル選択リスト用
+    ARPExportTargetList: bpy.props.CollectionProperty(type=_MenuUtility.MPM_OT_Utility_ARPExport.Item)
 
 
 # --------------------------------------------------------------------------------

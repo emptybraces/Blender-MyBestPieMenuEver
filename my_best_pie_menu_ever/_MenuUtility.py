@@ -48,7 +48,7 @@ def draw_pie_menu(layout, context):
     row.operator("wm.console_toggle", icon="CONSOLE", text="")
     row.operator("import_scene.fbx", icon="IMPORT", text="")
     row.operator("export_scene.fbx", icon="EXPORT", text="")
-    row.operator(MPM_OT_Utility_ARPExportPanel.bl_idname, icon="EXPORT", text="")
+    row.operator(MPM_OT_Utility_ARPExport.bl_idname, icon="EXPORT", text="")
     row.operator(MPM_OT_Utility_ChangeLanguage.bl_idname, text="", icon="FILE_FONT")
     row.operator(MPM_OT_Utility_OpenDirectory.bl_idname, text="", icon="FOLDER_REDIRECT")
     row = row_parent.row(align=True)
@@ -437,9 +437,17 @@ class MPM_OT_Utility_OpenFile(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
-    bl_idname = "mpm.util_arp_export_panel"
+# ValueError: bpy_struct "MPM_OT_util_arp_export_panel" registration error: 'items' CollectionProperty could not register because this type doesn't support data-block properties
+# なのでsceneに登録する。
+
+
+class MPM_OT_Utility_ARPExport(bpy.types.Operator):
+    bl_idname = "mpm.util_arp_export"
     bl_label = "Export with ARP"
+
+    class Item(bpy.types.PropertyGroup):
+        obj: bpy.props.PointerProperty(type=bpy.types.Object)
+        enabled: bpy.props.BoolProperty(default=True)
 
     @classmethod
     def poll(cls, context):
@@ -448,80 +456,33 @@ class MPM_OT_Utility_ARPExportPanel(bpy.types.Operator):
 
     def invoke(self, context, event):
         g.force_cancel_piemenu_modal(context)
+        arm = _Util.get_armature(context.active_object)
+        items = context.scene.mpm_prop.ARPExportTargetList
+        items.clear()
+        for obj in context.selectable_objects:
+            if obj.type == "MESH" and arm == _Util.get_armature(obj):
+                item = items.add()
+                item.obj = obj
         return context.window_manager.invoke_props_dialog(self, width=500)
 
     def draw(self, context):
         self.layout.label(text="ARP Export")
+        items = context.scene.mpm_prop.ARPExportTargetList
         c = self.layout.box().column(align=True)
-        _Util.layout_operator(c, MPM_OT_Utility_ARPExportSingle.bl_idname)
-        for i in MPM_OT_Utility_ARPExportSingle.label_targets(context):
-            c.label(text=i)
+        for item in sorted(items, key=lambda item: item.obj.name):
+            c.prop(item, "enabled", text=item.obj.name)
 
-        c = self.layout.box().column(align=True)
-        _Util.layout_operator(c, MPM_OT_Utility_ARPExportAll.bl_idname)
-        for i in MPM_OT_Utility_ARPExportAll.label_targets(context):
-            c.label(text=i)
-
+    # 必ず必要
     def execute(self, context):
-        return {"FINISHED"}
-
-
-class MPM_OT_Utility_ARPExportAll(bpy.types.Operator):
-    bl_idname = "mpm.util_arp_export_all"
-    bl_label = "Export with all meshes tied current armature"
-
-    @classmethod
-    def label_targets(cls, context):
-        active_arm = _Util.get_armature(context.active_object)
-        sels = []
-        for obj in context.selectable_objects:
-            if obj.type == "MESH" and active_arm == _Util.get_armature(obj):
-                sels.append(obj.name)
-        label = [f"mesh: {', '.join(sels)}", f"armature: {active_arm.name}"]
-        return label
-
-    def execute(self, context):
-        active_arm = _Util.get_armature(context.active_object)
-        if active_arm is None:
-            _Util.show_msgbox("Invalid selection!", icon="ERROR")
+        items = context.scene.mpm_prop.ARPExportTargetList
+        if not any(i.enabled for i in items):
             return {"CANCELLED"}
-        sels = []
-        for obj in context.selectable_objects:
-            if obj.type == "MESH" and active_arm == _Util.get_armature(obj):
-                sels.append(obj)
-        if 0 < len(sels):
-            bpy.ops.object.select_all(action='DESELECT')
-            for obj in sels:
-                obj.select_set(True)
-            _Util.select_active(active_arm)
-            bpy.ops.arp.arp_export_fbx_panel("INVOKE_DEFAULT")
-        return {"FINISHED"}
-
-
-class MPM_OT_Utility_ARPExportSingle(bpy.types.Operator):
-    bl_idname = "mpm.util_arp_export_single"
-    bl_label = "Export with selected mesh"
-
-    @classmethod
-    def label_targets(cls, context):
-        label = [f"mesh: {context.active_object.name}", f"armature: {_Util.get_armature(context.active_object).name}"]
-        return label
-
-    def execute(self, context):
         active_arm = _Util.get_armature(context.active_object)
-        if active_arm is None:
-            _Util.show_msgbox("Invalid selection!", icon="ERROR")
-            return {"CANCELLED"}
-        sel = None
-        for obj in context.selected_objects:
-            if obj.type == "MESH" and active_arm == _Util.get_armature(obj):
-                sel = obj
-                break
-        if sel != None:
-            bpy.ops.object.select_all(action='DESELECT')
-            sel.select_set(True)
-            _Util.select_active(active_arm)
-            bpy.ops.arp.arp_export_fbx_panel("INVOKE_DEFAULT")
+        bpy.ops.object.select_all(action="DESELECT")
+        _Util.select_active(active_arm)
+        for i in items:
+            _Util.select_add(i.obj)
+        bpy.ops.arp.arp_export_fbx_panel("INVOKE_DEFAULT")
         return {"FINISHED"}
 # --------------------------------------------------------------------------------
 
@@ -1025,9 +986,8 @@ classes = (
     MPM_OT_Utility_ViewportCameraTransformRestorePanel,
     MPM_OT_Utility_ViewportCameraTransformRestoreModal,
     MPM_OT_Utility_OpenFile,
-    MPM_OT_Utility_ARPExportPanel,
-    MPM_OT_Utility_ARPExportSingle,
-    MPM_OT_Utility_ARPExportAll,
+    MPM_OT_Utility_ARPExport.Item,
+    MPM_OT_Utility_ARPExport,
     MPM_OT_Utility_Snap3DCursorToSelectedEx,
     MPM_OT_Utility_Snap3DCursorOnViewPlane,
     MPM_OT_Utility_3DCursorPositionSetZero,
