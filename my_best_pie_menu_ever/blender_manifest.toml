@@ -35,6 +35,8 @@ files = "Import/export FBX from/to disk"
 # - [WeightPaint] 選択頂点から拡大していくグラデーションウェイト機能(Gradient Weight Expand)を追加。
 # - [WeightPaint] 選択中のポーズボーンのミラーボーンを選択する機能を追加。
 # - [WeightPaint] ポーズボーンのミラーを設定項目を追加。
+# - [Utility] アクティブオブジェクトカラムのレイアウト整理。
+# - [Utility] アクティブな各データ(VertexGroup, ShapeKey, UV)を選択できるプルダウンリストを追加。
 # - [Utility] Armatureのアクションスロットを追加。
 # - [Utility] シェイプキーのアクティブ状態と全シェイプキーの状態の保存／復元処理を追加。
 # - [Utility] ExportARP実行時、対象オブジェクトをリストから選択して実行できるように修正。

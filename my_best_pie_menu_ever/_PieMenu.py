@@ -279,11 +279,73 @@ class MPM_Prop(bpy.types.PropertyGroup):
             return 0
         return obj.data.uv_layers.active_index
     UVMapPopoverEnum: bpy.props.EnumProperty(
-        name="Active UVMap",
-        description="Select UVMap want to be active",
+        name="UVMap",
+        description="Select UV Map want to be active",
         items=on_items_UVMapEnum,
         get=on_get_UVMapEnum,
         set=on_set_UVMapEnum
+    )
+
+    # Vertex Group選択用
+    def on_items_VertexGroupEnum(self, context):
+        if context.active_object is None or context.active_object.type != "MESH":
+            return [("", "", "")]
+        vgs = context.active_object.vertex_groups
+        items = []
+        if vgs:
+            for i in vgs:
+                items.append((i.name, i.name, ""))
+        return items
+
+    def on_set_VertexGroupEnum(self, value):
+        vgs = bpy.context.active_object.vertex_groups
+        vgs.active_index = value
+
+    def on_get_VertexGroupEnum(self):
+        obj = bpy.context.active_object
+        if not obj or obj.type != "MESH":
+            return 0
+        return obj.vertex_groups.active_index
+    VertexGroupPopoverEnum: bpy.props.EnumProperty(
+        name="VertexGroup",
+        description="Select Vertex Group want to be active",
+        items=on_items_VertexGroupEnum,
+        get=on_get_VertexGroupEnum,
+        set=on_set_VertexGroupEnum
+    )
+
+    # Shapekey選択用
+    def on_items_ShapeKeyEnum(self, context):
+        items = []
+        group_map = {}
+        group_id_counter = 0
+        obj = context.active_object
+        if obj and obj.data.shape_keys:
+            for sk in obj.data.shape_keys.key_blocks:
+                prefix = sk.name[:3]
+                if prefix not in group_map:
+                    group_map[prefix] = group_id_counter
+                    group_id_counter += 1
+                    # items.append(("", prefix, ""))
+                group_id = group_map[prefix]
+                items.append((sk.name, sk.name, ""))
+        return items
+
+    def on_set_ShapeKeyEnum(self, value):
+        obj = bpy.context.active_object
+        obj.active_shape_key_index = value
+
+    def on_get_ShapeKeyEnum(self):
+        obj = bpy.context.active_object
+        if not obj or obj.type != "MESH":
+            return 0
+        return obj.active_shape_key_index
+    ShapeKeyPopoverEnum: bpy.props.EnumProperty(
+        name="Shapekey",
+        description="Select Shape Key want to be active",
+        items=on_items_ShapeKeyEnum,
+        get=on_get_ShapeKeyEnum,
+        set=on_set_ShapeKeyEnum
     )
 
     # アニメーション速度用

@@ -66,7 +66,7 @@ def draw(layout, context):
     # メインレイアウト
     r = box.row(align=True)
     c = r.column(align=True)
-    layout_overlay = c.box()
+    # layout_overlay = c.box()
     layout_selection = c.box()
     layout_uv = c.box()
     layout_normal = c.box()
@@ -77,11 +77,10 @@ def draw(layout, context):
     layout_vg = c.box()
     layout_util = c.box()
 
-    # overlay
-    layout_overlay.label(text="Overlay", icon="OVERLAY")
-    c = layout_overlay.column(align=True)
+    # # オーバーレイ
+    # layout_overlay.label(text="Overlay", icon="OVERLAY")
+    # c = layout_overlay.column(align=True)
     overlay = context.space_data.overlay
-    _Util.layout_prop(c, overlay, "show_weight", isActive=overlay.show_overlays)
 
     # 選択
     layout_selection.label(text="Selection", icon="ZOOM_SELECTED")
@@ -109,6 +108,7 @@ def draw(layout, context):
     box = c.box()
     layout_normal.label(text="Normal", icon="NORMALS_FACE")
     c = layout_normal.column(align=True)
+    _Util.layout_prop(c, overlay, "show_face_orientation", isActive=overlay.show_overlays)
     _Util.layout_operator(c, "mesh.normals_make_consistent", isActive=has_selected_verts).inside = False
 
     # 頂点メニュー
@@ -184,6 +184,7 @@ def draw(layout, context):
     from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
     MirrorVertexGroup(c, "Mirror", 0.2)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_prop(c, overlay, "show_weight", isActive=overlay.show_overlays)
 
     # Applyメニュー
     layout_util.label(text="Apply", icon="CHECKMARK")

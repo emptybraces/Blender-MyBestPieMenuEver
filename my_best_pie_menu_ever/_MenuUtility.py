@@ -82,43 +82,39 @@ def DrawView3D(layout, context):
     for item in bpy.types.TransformOrientationSlot.bl_rna.properties["type"].enum_items:
         _Util.MPM_OT_SetString.operator(r, "", context.scene.transform_orientation_slots[0], "type", item.identifier,
                                         item.icon, context.scene.transform_orientation_slots[0].type == item.identifier)
-    s = c.split(factor=0.7)
-    _, r = s.row(), s.row()
+    r = c.row()
+    r.alignment = "RIGHT"
     _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Reset.bl_idname, text="Reset")
-    # _Util.layout_operator(r, MPM_OT_Utility_PivotOrientationSet_Cursor.bl_idname, text="Cursor")
 
     # 3Dカーソル
-    s = c.split(factor=0.25)
-    r1, r2 = s.row(align=True), s.row(align=True)
-    r1.label(text="3D Cursor")
-    _Util.layout_operator(r2, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
-    _Util.layout_operator(r2, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
-    _Util.layout_operator(r2, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
-    _Util.layout_operator(r2, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
-    _Util.layout_operator(r2, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="X0").mode = "x"
-    _Util.layout_operator(r2, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Y0").mode = "y"
-    _Util.layout_operator(r2, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, text="Z0").mode = "z"
+    r = c.row(align=True)
+    r.label(text="3D Cursor")
+    r = r.row(align=True)
+    _Util.layout_operator(r, "view3d.snap_cursor_to_center", text="", icon="TRANSFORM_ORIGINS")
+    _Util.layout_operator(r, "view3d.snap_cursor_to_selected", text="", icon="SNAP_FACE_CENTER")
+    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorToSelectedEx.bl_idname, text="", icon="EMPTY_AXIS")
+    _Util.layout_operator(r, MPM_OT_Utility_Snap3DCursorOnViewPlane.bl_idname, text="", icon="MOUSE_MOVE")
+    r.separator()
+    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, icon="EVENT_X").mode = "x"
+    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, icon="EVENT_Y").mode = "y"
+    _Util.layout_operator(r, MPM_OT_Utility_3DCursorPositionSetZero.bl_idname, icon="EVENT_Z").mode = "z"
     # 設定
     box = col.box()
-    box.label(text="Settings")
+    box.label(text="Viewport Settings")
     c = box.column(align=True)
     view = context.space_data
     shading = view.shading if view.type == "VIEW_3D" else context.scene.display.shading
 
-    # オーバーレイ
+    # オーバーレイ、ボーン、アノテーション
     overlay = getattr(context.space_data, "overlay", None)
     r = c.row(align=True)
-    r.enabled = overlay != None
-    _Util.layout_prop(r, overlay, "show_overlays", "Overlay")
-    r = r.row(align=True)
+    _Util.layout_prop(r, overlay, "show_overlays", "Overlay", overlay != None)
     _Util.layout_prop(r, overlay, "show_bones", "Bone", isActive=overlay.show_overlays)
-
-    # ワイヤーフレーム、アノテーション
+    # ワイヤーフレーム、透過
     r = c.row(align=True)
     _Util.layout_prop(r, overlay, "show_wireframes", "Wireframe", isActive=overlay.show_overlays)
     _Util.layout_prop(r, overlay, "show_annotation", "Annotation", isActive=overlay.show_overlays)
-    # 透過
-    r = c.row()
+    r = c.row(align=True)
     _Util.layout_prop(r, shading, "show_xray", text="")
     _Util.layout_prop(r, shading, "xray_alpha", text="X-Ray", isActive=shading.show_xray)
     # シェーディングモード
@@ -143,8 +139,11 @@ def DrawView3D(layout, context):
     col = row.column()
     # オブジェクトメニュー
     box = col.box()
-    c = box.column()
-    c.label(text="Active")
+    box.label(text="Active Object")
+    c = box.column(align=True)
+    indent_space = 0.02
+    # _, r2 = _Util.layout_split_row2(c, indent_space)
+    # c = r2.column(align=True)
 
     r = c.row(align=True)
     active_collec = context.view_layer.active_layer_collection
@@ -171,47 +170,35 @@ def DrawView3D(layout, context):
         for i, item in enumerate(bpy.types.Object.bl_rna.properties["display_type"].enum_items):
             _Util.MPM_OT_SetString.operator(r, "", obj, "display_type", item.identifier,
                                             icons[i], obj.display_type == item.identifier)
-
-        c = box.column(align=True)
-        r = c.row(align=True)
-        _Util.layout_prop(r, obj, "show_in_front")
-        _Util.layout_prop(r, obj, "show_wire")
-
-        r = c.row(align=True)
-        # ビューポートオブジェクトカラー
-        r = c.row(align=True)
-        r.scale_x = 0.5
-        _Util.layout_prop(r, obj, "color", isActive=shading.color_type == "OBJECT")
-        # コピー
-        r = c.row(align=True)
-        r.active = obj is not None and 1 < len(context.selected_objects)
-        r1, r2 = _Util.layout_split_row2(r, 0.2)
-        r1.label(text="Copy")
-        _Util.layout_operator(r2, MPM_OT_Utility_CopyPosition.bl_idname)
-        _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
-        _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
-        # UV
+        # アクティブ頂点グループ
+        c.prop(context.scene.mpm_prop, "VertexGroupPopoverEnum")
+        # アクティブシェイプキー
+        c.prop(context.scene.mpm_prop, "ShapeKeyPopoverEnum")
+        _, r2 = _Util.layout_split_row2(c, indent_space)
+        r2.operator(MPM_OT_Utility_ShapekeyStoreThenReset.bl_idname)
+        r2.operator(MPM_OT_Utility_ShapekeyRestore.bl_idname)
+        # アクティブUVマップ
         c.prop(context.scene.mpm_prop, "UVMapPopoverEnum")
-        # ブレンドシェイプ
-        c.label(text=f"Active ShapeKey: {obj.active_shape_key.name if obj.active_shape_key else 'None'}", icon="SHAPEKEY_DATA")
-        r = c.row(align=True)
-        r.operator(MPM_OT_Utility_ShapekeyResetRevert.bl_idname, text="Store/Reset").mode = 0
-        r.operator(MPM_OT_Utility_ShapekeyResetRevert.bl_idname, text="Restore").mode = 1
+
         # アーマチュア
+        c = box.column(align=True)
         armature = _Util.get_armature(obj)
-        c = c.box().column(align=True)
         c.label(text=f"Linked Armature: {armature.name if armature else 'None'}")
         if armature != None:
+            _, r2 = _Util.layout_split_row2(c, indent_space)
+            c = r2.column(align=True)
+
             c.row(align=True).prop(armature.data, "pose_position", expand=True)
             r = c.row(align=True)
             _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransform.bl_idname)
             _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ResetBoneTransformAndAnimationFrame.bl_idname, icon="ANIM")
 
             c.popover(panel=_MenuPose.MPM_PT_Pose_BoneCollectionPopover.bl_idname, icon="GROUP_BONE")
-            _Util.layout_prop(c, armature.data, "display_type")
+            r = c.row(align=True)
+            _Util.layout_prop(r, armature.data, "display_type")
             # _Util.layout_prop(r, overlay, "show_xray_bone", "", icon="BONE_DATA")
             show_in_front = getattr(armature, "show_in_front", False)
-            _Util.layout_operator(c, _MenuPose.MPM_OT_Pose_ShowInFrontArmature.bl_idname, iface_("In Front"), isActive=armature != None,
+            _Util.layout_operator(r, _MenuPose.MPM_OT_Pose_ShowInFrontArmature.bl_idname, iface_("In Front"), isActive=armature != None,
                                   depress=show_in_front).is_on = not show_in_front
 
             animated_id = armature
@@ -226,6 +213,18 @@ def DrawView3D(layout, context):
                     new="anim.slot_new_for_id",
                     unlink="anim.slot_unassign_from_id",
                 )
+        # 見栄え関連
+        c = box.column(align=True)
+        c.label(text="Look")
+        _, r2 = _Util.layout_split_row2(c, indent_space)
+        c = r2.column(align=True)
+        r = c.row(align=True)
+        _Util.layout_prop(r, obj, "show_in_front")
+        _Util.layout_prop(r, obj, "show_wire")
+        # ビューポートオブジェクトカラー
+        r = c.row(align=True)
+        r.scale_x = 0.2
+        _Util.layout_prop(r, obj, "color", isActive=shading.color_type == "OBJECT")
 
     # -------------------------------
     # 次の列
@@ -258,6 +257,14 @@ def DrawView3D(layout, context):
     r.label(text="VPCamera", icon="VIEW_CAMERA")
     _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformSave.bl_idname)
     _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformRestorePanel.bl_idname)
+    # コピー
+    r = c.row(align=True)
+    r.active = obj is not None and 1 < len(context.selected_objects)
+    r1, r2 = _Util.layout_split_row2(r, 0.2)
+    r1.label(text="Copy")
+    _Util.layout_operator(r2, MPM_OT_Utility_CopyPosition.bl_idname)
+    _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
+    _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
 
 
 def DrawImageEditor(layout, context):
@@ -386,41 +393,60 @@ class MPM_OT_Utility_PivotOrientationSet_Cursor(bpy.types.Operator):
 # --------------------------------------------------------------------------------
 
 
-class MPM_OT_Utility_ShapekeyResetRevert(bpy.types.Operator):
-    bl_idname = "mpm.util_shapekey_reset_revert"
-    bl_label = "Shapekey Reset/Revert"
-    bl_description = "Reset shapekey values to 0 or revert to basis"
+shapekey_store_dict = {}
+
+
+class MPM_OT_Utility_ShapekeyStoreThenReset(bpy.types.Operator):
+    bl_idname = "mpm.util_shapekey_store_then_reset"
+    bl_label = "Store then Reset"
+    bl_description = "Store current shapekey values then set 0 all"
     bl_options = {"UNDO"}
-    mode: bpy.props.IntProperty()
     dict = {}
 
     def execute(self, context):
-        sk = context.object.data.shape_keys
+        obj = context.active_object
+        sk = obj.data.shape_keys
         drivers = sk.animation_data.drivers if sk and sk.animation_data else []
         # for i in drivers:
         #     print(i.data_path)
-        values = self.dict.setdefault(context.object.name, {})
-        is_reset = self.mode == 0
-        is_restore = self.mode == 1
-        if not values and is_restore:
-            return {"CANCELLED"}
-
+        global shapekey_store_dict
+        values = shapekey_store_dict.setdefault(obj.name, {})
         for kb in sk.key_blocks:
-            if kb == sk.reference_key:
+            if kb == sk.reference_key:  # basis
                 continue
             has_driver = any(fcurve.data_path == f'key_blocks["{kb.name}"].value' for fcurve in drivers)
             if not has_driver:
-                if is_reset:
-                    values[kb.name] = kb.value
-                    kb.value = 0.0
-                else:
-                    kb.value = values.get(kb.name, kb.value)
-        if is_reset:
-            values["__active_index"] = context.object.active_shape_key_index
-            context.object.active_shape_key_index = 0
-            pass
-        elif is_restore:
-            context.object.active_shape_key_index = values.get("__active_index", context.object.active_shape_key_index)
+                values[kb.name] = kb.value
+                kb.value = 0.0
+        values["__active_index"] = obj.active_shape_key_index
+        obj.active_shape_key_index = 0
+        return {"FINISHED"}
+
+
+class MPM_OT_Utility_ShapekeyRestore(bpy.types.Operator):
+    bl_idname = "mpm.util_shapekey_restore"
+    bl_label = "Restore"
+    bl_description = "Restore shapekey from last stored values"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object.name in shapekey_store_dict and shapekey_store_dict[context.active_object.name]
+
+    def execute(self, context):
+        obj = context.active_object
+        sk = obj.data.shape_keys
+        drivers = sk.animation_data.drivers if sk and sk.animation_data else []
+        global shapekey_store_dict
+        values = shapekey_store_dict.setdefault(obj.name, {})
+        for kb in sk.key_blocks:
+            if kb == sk.reference_key:  # basis
+                continue
+            has_driver = any(fcurve.data_path == f'key_blocks["{kb.name}"].value' for fcurve in drivers)
+            if not has_driver:
+                kb.value = values.get(kb.name, kb.value)
+        obj.active_shape_key_index = values.get("__active_index", obj.active_shape_key_index)
+        del shapekey_store_dict[obj.name]
         return {"FINISHED"}
 
 # --------------------------------------------------------------------------------
@@ -475,8 +501,6 @@ class MPM_OT_Utility_ARPExport(bpy.types.Operator):
     # 必ず必要
     def execute(self, context):
         items = context.scene.mpm_prop.ARPExportTargetList
-        if not any(i.enabled for i in items):
-            return {"CANCELLED"}
         active_arm = _Util.get_armature(context.active_object)
         bpy.ops.object.select_all(action="DESELECT")
         _Util.select_active(active_arm)
@@ -589,6 +613,7 @@ class MPM_OT_Utility_Snap3DCursorOnViewPlane(bpy.types.Operator):
             rv3d = context.space_data.region_3d
             self.start_mouse_location3d = region_2d_to_location_3d(region, rv3d, (event.mouse_x, event.mouse_y), (0, 0, 0))
             context.window_manager.modal_handler_add(self)
+            g.force_cancel_piemenu_modal(context)
             return {"RUNNING_MODAL"}
         else:
             self.report({"WARNING"}, "View3D not found, cannot run operator")
@@ -982,7 +1007,8 @@ classes = (
     MPM_OT_Utility_ChangeLanguage,
     MPM_OT_Utility_PivotOrientationSet_Reset,
     MPM_OT_Utility_PivotOrientationSet_Cursor,
-    MPM_OT_Utility_ShapekeyResetRevert,
+    MPM_OT_Utility_ShapekeyStoreThenReset,
+    MPM_OT_Utility_ShapekeyRestore,
     MPM_OT_Utility_ViewportCameraTransformSave,
     MPM_OT_Utility_ViewportCameraTransformRestorePanel,
     MPM_OT_Utility_ViewportCameraTransformRestoreModal,

@@ -82,8 +82,8 @@ class MPM_PT_Pose_BoneCollectionPopover(bpy.types.Panel):
         arm = _Util.get_armature(context.object).data
 
         selected_col_names = set()
-        if bpy.context.mode in ("POSE", "PAINT_WEIGHT"):
-            for pbone in bpy.context.selected_pose_bones:
+        if context.mode in ("POSE"):
+            for pbone in context.selected_pose_bones:
                 selected_col_names.update(col.name for col in pbone.bone.collections)
         for col, level in __get_all_bone_collections(arm):
             row = c.row(align=True)
