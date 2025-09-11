@@ -91,7 +91,7 @@ class MPM_PT_ModeHistory_HistoryPopover(bpy.types.Panel):
         return text[:head_len] + ellipsis + text[-tail_len:]
 
 
-msgbus_owner = "mpm.g.on_mode_change"
+msgbus_owner = "mpm.mode_history"
 history_objs_and_mode = []
 enable_history = True
 

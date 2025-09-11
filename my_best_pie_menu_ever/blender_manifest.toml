@@ -29,7 +29,7 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # v2.8.0
-# - [ModeHistory] パイメニュー左側に新しくモード選択（＋オブジェクト選択）履歴ポップオーバーを追加。
+# - [ModeHistory] パイメニュー左側にモード選択（＋オブジェクト選択）履歴ポップオーバーを追加。
 # - [WeightPaint] ウェイト設定/削除機能に非選択頂点を対象にするオプションを追加。
 # - [WeightPaint] 左、または右のボーンだけ非表示にする機能(Hide L/R Bones)を追加。
 # - [WeightPaint] 選択頂点から拡大していくグラデーションウェイト機能(Gradient Weight Expand)を追加。

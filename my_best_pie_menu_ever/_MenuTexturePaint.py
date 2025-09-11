@@ -450,6 +450,7 @@ classes = (
 )
 
 addon_keymaps = []
+msgbus_owner = "mpm.texture_paint"
 
 
 def register():
