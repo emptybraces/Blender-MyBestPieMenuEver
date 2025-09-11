@@ -259,13 +259,13 @@ class MPM_Prop(bpy.types.PropertyGroup):
 
     # UVMap選択用
     def on_items_UVMapEnum(self, context):
-        if context.active_object is None or context.active_object.type != "MESH":
-            return [("", "", "")]
-        uv_layers = context.active_object.data.uv_layers
         items = []
-        if uv_layers:
-            for i in uv_layers:
-                items.append((i.name, i.name, ""))
+        obj = context.active_object
+        if obj and obj.type == "MESH":
+            uv_layers = context.active_object.data.uv_layers
+            if uv_layers:
+                for i in uv_layers:
+                    items.append((i.name, i.name, ""))
         return items
 
     def on_set_UVMapEnum(self, value):
@@ -288,13 +288,13 @@ class MPM_Prop(bpy.types.PropertyGroup):
 
     # Vertex Group選択用
     def on_items_VertexGroupEnum(self, context):
-        if context.active_object is None or context.active_object.type != "MESH":
-            return [("", "", "")]
-        vgs = context.active_object.vertex_groups
         items = []
-        if vgs:
-            for i in vgs:
-                items.append((i.name, i.name, ""))
+        obj = context.active_object
+        if obj and obj.type == "MESH":
+            vgs = obj.vertex_groups
+            if vgs:
+                for i in vgs:
+                    items.append((i.name, i.name, ""))
         return items
 
     def on_set_VertexGroupEnum(self, value):
@@ -317,18 +317,19 @@ class MPM_Prop(bpy.types.PropertyGroup):
     # Shapekey選択用
     def on_items_ShapeKeyEnum(self, context):
         items = []
-        group_map = {}
-        group_id_counter = 0
         obj = context.active_object
-        if obj and obj.data.shape_keys:
-            for sk in obj.data.shape_keys.key_blocks:
-                prefix = sk.name[:3]
-                if prefix not in group_map:
-                    group_map[prefix] = group_id_counter
-                    group_id_counter += 1
-                    # items.append(("", prefix, ""))
-                group_id = group_map[prefix]
-                items.append((sk.name, sk.name, ""))
+        if obj and obj.type == "MESH":
+            group_map = {}
+            group_id_counter = 0
+            if obj.data and obj.data.shape_keys:
+                for sk in obj.data.shape_keys.key_blocks:
+                    prefix = sk.name[:3]
+                    if prefix not in group_map:
+                        group_map[prefix] = group_id_counter
+                        group_id_counter += 1
+                        # items.append(("", prefix, ""))
+                    group_id = group_map[prefix]
+                    items.append((sk.name, sk.name, ""))
         return items
 
     def on_set_ShapeKeyEnum(self, value):

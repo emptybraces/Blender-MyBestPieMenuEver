@@ -19,7 +19,7 @@ from bpy.app.translations import pgettext_iface as iface_
 def draw_pie_menu(layout, context):
     r = layout.row(align=True)
     r.scale_x = 1.2
-    r.enabled = 1 < len(history_objs_and_mode)
+    r.enabled = 0 < len(history_objs_and_mode)
     for i in reversed(range(len(history_objs_and_mode))):
         sels, mode = history_objs_and_mode[i]
         try:
@@ -35,10 +35,6 @@ class MPM_OT_ModeHistory_ChangePrevMode(bpy.types.Operator):
     bl_label = "Change Mode to last"
     bl_options = {"UNDO"}
     select_idx: bpy.props.IntProperty()
-
-    @classmethod
-    def poll(cls, context):
-        return get_last_objs_and_mode()[0] != None
 
     def execute(self, context):
         global enable_history
@@ -63,8 +59,9 @@ class MPM_PT_ModeHistory_HistoryPopover(bpy.types.Panel):
 
     def draw(self, context):
         c = self.layout.column(align=True)
+        current_selection = _Util.selected_objects()
         try:
-            for i, (sels, mode) in enumerate(history_objs_and_mode[1:], start=1):
+            for i, (sels, mode) in enumerate(history_objs_and_mode, start=0):
                 # アクティブオブジェクトが生存中なら、
                 if sels[0] is not None:
                     safe_sels = [i for i in sels if i != None]
@@ -76,7 +73,9 @@ class MPM_PT_ModeHistory_HistoryPopover(bpy.types.Panel):
                         msg += f", {self.middle_truncate(sels[1].name)}"
                     if 2 < cnt:
                         msg += f", and {cnt-2} objs"
-                    _Util.layout_operator(r, MPM_OT_ModeHistory_ChangePrevMode.bl_idname, msg).select_idx = i
+                    # activeチェック
+                    _Util.layout_operator(r, MPM_OT_ModeHistory_ChangePrevMode.bl_idname, msg,
+                                          isActive=mode != context.object.mode or sels != current_selection).select_idx = i
         except Exception as e:
             print(2, e)
 
@@ -97,18 +96,20 @@ enable_history = True
 
 
 def on_mode_change():
-    global prev_obj_and_mode
     obj = bpy.context.object
     if obj:
-        sels = _Util.selected_objects()
-        history_objs_and_mode.insert(0, (sels, obj.mode))
-        # print(history_objs_and_mode[0])
+        current_selection = _Util.selected_objects()
+        for sels, mode in history_objs_and_mode:
+            if mode == obj.mode and sels == current_selection:
+                return
+        history_objs_and_mode.insert(0, (current_selection, obj.mode))
+        # print(history_objs_and_mode)
         if _AddonPreferences.get_data().modeHistoryLimit < len(history_objs_and_mode):
             history_objs_and_mode.pop()
 
 
 def get_last_objs_and_mode():
-    return history_objs_and_mode[1]
+    return history_objs_and_mode[0]
 
 
 classes = (
