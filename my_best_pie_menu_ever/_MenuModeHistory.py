@@ -55,7 +55,7 @@ class MPM_PT_ModeHistory_HistoryPopover(bpy.types.Panel):
     bl_label = "Mode History"
     bl_space_type = "TOPBAR"  # ポップオーバー専用の空間
     bl_region_type = "WINDOW"
-    bl_ui_units_x = 30  # 横幅
+    # bl_ui_units_x = 200  # 横幅?
 
     def draw(self, context):
         c = self.layout.column(align=True)
@@ -68,12 +68,12 @@ class MPM_PT_ModeHistory_HistoryPopover(bpy.types.Panel):
                     r = c.row()
                     r.alignment = "LEFT"
                     cnt = len(safe_sels)
-                    msg = f"{i}.{mode} | {self.middle_truncate(sels[0].name)}"
+                    msg = f"{i}.{self.get_shorten_mode_name(mode)}: {self.middle_truncate(sels[0].name)}"
                     if 1 < cnt:
                         msg += f", {self.middle_truncate(sels[1].name)}"
                     if 2 < cnt:
                         msg += f", and {cnt-2} objs"
-                    # activeチェック
+                        # activeチェック
                     _Util.layout_operator(r, MPM_OT_ModeHistory_ChangePrevMode.bl_idname, msg,
                                           isActive=mode != context.object.mode or sels != current_selection).select_idx = i
         except Exception as e:
@@ -88,6 +88,18 @@ class MPM_PT_ModeHistory_HistoryPopover(bpy.types.Panel):
         head_len = keep // 2
         tail_len = keep - head_len
         return text[:head_len] + ellipsis + text[-tail_len:]
+
+# fmt: off
+    def get_shorten_mode_name(self, mode):
+        if mode == "WEIGHT_PAINT": return "W-PAINT"
+        elif mode == "TEXTURE_PAINT": return "T-PAINT"
+        elif mode == "VERTEX_PAINT": return "V-PAINT"
+        elif mode == "PAINT_GPENCIL": return "GP-PAINT"
+        elif mode == "SCULPT_GPENCIL": return "GP-SCULPT"
+        elif mode == "EDIT_GPENCIL": return "GP-EDIT"
+        elif mode == "WEIGHT_GPENCIL": return "GP-WEIGHT"
+        else: return mode
+# fmt: on
 
 
 msgbus_owner = "mpm.mode_history"
