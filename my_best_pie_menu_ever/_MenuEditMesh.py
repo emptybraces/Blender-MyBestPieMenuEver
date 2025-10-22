@@ -181,9 +181,11 @@ def draw(layout, context):
     _Util.layout_operator(r, MPM_OT_VertexGroupNewPanel.bl_idname)
     _Util.layout_operator(r, MPM_OT_VertexGroupAdd.bl_idname)
     _Util.layout_operator(r, MPM_OT_VertexGroupRemove.bl_idname)
-    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup
+    from ._MenuWeightPaint import MirrorVertexGroup, MPM_OT_Weight_RemoveUnusedVertexGroup, MPM_OT_Weight_InspectSelectedVertices
+
     MirrorVertexGroup(c, "Mirror", 0.2)
     _Util.layout_operator(c, MPM_OT_Weight_RemoveUnusedVertexGroup.bl_idname, icon="X")
+    _Util.layout_operator(c, MPM_OT_Weight_InspectSelectedVertices.bl_idname, isActive=has_selected_verts, icon="VIEWZOOM")
     _Util.layout_prop(c, overlay, "show_weight", isActive=overlay.show_overlays)
 
     # Applyメニュー

@@ -24,9 +24,12 @@ from bpy.app.translations import pgettext_iface as iface_
 # ウェイトペイントモードメニュー
 # --------------------------------------------------------------------------------
 blur_brush = None
+has_selected_verts = False
 
 
 def draw(pie, context):
+    global has_selected_verts
+    has_selected_verts = _Util.has_selected_verts(context)
     box = pie.split().box()
     box.label(text="WeightPaint Primary")
     topbar_menu = box.row(align=True)
@@ -140,6 +143,7 @@ def draw(pie, context):
     _Util.layout_operator(r, MPM_OT_Weight_PoseBoneUseMirror.bl_idname, "ON").is_use = True
     _Util.layout_operator(r, MPM_OT_Weight_PoseBoneUseMirror.bl_idname, "OFF").is_use = False
     _Util.layout_operator(c, MPM_OT_Weight_PoseBoneMirrorSelect.bl_idname)
+    _Util.layout_operator(c, MPM_OT_Weight_InspectSelectedVertices.bl_idname, isActive=has_selected_verts, icon="VIEWZOOM")
 
     # apply
     box = c.box()
@@ -400,15 +404,76 @@ class MPM_OT_Weight_MaskNonZeroVGroup(bpy.types.Operator):
                     v.select = True
         return {"FINISHED"}
 
+
+class MPM_OT_Weight_InspectSelectedVertices(bpy.types.Operator):
+    bl_idname = "mpm.weight_inspect_selected_vertices"
+    bl_label = "Inspect Selected Verts"
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Checks which vertex groups the selected vertices are assigned to"
+
+    def invoke(self, context, event):
+        g.force_cancel_piemenu_modal(context)
+        obj = context.object
+        self.last_active_vg = obj.vertex_groups.active
+        self.assigned = set()
+        arm = obj.find_armature()
+        dbones = [vg.name
+                  for bone in arm.data.bones
+                  if bone.use_deform and (vg := obj.vertex_groups.get(bone.name))
+                  ] if arm else []
+        if obj.mode == "EDIT":
+            import bmesh
+            bm = bmesh.from_edit_mesh(obj.data)
+            verts = [obj.data.vertices[v.index] for v in bm.verts if v.select]
+        else:
+            verts = [v for v in obj.data.vertices if v.select]
+        for v in verts:
+            for group in v.groups:
+                vg = obj.vertex_groups[group.group]
+                if 0.0 < group.weight:
+                    self.assigned.add((vg, vg.name in dbones))
+        self.last_states = obj.data.use_paint_mask, obj.data.use_paint_mask_vertex, obj.data.use_paint_bone_selection
+        obj.data.use_paint_mask_vertex = True
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        r = self.layout.row(align=False)
+        c = r.column(align=True)
+        for vg, is_deform in self.assigned:
+            _Util.MPM_OT_CallbackOperator.operator(c, f"{vg.name}", self.bl_idname + vg.name,
+                                                   self.on_click_item, (context, vg), icon="BONE_DATA" if is_deform else "GROUP_VERTEX")
+
+    def on_click_item(self, context, vg):
+        context.object.vertex_groups.active = vg
+
+    def execute(self, context):
+        self.finish(context)
+        return {"FINISHED"}
+
+    def cancel(self, context):
+        self.finish(context)
+        context.object.vertex_groups.active = self.last_active_vg
+
+    def finish(self, context):
+        _Util.MPM_OT_CallbackOperator.clear()
+        obj = context.object
+        if self.last_states[0]:
+            obj.data.use_paint_mask = self.last_states[0]
+        elif self.last_states[1]:
+            obj.data.use_paint_mask_vertex = self.last_states[1]
+        elif self.last_states[2]:
+            obj.data.use_paint_bone_selection = self.last_states[2]
+
+
 # --------------------------------------------------------------------------------
 
 
 class MPM_OT_Weight_SetWeight(bpy.types.Operator):
     bl_idname = "mpm.weight_set"
     bl_label = "Set Weight"
-    bl_options = {"UNDO"}
+    bl_options = {"REGISTER", "UNDO"}
     bl_description = "Weights set. Option1: Selected only. Option2: Unselected only."
-    mode: bpy.props.IntProperty()
+    mode: bpy.props.IntProperty(options={"HIDDEN"})
 
     @classmethod
     def poll(cls, context):
@@ -435,9 +500,9 @@ class MPM_OT_Weight_SetWeight(bpy.types.Operator):
 class MPM_OT_Weight_RemoveWeight(bpy.types.Operator):
     bl_idname = "mpm.weight_remove"
     bl_label = "Delete Weight"
-    bl_options = {"UNDO"}
+    bl_options = {"REGISTER", "UNDO"}
     bl_description = "Weights remove. Option1: Selected only. Option2: Unselected only."
-    mode: bpy.props.IntProperty()
+    mode: bpy.props.IntProperty(options={"HIDDEN"})
 
     @classmethod
     def poll(cls, context):
@@ -706,6 +771,7 @@ classes = (
     MPM_OT_Weight_VGroupMirrorOverwriteConfirm,
     MPM_OT_Weight_RemoveUnusedVertexGroup,
     MPM_OT_Weight_MaskNonZeroVGroup,
+    MPM_OT_Weight_InspectSelectedVertices,
     MPM_OT_Weight_SetWeight,
     MPM_OT_Weight_RemoveWeight,
     MPM_OT_Weight_HideBoneOnPaintMonitorModal,
