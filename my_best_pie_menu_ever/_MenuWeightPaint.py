@@ -439,7 +439,7 @@ class MPM_OT_Weight_InspectSelectedVertices(bpy.types.Operator):
     def draw(self, context):
         r = self.layout.row(align=False)
         c = r.column(align=True)
-        for vg, is_deform in self.assigned:
+        for vg, is_deform in sorted(self.assigned, key=lambda x: (x[1], x[0].name)):
             _Util.MPM_OT_CallbackOperator.operator(c, f"{vg.name}", self.bl_idname + vg.name,
                                                    self.on_click_item, (context, vg), icon="BONE_DATA" if is_deform else "GROUP_VERTEX")
 
