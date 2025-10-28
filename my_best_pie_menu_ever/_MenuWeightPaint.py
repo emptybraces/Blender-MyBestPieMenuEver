@@ -440,11 +440,25 @@ class MPM_OT_Weight_InspectSelectedVertices(bpy.types.Operator):
         r = self.layout.row(align=False)
         c = r.column(align=True)
         for vg, is_deform in sorted(self.assigned, key=lambda x: (x[1], x[0].name)):
-            _Util.MPM_OT_CallbackOperator.operator(c, f"{vg.name}", self.bl_idname + vg.name,
-                                                   self.on_click_item, (context, vg), icon="BONE_DATA" if is_deform else "GROUP_VERTEX")
+            r = c.row(align=True)
+            _Util.MPM_OT_CallbackOperator.operator(r, f"{vg.name}", self.bl_idname + vg.name + "_select_vg",
+                                                   self.select_vg, (context, vg), icon="BONE_DATA" if is_deform else "GROUP_VERTEX")
+            _Util.MPM_OT_CallbackOperator.operator(r, "", self.bl_idname + vg.name + "_remove_from_vg",
+                                                   self.remove_from_vg, (context, vg), icon="X")
 
-    def on_click_item(self, context, vg):
+    def select_vg(self, context, vg):
         context.object.vertex_groups.active = vg
+
+    def remove_from_vg(self, context, vg):
+        obj = context.object
+        if obj.mode == "EDIT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+            vg.remove([v.index for v in obj.data.vertices if v.select])
+            bpy.ops.object.mode_set(mode="EDIT")
+        else:
+            vg.remove([v.index for v in obj.data.vertices if v.select])
+        self.assigned.discard((vg, True))
+        self.assigned.discard((vg, False))
 
     def execute(self, context):
         self.finish(context)
