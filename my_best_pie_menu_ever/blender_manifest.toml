@@ -29,6 +29,7 @@ files = "Import/export FBX from/to disk"
 
 # ---------------------------
 # v2.9.0
+# - Blender5.0対応。
 # - [WeightPaint, Edit] 選択した頂点が所属する頂点グループを選択できるポップアップ機能。(Inspect Selected Verts)
 # v2.8.1
 # - [ModeHistory] 横幅が短いのでモード名を一部短縮。

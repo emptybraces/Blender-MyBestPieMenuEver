@@ -207,7 +207,8 @@ def draw(pie, context):
 
     # Smoothブラシの強さ
     global smooth_brush
-    unified_paint_settings = context.tool_settings.unified_paint_settings
+    unified_paint_settings = getattr(context.tool_settings, "unified_paint_settings", None) \
+        or getattr(tool, "unified_paint_settings", None)  # v5.0からunified_paint_settingsの場所が変わった
     if smooth_brush == None:
         path = os.path.join(bpy.utils.system_resource("DATAFILES"), "assets", "brushes", "essentials_brushes-mesh_sculpt.blend")
         with bpy.data.libraries.load(path, link=True, assets_only=True) as (data_from, data_to):

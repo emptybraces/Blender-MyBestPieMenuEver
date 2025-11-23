@@ -48,7 +48,8 @@ def draw(pie, context):
     # brushes
     brush_property_box.label(text="Current Brush Property", icon="BRUSH_DATA")
     current_brush = context.tool_settings.weight_paint.brush
-    unified_paint_settings = context.tool_settings.unified_paint_settings
+    unified_paint_settings = getattr(context.tool_settings, "unified_paint_settings", None) \
+        or getattr(context.tool_settings.weight_paint, "unified_paint_settings", None)  # v5.0からunified_paint_settingsの場所が変わった
 
     def _get_row3(layout):
         s = layout.row().split(factor=0.25, align=True)
@@ -180,9 +181,9 @@ def MirrorVertexGroup(layout, label, factor=0.3):
     r1.label(text=label)
     r1.scale_x = 0.9
     _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorActive.bl_idname, "Active")
-    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorActive.bl_idname, "", icon="MOD_MIRROR").use_topology = True
+    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorActive.bl_idname, "", icon="MESH_DATA").use_topology = True
     _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorBoneSelection.bl_idname, "Selected Bones")
-    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorBoneSelection.bl_idname, "", icon="MOD_MIRROR").use_topology = True
+    _Util.layout_operator(r2, MPM_OT_Weight_VGroupMirrorBoneSelection.bl_idname, "", icon="MESH_DATA").use_topology = True
 
 
 # --------------------------------------------------------------------------------
@@ -197,10 +198,17 @@ def rename_vertexgroup(obj, target, rename):
 class MPM_OT_Weight_VGroupMirrorBoneSelection(bpy.types.Operator):
     bl_idname = "mpm.weight_mirror_vg_from_bone"
     bl_label = "Mirror VertexGroup"
-    bl_description = "Create mirror VertexGroup from selected bones"
+    bl_description = "Create mirror VertexGroup from selected bones. Option: Use Topology"
     bl_options = {"REGISTER", "UNDO"}
     use_topology: bpy.props.BoolProperty()
     replace: bpy.props.BoolProperty()
+
+    @classmethod
+    def get_bone_for_select(cls, obj):
+        if g.is_v5_0_later():
+            return obj.pose.bones
+        else:
+            return obj.data.bones
 
     @classmethod
     def poll(cls, context):
@@ -208,17 +216,19 @@ class MPM_OT_Weight_VGroupMirrorBoneSelection(bpy.types.Operator):
         arm_cnt = 0
         for obj in _Util.selected_objects():
             is_mesh |= obj.type == "MESH"
-            if obj.type == "ARMATURE" and any(bone.select for bone in obj.data.bones):
+            if obj.type == "ARMATURE" and any(bone.select for bone in MPM_OT_Weight_VGroupMirrorBoneSelection.get_bone_for_select(obj)):
                 arm_cnt += 1
+
         return is_mesh and arm_cnt == 1
 
     def execute(self, context):
         g.force_cancel_piemenu_modal(context)
         msg = ""
         selected_bone_names = None
+        cls = MPM_OT_Weight_VGroupMirrorBoneSelection
         for obj in _Util.selected_objects():
-            if obj.type == "ARMATURE" and any(bone.select for bone in obj.data.bones):
-                selected_bone_names = [bone.name for bone in obj.data.bones if bone.select]
+            if obj.type == "ARMATURE" and any(bone.select for bone in cls.get_bone_for_select(obj)):
+                selected_bone_names = [bone.name for bone in cls.get_bone_for_select(obj) if bone.select]
                 break
         print(selected_bone_names)
         if selected_bone_names:
@@ -241,7 +251,7 @@ class MPM_OT_Weight_VGroupMirrorBoneSelection(bpy.types.Operator):
 class MPM_OT_Weight_VGroupMirrorActive(bpy.types.Operator):
     bl_idname = "mpm.weight_vgroup_mirror_active"
     bl_label = "VertexGroup Mirror"
-    bl_description = "Mirroring active VertexGroup"
+    bl_description = "Mirroring active VertexGroup. Option: Use Topology"
     bl_options = {"REGISTER", "UNDO"}
     use_topology: bpy.props.BoolProperty()
 
@@ -451,6 +461,7 @@ class MPM_OT_Weight_InspectSelectedVertices(bpy.types.Operator):
 
     def remove_from_vg(self, context, vg):
         obj = context.object
+        # 編集モード時は頂点グループの削除ができない
         if obj.mode == "EDIT":
             bpy.ops.object.mode_set(mode="OBJECT")
             vg.remove([v.index for v in obj.data.vertices if v.select])
@@ -764,7 +775,10 @@ class MPM_OT_Weight_HideLeftRightBones(bpy.types.Operator):
                 # ボーンコレクションが表示されているなら
                 if any(coll.is_visible for coll in bone.collections):
                     if bone.name.endswith(conditions):
-                        bone.hide = True
+                        if g.is_v5_0_later():
+                            pbone.hide = True
+                        else:
+                            bone.hide = True
         _Util.select_active(sels[0])
         for i in sels[1:]:
             _Util.select_add(i)

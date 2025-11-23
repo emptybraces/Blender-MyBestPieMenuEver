@@ -230,34 +230,38 @@ def draw(pie, context):
 
     # brush proeprty
     c = layout_property.column(align=True)
-    unified_paint_settings = context.tool_settings.unified_paint_settings
+    unified_paint_settings = getattr(context.tool_settings, "unified_paint_settings", None) \
+        or getattr(tool, "unified_paint_settings", None)  # v5.0からunified_paint_settingsの場所が変わった
+
     # color
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_color else current_brush
-    s = c.row().split(factor=0.3, align=True)
+    s = c.row().split(factor=0.1, align=True)
     r1 = s.row(align=True)
-    s = s.row().split(factor=0.15, align=True)
+    s = s.row().split(factor=0.2, align=True)
     r2 = s.row(align=True)
+    s = s.row().split(factor=0.2, align=True)
     r3 = s.row(align=True)
-    r3.alignment = "LEFT"
+    r4 = s.row(align=True)
+    # r4.alignment = "LEFT"
     r1.label(text="Color")
-    UnifiedPaintPanel.prop_unified_color(r1, context, brush_property_target, "color", text="")
-    UnifiedPaintPanel.prop_unified_color(r1, context, brush_property_target, "secondary_color", text="")
-    _Util.MPM_OT_CallbackOperator.operator(r1, "", "_MenuTexturePaint.swap_color",
+    UnifiedPaintPanel.prop_unified_color(r2, context, brush_property_target, "color", text="")
+    UnifiedPaintPanel.prop_unified_color(r2, context, brush_property_target, "secondary_color", text="")
+    _Util.MPM_OT_CallbackOperator.operator(r2, "", "_MenuTexturePaint.swap_color",
                                            _SwapBrushColor, (context, brush_property_target,), icon="ARROW_LEFTRIGHT")
-    _Util.MPM_OT_CallbackOperator.operator(r2, "W", "_MenuTexturePaint.set_white",
+    _Util.MPM_OT_CallbackOperator.operator(r3, "W", "_MenuTexturePaint.set_white",
                                            lambda x: setattr(x, "color", mathutils.Color((1.0, 1.0, 1.0))), (brush_property_target,))
-    _Util.MPM_OT_CallbackOperator.operator(r2, "B", "_MenuTexturePaint.set_black",
+    _Util.MPM_OT_CallbackOperator.operator(r3, "B", "_MenuTexturePaint.set_black",
                                            lambda x: setattr(x, "color", mathutils.Color((0.0, 0.0, 0.0))), (brush_property_target,))
-    r3.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
-    _Util.layout_prop(r3, unified_paint_settings, "use_unified_color")
+    r4.prop_with_popover(context.scene.mpm_prop, "ColorPalettePopoverEnum", text="", panel="MPM_PT_BrushColorPalettePanel",)
+    _Util.layout_prop(r4, unified_paint_settings, "use_unified_color")
     # size
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_size else current_brush
-    s = c.row().split(factor=0.2, align=True)
+    s = c.row().split(factor=0.29, align=True)
     r1 = s.row(align=True)
-    s = s.row().split(factor=0.5, align=True)
+    s = s.row().split(factor=0.56, align=True)
     r2 = s.row(align=True)
     r3 = s.row(align=True)
-    r3.alignment = "LEFT"
+    # r3.alignment = "LEFT"
     _Util.layout_prop(r1, brush_property_target, "size")
     _Util.MPM_OT_SetInt.operator(r2, "50%", brush_property_target, "size", int(brush_property_target.size * 0.5))
     _Util.MPM_OT_SetInt.operator(r2, "80%", brush_property_target, "size", int(brush_property_target.size * 0.8))
@@ -266,12 +270,12 @@ def draw(pie, context):
     _Util.layout_prop(r3, unified_paint_settings, "use_unified_size")
     # strength
     brush_property_target = unified_paint_settings if unified_paint_settings.use_unified_strength else current_brush
-    s = c.row().split(factor=0.2, align=True)
+    s = c.row().split(factor=0.29, align=True)
     r1 = s.row(align=True)
-    s = s.row().split(factor=0.5, align=True)
+    s = s.row().split(factor=0.56, align=True)
     r2 = s.row(align=True)
     r3 = s.row(align=True)
-    r3.alignment = "LEFT"
+    # r3.alignment = "LEFT"
     _Util.layout_prop(r1, brush_property_target, "strength")
     _Util.MPM_OT_SetSingle.operator(r2, "50%", brush_property_target, "strength", brush_property_target.strength / 2)
     _Util.MPM_OT_SetSingle.operator(r2, "200%", brush_property_target, "strength", brush_property_target.strength * 2)
@@ -281,7 +285,7 @@ def draw(pie, context):
 
     # Etc
     r = c.row(align=True)
-    r.alignment = "LEFT"
+    # r.alignment = "LEFT"
 
     _Util.layout_prop(r, current_brush, "use_accumulate")
     _DrawBrushAngle(context, r)
@@ -299,12 +303,14 @@ def draw(pie, context):
 
 
 def _DrawBehaviourOfControlKey(layout):
-    r = layout.row(align=True)
-    r.alignment = "LEFT"
-    r.label(text="Holding Ctrl Key is")
+    s = layout.split(factor=0.2, align=True)
+    r1 = s.row(align=True)
+    r2 = s.row(align=True)
+    r2.alignment = "LEFT"
+    r1.label(text="Holding Ctrl Key")
     is_erace_alpha = _AddonPreferences.Accessor.get_image_paint_ctrl_behaviour()
-    _Util.layout_operator(r, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=not is_erace_alpha)
-    _Util.layout_operator(r, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=is_erace_alpha)
+    _Util.layout_operator(r2, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "SubColor", depress=not is_erace_alpha)
+    _Util.layout_operator(r2, MPM_OT_TexPaint_ToggleCtrlBehaviour.bl_idname, "Erase Alpha", depress=is_erace_alpha)
 
 
 def _DrawBrushAngle(context, layout):
