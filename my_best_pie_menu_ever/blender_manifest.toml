@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "my_best_pie_menu_ever"
-version = "2.9.0"
+version = "2.9.2"
 name = "My Best Pie Menu Ever"
 tagline = "Quick access to the functions you need"
 maintainer = "emptybraces <motose6@gmail.com>"
@@ -28,7 +28,7 @@ files = "Import/export FBX from/to disk"
 
 
 # ---------------------------
-# v2.9.0
+# v2.9.1
 # - Blender5.0対応。
 # - [WeightPaint, Edit] 選択した頂点が所属する頂点グループを選択できるポップアップ機能。(Inspect Selected Verts)
 # v2.8.1

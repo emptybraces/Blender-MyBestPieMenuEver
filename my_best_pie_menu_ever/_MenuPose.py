@@ -2,12 +2,14 @@ if "bpy" in locals():
     import importlib
     for m in (
         _Util,
+        g,
     ):
         importlib.reload(m)
 else:
     import bpy
     from . import (
         _Util,
+        g,
     )
 # --------------------------------------------------------------------------------
 # ポーズメニュー
@@ -173,17 +175,17 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
         for arm in arms:
             _Util.select_active(arm)
             if self.type == "FK_Arm":
-                self.convert(arm.pose.bones["c_hand_ik.l"].bone, bpy.ops.pose.arp_arm_fk_to_ik_)
-                self.convert(arm.pose.bones["c_hand_ik.r"].bone, bpy.ops.pose.arp_arm_fk_to_ik_)
+                self.convert(arm.pose.bones["c_hand_ik.l"], bpy.ops.pose.arp_arm_fk_to_ik_)
+                self.convert(arm.pose.bones["c_hand_ik.r"], bpy.ops.pose.arp_arm_fk_to_ik_)
             elif self.type == "IK_Arm":
-                self.convert(arm.pose.bones["c_hand_fk.l"].bone, bpy.ops.pose.arp_arm_ik_to_fk_)
-                self.convert(arm.pose.bones["c_hand_fk.r"].bone, bpy.ops.pose.arp_arm_ik_to_fk_)
+                self.convert(arm.pose.bones["c_hand_fk.l"], bpy.ops.pose.arp_arm_ik_to_fk_)
+                self.convert(arm.pose.bones["c_hand_fk.r"], bpy.ops.pose.arp_arm_ik_to_fk_)
             elif self.type == "FK_Leg":
-                self.convert(arm.pose.bones["c_foot_ik.l"].bone, bpy.ops.pose.arp_leg_fk_to_ik_)
-                self.convert(arm.pose.bones["c_foot_ik.r"].bone, bpy.ops.pose.arp_leg_fk_to_ik_)
+                self.convert(arm.pose.bones["c_foot_ik.l"], bpy.ops.pose.arp_leg_fk_to_ik_)
+                self.convert(arm.pose.bones["c_foot_ik.r"], bpy.ops.pose.arp_leg_fk_to_ik_)
             elif self.type == "IK_Leg":
-                self.convert(arm.pose.bones["c_foot_fk.l"].bone, bpy.ops.pose.arp_leg_ik_to_fk_)
-                self.convert(arm.pose.bones["c_foot_fk.r"].bone, bpy.ops.pose.arp_leg_ik_to_fk_)
+                self.convert(arm.pose.bones["c_foot_fk.l"], bpy.ops.pose.arp_leg_ik_to_fk_)
+                self.convert(arm.pose.bones["c_foot_fk.r"], bpy.ops.pose.arp_leg_ik_to_fk_)
         if current_mode != "POSE":
             _Util.select_active(sels[0])
             for i in sels[1:]:
@@ -191,9 +193,12 @@ class MPM_OT_Pose_ARP_SnapIKFK(bpy.types.Operator):
             bpy.ops.object.mode_set(mode=current_mode)
         return {"FINISHED"}
 
-    def convert(self, bone, func):
+    def convert(self, pbone, func):
         bpy.ops.pose.select_all(action="DESELECT")
-        bone.select = True
+        if g.is_v5_0_later():
+            pbone.select = True
+        else:
+            pbone.bone.select = True
         func()
 
 

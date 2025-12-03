@@ -470,6 +470,7 @@ class MPM_OT_Weight_InspectSelectedVertices(bpy.types.Operator):
             vg.remove([v.index for v in obj.data.vertices if v.select])
         self.assigned.discard((vg, True))
         self.assigned.discard((vg, False))
+        _Util.show_msgbox(f"selected vertices removed from '{vg.name}'", "", "WARNING_LARGE")
 
     def execute(self, context):
         self.finish(context)

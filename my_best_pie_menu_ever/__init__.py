@@ -18,7 +18,7 @@ else:
 bl_info = {
     "name": "My Best Pie Menu Ever",
     "author": "emptybraces",
-    "version": (2, 8, 1),
+    "version": (2, 9, 2),
     "blender": (4, 3, 0),
     "location": "3D View",
     "description": "Quick access to the functions you need",
