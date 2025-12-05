@@ -27,6 +27,8 @@ from time import time
 from mathutils import Vector, Quaternion
 from bpy_extras.view3d_utils import region_2d_to_vector_3d, region_2d_to_location_3d, region_2d_to_origin_3d
 from bpy.app.translations import pgettext_iface as iface_
+if g.is_v5_0_later():
+    from bpy_extras import anim_utils
 # --------------------------------------------------------------------------------
 # ユーティリティメニュー
 # --------------------------------------------------------------------------------
@@ -258,13 +260,21 @@ def DrawView3D(layout, context):
     _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformSave.bl_idname)
     _Util.layout_operator(r, MPM_OT_Utility_ViewportCameraTransformRestorePanel.bl_idname)
     # コピー
-    r = c.row(align=True)
-    r.active = obj is not None and 1 < len(context.selected_objects)
-    r1, r2 = _Util.layout_split_row2(r, 0.2)
-    r1.label(text="Copy")
-    _Util.layout_operator(r2, MPM_OT_Utility_CopyPosition.bl_idname)
-    _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
-    _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
+    if context.mode == "OBJECT":
+        r = c.row(align=True)
+        r.active = obj is not None and 1 < len(context.selected_objects)
+        r1, r2 = _Util.layout_split_row2(r, 0.2)
+        r1.label(text="Copy")
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyPosition.bl_idname)
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyRosition.bl_idname)
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyScale.bl_idname)
+    elif armature and obj.mode == "EDIT":
+        r = c.row(align=True)
+        r.active = obj is not None and 1 < len([b for b in armature.data.edit_bones if b.select])
+        r1, r2 = _Util.layout_split_row2(r, 0.2)
+        r1.label(text="Copy")
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyBoneHead.bl_idname)
+        _Util.layout_operator(r2, MPM_OT_Utility_CopyBoneTail.bl_idname)
 
 
 def DrawImageEditor(layout, context):
@@ -319,11 +329,11 @@ class MPM_OT_Utility_CopyPRSBase():
         for obj in context.selected_objects:
             if obj != active_obj:
                 if type(self) is MPM_OT_Utility_CopyPosition:
-                    obj.location = active_obj.location
+                    obj.location = active_obj.location.copy()
                 elif type(self) is MPM_OT_Utility_CopyRosition:
-                    obj.rotation_euler = active_obj.rotation_euler
+                    obj.rotation_euler = active_obj.rotation_euler.copy()
                 elif type(self) is MPM_OT_Utility_CopyScale:
-                    obj.scale = active_obj.scale
+                    obj.scale = active_obj.scale.copy()
         return {"FINISHED"}
 
 
@@ -349,6 +359,37 @@ class MPM_OT_Utility_CopyScale(MPM_OT_Utility_CopyPRSBase, bpy.types.Operator):
     bl_description = "Scale copy from active_object to selections."
     bl_options = {"REGISTER", "UNDO"}
     def execute(self, context): return super().execute(context)
+
+
+class MPM_OT_Utility_CopyBoneBase():
+    def execute(self, context):
+        src = context.object.data.edit_bones.active
+        selected = [b for b in context.object.data.edit_bones if b.select]
+        for bone in selected:
+            if bone == src:
+                continue
+            if type(self) is MPM_OT_Utility_CopyBoneHead:
+                bone.head = src.head.copy()
+            elif type(self) is MPM_OT_Utility_CopyBoneTail:
+                bone.tail = src.tail.copy()
+        return {"FINISHED"}
+
+
+class MPM_OT_Utility_CopyBoneHead(MPM_OT_Utility_CopyBoneBase, bpy.types.Operator):
+    bl_idname = "mpm.util_copy_bone_head"
+    bl_label = "Head"
+    bl_description = "Head position copy from active to selections."
+    bl_options = {"REGISTER", "UNDO"}
+    def execute(self, context): return super().execute(context)
+
+
+class MPM_OT_Utility_CopyBoneTail(MPM_OT_Utility_CopyBoneBase, bpy.types.Operator):
+    bl_idname = "mpm.util_copy_bone_tail"
+    bl_label = "Tail"
+    bl_description = "Tail position copy from active to selections."
+    bl_options = {"REGISTER", "UNDO"}
+    def execute(self, context): return super().execute(context)
+
 # --------------------------------------------------------------------------------
 
 
@@ -659,12 +700,19 @@ class MPM_OT_Utility_AnimationEndFrameSyncCurrentAction(bpy.types.Operator):
         frame_start = MAX
         frame_end = -MAX
         for obj in _Util.selected_objects():
-            action = obj.animation_data and obj.animation_data.action
+            anim_data = obj.animation_data
+            action = anim_data and anim_data.action
             if not action:
                 arm = obj.find_armature()
-                action = arm and arm.animation_data and arm.animation_data.action
+                anim_data = arm and arm.animation_data
+                action = anim_data and anim_data.action
             if action:
-                for fcurve in action.fcurves:
+                if g.is_v5_0_later():
+                    channelbag = anim_utils.action_get_channelbag_for_slot(action, anim_data.action_slot)
+                    fcurves = channelbag.fcurves
+                else:
+                    fcurves = action.fcurves
+                for fcurve in fcurves:
                     keyframe_points = fcurve.keyframe_points
                     if keyframe_points:
                         frame_start = min(frame_start, keyframe_points[0].co.x)
@@ -1004,6 +1052,8 @@ classes = (
     MPM_OT_Utility_CopyPosition,
     MPM_OT_Utility_CopyRosition,
     MPM_OT_Utility_CopyScale,
+    MPM_OT_Utility_CopyBoneHead,
+    MPM_OT_Utility_CopyBoneTail,
     MPM_OT_Utility_ChangeLanguage,
     MPM_OT_Utility_PivotOrientationSet_Reset,
     MPM_OT_Utility_PivotOrientationSet_Cursor,

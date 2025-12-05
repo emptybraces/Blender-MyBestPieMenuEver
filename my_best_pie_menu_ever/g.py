@@ -8,7 +8,7 @@ for m in (
     _UtilBlf,
 ):
     importlib.reload(m)
-ver = (2, 9, 2)
+ver = (2, 10, 0)
 is_force_cancelled_piemenu_modal = False  # メニューモーダルの強制キャンセル。
 is_request_reopen_piemenu = False  # パイメニュー再起動リクエスト
 on_closed: dict[str, Callable[[], None]] = {}
