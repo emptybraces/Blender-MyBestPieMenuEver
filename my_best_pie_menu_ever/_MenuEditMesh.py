@@ -504,7 +504,7 @@ class MPM_OT_EditMesh_MirrorMerge(bpy.types.Operator):
     mode: bpy.props.EnumProperty(name="Mode", items=[("CENTER", "At Center", ""), ("FIRST", "At First", ""),
                                  ("LAST", "At Last", ""), ("CURSOR", "At Cursor", ""), ("COLLAPSE", "Collapse", "")])
     axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
-    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
+    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.0001)
 
     def execute(self, context):
         obj = context.object
@@ -512,6 +512,10 @@ class MPM_OT_EditMesh_MirrorMerge(bpy.types.Operator):
         selected = [v for v in bm.verts if v.select]
         # bm.vertsはbpy.ops.mesh.select_mirrorしてからストアしておいたおのにアクセスするとエラーになる
         mirror_v = _Util.find_mirror_vertex(bm, selected, self.axis, self.threshold)
+        # ミラー側が選択されたときの対応
+        if any(v in selected for v in mirror_v):
+            _Util.show_msgbox("Mirror-side vertices are already selected!", "Abort", "WARNING_LARGE")
+            return {"CANCELLED"}
         bpy.ops.mesh.merge(type=self.mode)
         selected = [v for v in bm.verts if v.select]
         _Util.unselected_bm(bm)
@@ -542,7 +546,7 @@ class MPM_OT_EditMesh_BridgeEdgeLoopsMerge(bpy.types.Operator):
     bl_label = "Mirror BridgeEdgeLoops"
     bl_options = {"REGISTER", "UNDO"}
     axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
-    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
+    # threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.0001)
 
     def execute(self, context):
         obj = context.object
@@ -578,12 +582,16 @@ class MPM_OT_EditMesh_MirrorVertConnect(bpy.types.Operator):
     bl_label = "Mirror Verts Connect"
     bl_options = {"REGISTER", "UNDO"}
     axis: bpy.props.EnumProperty(name="Axis", items=[("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
-    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.001)
+    threshold: bpy.props.FloatProperty(name="Threshold", min=0.00001, default=0.0001)
 
     def execute(self, context):
         obj = context.object
         bm = bmesh.from_edit_mesh(obj.data)
         mirror_v = _Util.find_mirror_vertex(bm, [v for v in bm.verts if v.select], self.axis, self.threshold)
+        # ミラー側が選択されたときの対応
+        if any(v in selected for v in mirror_v):
+            _Util.show_msgbox("Mirror-side vertices are already selected!", "Abort", "WARNING_LARGE")
+            return {"CANCELLED"}
         bpy.ops.mesh.vert_connect()
         selected = [e for e in bm.edges if e.select]
         _Util.unselected_bm(bm)
